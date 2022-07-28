@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <stdint.h>
+
 typedef struct AttackSkill
 {
     int unkint;
@@ -55,8 +57,8 @@ typedef struct AttackSkill
     short unk14;
     short HitEffectSkills; // 01 = Erase skill on hit. Only used on Lightning Sword in vanilla.
     short Increase; // 09 = Health, 0B = Lvl (Increase = atk)
-    unsigned char StatusEnabler; // Status ID won't apply unless this is 2C
-    unsigned char StatusDuration; // Status ID Duration
+    uint8_t StatusEnabler; // Status ID won't apply unless this is 2C
+    uint8_t StatusDuration; // Status ID Duration
     short unk15;
     short ProjectileProperties; // 02 = Penetrate Defense
     short ProjectileID; // See spreadsheet.
@@ -68,8 +70,8 @@ typedef struct AttackSkill
     short unk17;
     short unk18;
     short unknown; // Downed Hit Animation
-    unsigned char SkillDuration;
-    unsigned char HitRange;
+    uint8_t SkillDuration;
+    uint8_t HitRange;
     short ExpandSkillWidth;
     short AnimationSize;
     short ProjectileSpeed; // Can also be projectile rain count
