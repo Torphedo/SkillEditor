@@ -1,12 +1,15 @@
 #pragma once
+#include <iostream>
+#include <tchar.h>
 
 #include "imgui.h"
 #include <imgui_internal.h>
 #include "imgui_impl_dx9.h"
 #include "imgui_impl_win32.h"
 #include <d3d9.h>
-#include <tchar.h>
+
 #include <dx-init.h>
+#include <main.h>
 
 int CreateUI() {
     // Create application window
@@ -62,10 +65,10 @@ int CreateUI() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
+    //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/Roboto-Medium.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/Cousine-Regular.ttf", 15.0f);
+    io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/DroidSans.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
@@ -112,10 +115,11 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Open"))
                         {
-                            return 1;
+                            wWinMain(NULL, NULL, NULL, NULL);
+                            LoadAttackSkill(filepathptr);
                         }
 
-                        if (ImGui::MenuItem("Save"))
+                        if (ImGui::MenuItem("Exit"))
                         {
                             return 1;
                         }

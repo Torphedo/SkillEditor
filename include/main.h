@@ -1,6 +1,22 @@
 ﻿#pragma once
 
 #include <stdint.h>
+#include <string>
+
+using namespace std;
+
+string filepath;
+char* filepathptr;
+
+void LoadAttackSkill(char* filename);
+
+string PWSTR_to_string(PWSTR ws) {
+    string ret;
+    ret.reserve(wcslen(ws));
+    for (; *ws; ws++)
+        ret += (char)*ws;
+    return ret;
+}
 
 typedef struct AttackSkill
 {
@@ -78,3 +94,4 @@ typedef struct AttackSkill
     short AccuracyID;
     short AnimationHeight;
 }atkskill;
+
