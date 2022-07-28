@@ -10,7 +10,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="include\imgui\imgui.cpp">
