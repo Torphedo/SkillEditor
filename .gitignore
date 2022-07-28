@@ -18,3 +18,6 @@ x86/
 [Bb]in/
 
 imgui.ini
+
+include/imGUI/examples/example_android_opengl3/out
+include/imGUI/examples/example_glfw_vulkan/out
