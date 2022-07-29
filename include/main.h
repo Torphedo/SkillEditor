@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <imgui_internal.h>
 
 using namespace std;
 
@@ -91,6 +92,16 @@ typedef struct AttackSkill
     short AccuracyID;
     short AnimationHeight;
 }atkskill;
+
+void InputShort(const char *label, void *p_data) {
+    const short s16_one = 1;
+    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, true ? &s16_one : NULL, NULL, "%d");
+}
+
+void InputUInt8(const char* label, void* p_data) {
+    const short s8_one = 1;
+    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, true ? &s8_one : NULL, NULL, "%d");
+}
 
 
 string PWSTR_to_string(PWSTR ws) {
