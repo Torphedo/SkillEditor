@@ -135,6 +135,10 @@ int WINAPI FileSelectDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int 
             hr = pFileOpen->Show(NULL);
 
             // Get the file name from the dialog box.
+            if (hr == 0x800704c7) // ERROR_CANCELLED
+            {
+                return -1;
+            }
             if (SUCCEEDED(hr))
             {
                 IShellItem* pItem;
@@ -179,6 +183,10 @@ int WINAPI FileSaveDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nC
             hr = pFileOpen->Show(NULL);
 
             // Get the file name from the dialog box.
+            if (hr == 0x800704c7) // ERROR_CANCELLED
+            {
+                return -1;
+            }
             if (SUCCEEDED(hr))
             {
                 IShellItem* pItem;

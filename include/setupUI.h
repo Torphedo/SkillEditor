@@ -116,39 +116,63 @@ int CreateUI() {
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
             float height = ImGui::GetFrameHeight();
 
+            short ErrorCode;
+
             if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
                     if (ImGui::BeginMenu("File"))
                     {
                         if (ImGui::MenuItem("Open"))
                         {
-                            FileSelectDialog(NULL, NULL, NULL, NULL); // Pulls up file open window and places the selected
-                                                                      // file's path in the filepathptr and filepath variables
-
-                            LoadAttackSkill(filepathptr);             // Loads the selected file into memory and loads
-                                                                      // the raw data into the variables of the atkskill struct
-                            cout << "Imported attack skill " << filepath << endl;
-                            AtkSkillState = 1;                        // Causes a message to appear on the status bar
-                            AtkSkillWindow = true;                    // Opens the Attack Skill Editor window
+                            if (FileSelectDialog(NULL, NULL, NULL, NULL) != -1) // Pulls up file open window and places the selected
+                            {                                                   // file's path in the filepathptr and filepath variables
+                                LoadAttackSkill(filepathptr);                   // Loads the selected file into memory and loads
+                                                                                // the raw data into the variables of the atkskill struct
+                                cout << "Imported attack skill " << filepath << "\n";
+                                AtkSkillState = 1;                              // Causes a message to appear on the status bar
+                                AtkSkillWindow = true;                          // Opens the Attack Skill Editor window
+                            }
+                            else
+                            {
+                                cout << "File selection cancelled.\n";
+                                ErrorCode = 1;
+                            }
                         }
                         if (ImGui::MenuItem("Save"))
                         {
-                            ofstream AtkSkillFile(filepathptr, ios::binary);  // Create a new ofstream variable, using
-                                                                              // the name of the file that was opened.
-                                                                              
-                            AtkSkillFile.write((char*)&AtkSkill, 144);        // Overwrites the file that was opened with
-                                                                              // the new data.
-                            cout << "Saved attack skill to " << filepath << endl;
-                            AtkSkillState = 2;                                // Causes a message to appear on the status bar
+                            if (AtkSkillState != 0) {
+                                ofstream AtkSkillFile(filepathptr, ios::binary);  // Create a new ofstream variable, using
+                                                                                  // the name of the file that was opened.
+                                AtkSkillFile.write((char*)&AtkSkill, 144);        // Overwrites the file that was opened with
+                                                                                  // the new data.
+                                cout << "Saved attack skill to " << filepath << "\n";
+                                AtkSkillState = 2;                                // Causes a message to appear on the status bar
+                            }
+                            else {
+                                cout << "Tried to save without opening a file, aborting...\n";
+                                ErrorCode = 2;
+                            }
                         }
-                        if (ImGui::MenuItem("Save New"))
+                        if (ImGui::MenuItem("Save As"))
                         {
-                            FileSaveDialog(NULL, NULL, NULL, NULL);          // Open a file save dialog and save to this
-                            ofstream AtkSkillFile(filepathptr, ios::binary); // new file instead of overwriting the original.
-
-                            AtkSkillFile.write((char*)&AtkSkill, 144);       // Write data.
-                            cout << "Saved attack skill to " << filepath << endl;
-                            AtkSkillState = 2;
+                            if (AtkSkillState != 0) {
+                                if (FileSaveDialog(NULL, NULL, NULL, NULL) != -1)    // Open a file save dialog and save to this
+                                {                                                    // new file instead of overwriting the original.
+                                    ofstream AtkSkillFile(filepathptr, ios::binary);
+                                    AtkSkillFile.write((char*)&AtkSkill, 144);       // Write data.
+                                    cout << "Saved attack skill to " << filepath << "\n";
+                                    AtkSkillState = 2;
+                                }
+                                else
+                                {
+                                    cout << "File selection cancelled.\n";
+                                    ErrorCode = 1;
+                                }
+                            }
+                            else {
+                                cout << "Tried to save without opening a file, aborting...\n";
+                                ErrorCode = 2;
+                            }
                         }
 
                         if (ImGui::MenuItem("Exit"))
@@ -178,6 +202,12 @@ int CreateUI() {
                     }
                     else if (AtkSkillState == 2) {
                         print = "Saved attack skill to " + filepath;
+                    }
+                    else if (ErrorCode == 1) {
+                        print = "File selection cancelled.";
+                    }
+                    else if (ErrorCode == 2) {
+                        print = "Tried to save without opening a file, aborting...";
                     }
                     ImGui::Text(const_cast<char*>(print.c_str()));
                     ImGui::EndMenuBar();
