@@ -11,6 +11,10 @@
 #include <dx-init.h>
 #include <main.h>
 
+bool OpenedAtkSkill = false;
+
+AttackSkill AtkSkill;
+
 int CreateUI() {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -117,11 +121,21 @@ int CreateUI() {
                         {
                             wWinMain(NULL, NULL, NULL, NULL);
                             LoadAttackSkill(filepathptr);
+                            cout << "Imported attack skill " << filepath << ".";
+                            OpenedAtkSkill = true;
                         }
 
                         if (ImGui::MenuItem("Exit"))
                         {
                             return 1;
+                        }
+                        ImGui::EndMenu();
+                    }
+                    if (ImGui::BeginMenu("Edit"))
+                    {
+                        if (ImGui::MenuItem("Attack Skill Editor"))
+                        {
+                            OpenedAtkSkill = true;
                         }
                         ImGui::EndMenu();
                     }
@@ -132,21 +146,74 @@ int CreateUI() {
 
             if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
-                    ImGui::Text("Status Bar :)");
+                    if (OpenedAtkSkill) {
+                        string print = "Imported attack skill " + filepath;
+                        ImGui::Text(const_cast<char*>(print.c_str()));
+                    }
                     ImGui::EndMenuBar();
                 }
                 ImGui::End();
             }
-        }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+            if (OpenedAtkSkill)
+            {
+                const short s16_one = 1;
+                const uint8_t s8_one = 1;
+                ImGui::Begin("Attack Skill Editor");
+                ImGui::InputScalar("Skill Text ID", ImGuiDataType_S16, &AtkSkill.SkillTextID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Register ID", ImGuiDataType_S16, &AtkSkill.RegisterID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Skill ID", ImGuiDataType_S16, &AtkSkill.SkillID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Rarity Stars", ImGuiDataType_S16, &AtkSkill.RarityStars, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Sound File ID", ImGuiDataType_S16, &AtkSkill.SoundFileID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Capsule Type", ImGuiDataType_S16, &AtkSkill.CapsuleType, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("School ID", ImGuiDataType_S16, &AtkSkill.SchoolID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Animation ID (Ground)", ImGuiDataType_S16, &AtkSkill.AnimationIDGround, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Animation ID (Air)", ImGuiDataType_S16, &AtkSkill.AnimationIDAir, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Multi Press 1", ImGuiDataType_S16, &AtkSkill.MultiPress1, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Multi Press 2", ImGuiDataType_S16, &AtkSkill.MultiPress2, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Double Skill 1", ImGuiDataType_S16, &AtkSkill.DoubleSkill1, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Double Skill 2", ImGuiDataType_S16, &AtkSkill.DoubleSkill2, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("After Hit SFX", ImGuiDataType_S16, &AtkSkill.PostHitSFX, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Start Up SFX", ImGuiDataType_S16, &AtkSkill.StartUpSFX, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Collision SFX", ImGuiDataType_S16, &AtkSkill.CollisionSFX, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Aura Cost", ImGuiDataType_S16, &AtkSkill.Cost, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Additional Aura Cost", ImGuiDataType_S16, &AtkSkill.ExtraCost, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Health Penalty", ImGuiDataType_S16, &AtkSkill.HealthCost, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("# of Uses", ImGuiDataType_S16, &AtkSkill.SkillUses, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Self Effect", ImGuiDataType_S16, &AtkSkill.SelfEffect, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Button Restrictions", ImGuiDataType_S16, &AtkSkill.ButtonRestrictions, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Requirements", ImGuiDataType_S16, &AtkSkill.Requirements, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Requirement Amount", ImGuiDataType_S16, &AtkSkill.ReqAmount, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Ground/Air/Both", ImGuiDataType_S16, &AtkSkill.GroundAirBoth, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Skill Button Effect", ImGuiDataType_S16, &AtkSkill.SkillButtonEffect, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Applied Status ID", ImGuiDataType_S16, &AtkSkill.AppliedStatusID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Restrictions", ImGuiDataType_S16, &AtkSkill.Restriction, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Strength Effect", ImGuiDataType_S16, &AtkSkill.StrengthEffect, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Damage", ImGuiDataType_S16, &AtkSkill.Damage, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Effect Duration / Misc. Effects", ImGuiDataType_S16, &AtkSkill.EffectDuration, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Target Hand Data", ImGuiDataType_S16, &AtkSkill.TargetHand, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Hit Effect Skills", ImGuiDataType_S16, &AtkSkill.HitEffectSkills, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Increase Stat", ImGuiDataType_S16, &AtkSkill.Increase, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Status Enabler", ImGuiDataType_S8, &AtkSkill.StatusEnabler, true ? &s8_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Status ID Duration", ImGuiDataType_S8, &AtkSkill.StatusDuration, true ? &s8_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Projectile Properties", ImGuiDataType_S16, &AtkSkill.ProjectileProperties, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Projectile ID", ImGuiDataType_S16, &AtkSkill.ProjectileID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("\"Collision Skill ID\"", ImGuiDataType_S16, &AtkSkill.ProjectileID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Homing Range 1st Hit", ImGuiDataType_S16, &AtkSkill.HomingRangeFirstHit, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Knockback Strength", ImGuiDataType_S16, &AtkSkill.HomingRangeSecondHit, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Combo End", ImGuiDataType_S16, &AtkSkill.HomingRangeThirdHit, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Skill Duration", ImGuiDataType_S8, &AtkSkill.SkillDuration, true ? &s8_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Hit Range", ImGuiDataType_S8, &AtkSkill.HitRange, true ? &s8_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Expand Skill Width / Start Speed", ImGuiDataType_S16, &AtkSkill.ExpandSkillWidth, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Animation Size / Acceleration", ImGuiDataType_S16, &AtkSkill.AnimationSize, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Projectile End Speed", ImGuiDataType_S16, &AtkSkill.ProjectileSpeed, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Homing Strength / Accuracy", ImGuiDataType_S16, &AtkSkill.AccuracyID, true ? &s16_one : NULL, NULL, "%d");
+                ImGui::InputScalar("Animation Height", ImGuiDataType_S16, &AtkSkill.AnimationHeight, true ? &s16_one : NULL, NULL, "%d");
+                if (ImGui::Button("Close")) {
+                    OpenedAtkSkill = false;
+                }
+                ImGui::End();
+            }
         }
 
         // Rendering
