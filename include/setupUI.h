@@ -122,31 +122,38 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Open"))
                         {
-                            FileSelectDialog(NULL, NULL, NULL, NULL);
-                            LoadAttackSkill(filepathptr);
+                            FileSelectDialog(NULL, NULL, NULL, NULL); // Pulls up file open window and places the selected
+                                                                      // file's path in the filepathptr and filepath variables
+
+                            LoadAttackSkill(filepathptr);             // Loads the selected file into memory and loads
+                                                                      // the raw data into the variables of the atkskill struct
                             cout << "Imported attack skill " << filepath << endl;
-                            AtkSkillState = 1;
-                            AtkSkillWindow = true;
+                            AtkSkillState = 1;                        // Causes a message to appear on the status bar
+                            AtkSkillWindow = true;                    // Opens the Attack Skill Editor window
                         }
                         if (ImGui::MenuItem("Save"))
                         {
-                            ofstream AtkSkillFile(filepathptr, ios::binary);
-                            AtkSkillFile.write((char*)&AtkSkill, 144);
+                            ofstream AtkSkillFile(filepathptr, ios::binary);  // Create a new ofstream variable, using
+                                                                              // the name of the file that was opened.
+                                                                              
+                            AtkSkillFile.write((char*)&AtkSkill, 144);        // Overwrites the file that was opened with
+                                                                              // the new data.
                             cout << "Saved attack skill to " << filepath << endl;
-                            AtkSkillState = 2;
+                            AtkSkillState = 2;                                // Causes a message to appear on the status bar
                         }
                         if (ImGui::MenuItem("Save New"))
                         {
-                            FileSaveDialog(NULL, NULL, NULL, NULL);
-                            ofstream AtkSkillFile(filepathptr, ios::binary);
-                            AtkSkillFile.write((char*)&AtkSkill, 144);
+                            FileSaveDialog(NULL, NULL, NULL, NULL);          // Open a file save dialog and save to this
+                            ofstream AtkSkillFile(filepathptr, ios::binary); // new file instead of overwriting the original.
+
+                            AtkSkillFile.write((char*)&AtkSkill, 144);       // Write data.
                             cout << "Saved attack skill to " << filepath << endl;
                             AtkSkillState = 2;
                         }
 
                         if (ImGui::MenuItem("Exit"))
                         {
-                            return 1;
+                            return 0;
                         }
                         ImGui::EndMenu();
                     }
@@ -154,7 +161,7 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Attack Skill Editor"))
                         {
-                            AtkSkillWindow = true;
+                            AtkSkillWindow = true; // Opens the Attack Skill Editor window
                         }
                         ImGui::EndMenu();
                     }
@@ -166,7 +173,8 @@ int CreateUI() {
             if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
                     if (AtkSkillState == 1) {
-                        print = "Imported attack skill " + filepath;
+                        print = "Imported attack skill " + filepath; // Status messages about importing
+                                                                     // and saving files.
                     }
                     else if (AtkSkillState == 2) {
                         print = "Saved attack skill to " + filepath;
@@ -181,12 +189,13 @@ int CreateUI() {
             {
                 const short s16_one = 1;
                 const uint8_t s8_one = 1;
-                string WindowTitle = "Attack Skill Editor - " + filepath;
-                ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));
-                InputShort("Skill Text ID", &AtkSkill.SkillTextID);
-                InputShort("Register ID", &AtkSkill.RegisterID);
-                InputShort("Skill ID", &AtkSkill.SkillID);
-                InputShort("Rarity Stars", &AtkSkill.RarityStars);
+                string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
+                ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));     // TODO: chop off the filepath and use only the name.
+
+                InputShort("Skill Text ID", &AtkSkill.SkillTextID);       // See comments in the atkskill struct for
+                InputShort("Register ID", &AtkSkill.RegisterID);          // more info on what these mean.There are
+                InputShort("Skill ID", &AtkSkill.SkillID);                // also lots of unknown data sections not
+                InputShort("Rarity Stars", &AtkSkill.RarityStars);        // listed here yet.
                 InputShort("Sound File ID", &AtkSkill.SoundFileID);
                 InputShort("Capsule Type", &AtkSkill.CapsuleType);
                 InputShort("School ID", &AtkSkill.SchoolID);
@@ -233,7 +242,7 @@ int CreateUI() {
                 InputShort("Homing Strength / Accuracy", &AtkSkill.AccuracyID);
                 InputShort("Animation Height", &AtkSkill.AnimationHeight);
                 if (ImGui::Button("Close")) {
-                    AtkSkillWindow = false;
+                    AtkSkillWindow = false; // Deactivates the window.
                 }
                 ImGui::End();
             }

@@ -94,6 +94,9 @@ typedef struct AttackSkill
 }atkskill;
 
 void InputShort(const char *label, void *p_data) {
+    // ImGui didn't have pre-made functions for short or uint8 input
+    // boxes, so I made my own.
+
     const short s16_one = 1;
     ImGui::InputScalar(label, ImGuiDataType_S16, p_data, true ? &s16_one : NULL, NULL, "%d");
 }
@@ -105,24 +108,25 @@ void InputUInt8(const char* label, void* p_data) {
 
 
 string PWSTR_to_string(PWSTR ws) {
-    string ret;
-    ret.reserve(wcslen(ws));
+    string result;
+    result.reserve(wcslen(ws));
     for (; *ws; ws++)
-        ret += (char)*ws;
-    return ret;
+        result += (char)*ws;
+    return result;
 }
 
 int WINAPI FileSelectDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
 {
-    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
-        COINIT_DISABLE_OLE1DDE);
+    // Confusing / overcomplicated way of opening a file dialog
+    // taken from Microsoft's documentation. There's probably a
+    // shorter way to do this.
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (SUCCEEDED(hr))
     {
         IFileOpenDialog* pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-            IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
         if (SUCCEEDED(hr))
         {
@@ -159,15 +163,13 @@ int WINAPI FileSelectDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int 
 
 int WINAPI FileSaveDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
 {
-    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
-        COINIT_DISABLE_OLE1DDE);
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (SUCCEEDED(hr))
     {
         IFileSaveDialog* pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL,
-            IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
+        hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
 
         if (SUCCEEDED(hr))
         {

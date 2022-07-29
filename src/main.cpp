@@ -10,13 +10,13 @@ using namespace std;
 
 int main()
 {
-    CreateUI();
+    CreateUI(); // Main UI loop, see setupUI.h.
 }
 
 void LoadAttackSkill(char* filename)
 {
-	AtkSkillFile.open(filename, ios::in | ios::binary); // Open file
-	AtkSkillFile.read((char*)&AtkSkill, (sizeof(AtkSkill)));    // Read bytes into AttackSkill struct
+	AtkSkillFile.open(filename, ios::in | ios::binary);      // Open file
+	AtkSkillFile.read((char*)&AtkSkill, (sizeof(AtkSkill))); // Read bytes into AttackSkill struct
 
 	AtkSkillFile.close();
 	return;
