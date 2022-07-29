@@ -12,6 +12,8 @@
 #include <main.h>
 
 bool OpenedAtkSkill = false;
+bool SavedAtkSkill = false;
+string print;
 
 AttackSkill AtkSkill;
 
@@ -121,7 +123,7 @@ int CreateUI() {
                         {
                             FileSelectDialog(NULL, NULL, NULL, NULL);
                             LoadAttackSkill(filepathptr);
-                            cout << "Imported attack skill " << filepath << ".";
+                            cout << "Imported attack skill " << filepath;
                             OpenedAtkSkill = true;
                         }
                         if (ImGui::MenuItem("Save"))
@@ -129,6 +131,9 @@ int CreateUI() {
                             FileSaveDialog(NULL, NULL, NULL, NULL);
                             ofstream AtkSkillFile(filepathptr, ios::binary);
                             AtkSkillFile.write((char*)&AtkSkill, 144);
+                            cout << "Saved attack skill to " << filepath;
+                            OpenedAtkSkill = false;
+                            SavedAtkSkill = true;
                         }
 
                         if (ImGui::MenuItem("Exit"))
@@ -153,9 +158,12 @@ int CreateUI() {
             if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
                     if (OpenedAtkSkill) {
-                        string print = "Imported attack skill " + filepath;
-                        ImGui::Text(const_cast<char*>(print.c_str()));
+                        print = "Imported attack skill " + filepath;
                     }
+                    else if (SavedAtkSkill) {
+                        print = "Saved attack skill to " + filepath;
+                    }
+                    ImGui::Text(const_cast<char*>(print.c_str()));
                     ImGui::EndMenuBar();
                 }
                 ImGui::End();

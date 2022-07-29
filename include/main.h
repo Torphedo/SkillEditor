@@ -189,7 +189,8 @@ int WINAPI FileSaveDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nC
                     // Display the file name to the user.
                     if (SUCCEEDED(hr))
                     {
-                        filepathptr = const_cast<char*>(PWSTR_to_string(pszFilePath).c_str());
+                        filepath = PWSTR_to_string(pszFilePath);
+                        filepathptr = const_cast<char*>(filepath.c_str());
                         CoTaskMemFree(pszFilePath);
                     }
                     pItem->Release();
