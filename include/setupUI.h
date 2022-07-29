@@ -10,6 +10,7 @@
 
 #include <dx-init.h>
 #include <main.h>
+#include <font.h>
 
 bool OpenedAtkSkill = false;
 bool SavedAtkSkill = false;
@@ -73,7 +74,7 @@ int CreateUI() {
     //io.Fonts->AddFontDefault();
     //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/Roboto-Medium.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/Cousine-Regular.ttf", 15.0f);
-    io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/DroidSans.ttf", 16.0f);
+    ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(DroidSans_compressed_data_base85, 16.0f);
     //io.Fonts->AddFontFromFileTTF("include/imGUI/misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);

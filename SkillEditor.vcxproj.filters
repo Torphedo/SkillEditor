@@ -63,6 +63,9 @@
     <ClInclude Include="include\setupUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\imgui\misc\debuggers\imgui.natvis">
