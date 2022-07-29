@@ -12,9 +12,9 @@
 #include <main.h>
 #include <font.h>
 
-bool OpenedAtkSkill = false;
-bool SavedAtkSkill = false;
 string print;
+short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
+bool AtkSkillWindow = false;
 
 AttackSkill AtkSkill;
 
@@ -124,17 +124,24 @@ int CreateUI() {
                         {
                             FileSelectDialog(NULL, NULL, NULL, NULL);
                             LoadAttackSkill(filepathptr);
-                            cout << "Imported attack skill " << filepath;
-                            OpenedAtkSkill = true;
+                            cout << "Imported attack skill " << filepath << endl;
+                            AtkSkillState = 1;
+                            AtkSkillWindow = true;
                         }
                         if (ImGui::MenuItem("Save"))
+                        {
+                            ofstream AtkSkillFile(filepathptr, ios::binary);
+                            AtkSkillFile.write((char*)&AtkSkill, 144);
+                            cout << "Saved attack skill to " << filepath << endl;
+                            AtkSkillState = 2;
+                        }
+                        if (ImGui::MenuItem("Save New"))
                         {
                             FileSaveDialog(NULL, NULL, NULL, NULL);
                             ofstream AtkSkillFile(filepathptr, ios::binary);
                             AtkSkillFile.write((char*)&AtkSkill, 144);
-                            cout << "Saved attack skill to " << filepath;
-                            OpenedAtkSkill = false;
-                            SavedAtkSkill = true;
+                            cout << "Saved attack skill to " << filepath << endl;
+                            AtkSkillState = 2;
                         }
 
                         if (ImGui::MenuItem("Exit"))
@@ -147,7 +154,7 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Attack Skill Editor"))
                         {
-                            OpenedAtkSkill = true;
+                            AtkSkillWindow = true;
                         }
                         ImGui::EndMenu();
                     }
@@ -158,10 +165,10 @@ int CreateUI() {
 
             if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
-                    if (OpenedAtkSkill) {
+                    if (AtkSkillState == 1) {
                         print = "Imported attack skill " + filepath;
                     }
-                    else if (SavedAtkSkill) {
+                    else if (AtkSkillState == 2) {
                         print = "Saved attack skill to " + filepath;
                     }
                     ImGui::Text(const_cast<char*>(print.c_str()));
@@ -170,11 +177,12 @@ int CreateUI() {
                 ImGui::End();
             }
 
-            if (OpenedAtkSkill)
+            if (AtkSkillWindow)
             {
                 const short s16_one = 1;
                 const uint8_t s8_one = 1;
-                ImGui::Begin("Attack Skill Editor");
+                string WindowTitle = "Attack Skill Editor - " + filepath;
+                ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));
                 InputShort("Skill Text ID", &AtkSkill.SkillTextID);
                 InputShort("Register ID", &AtkSkill.RegisterID);
                 InputShort("Skill ID", &AtkSkill.SkillID);
@@ -225,7 +233,7 @@ int CreateUI() {
                 InputShort("Homing Strength / Accuracy", &AtkSkill.AccuracyID);
                 InputShort("Animation Height", &AtkSkill.AnimationHeight);
                 if (ImGui::Button("Close")) {
-                    OpenedAtkSkill = false;
+                    AtkSkillWindow = false;
                 }
                 ImGui::End();
             }
