@@ -119,10 +119,16 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Open"))
                         {
-                            wWinMain(NULL, NULL, NULL, NULL);
+                            FileSelectDialog(NULL, NULL, NULL, NULL);
                             LoadAttackSkill(filepathptr);
                             cout << "Imported attack skill " << filepath << ".";
                             OpenedAtkSkill = true;
+                        }
+                        if (ImGui::MenuItem("Save"))
+                        {
+                            FileSaveDialog(NULL, NULL, NULL, NULL);
+                            ofstream AtkSkillFile(filepathptr, ios::binary);
+                            AtkSkillFile.write((char*)&AtkSkill, 144);
                         }
 
                         if (ImGui::MenuItem("Exit"))
