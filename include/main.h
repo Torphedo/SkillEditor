@@ -8,7 +8,9 @@ using namespace std;
 
 string filepath;
 char* filepathptr;
+
 fstream AtkSkillFile;
+
 const COMDLG_FILTERSPEC fileTypes[] =
 {
     { L"Skill File", L"*.skill;" },

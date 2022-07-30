@@ -13,6 +13,7 @@
 #include <font.h>
 
 string print;
+short ErrorCode;
 short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool AtkSkillWindow = false;
 
@@ -116,8 +117,6 @@ int CreateUI() {
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
             float height = ImGui::GetFrameHeight();
 
-            short ErrorCode;
-
             if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
                 if (ImGui::BeginMenuBar()) {
                     if (ImGui::BeginMenu("File"))
@@ -175,7 +174,7 @@ int CreateUI() {
                             }
                         }
 
-                        if (ImGui::MenuItem("Exit"))
+                        if (ImGui::MenuItem("Exit", "Alt + F4"))
                         {
                             return 0;
                         }
