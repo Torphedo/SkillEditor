@@ -2,7 +2,7 @@
 #include <iostream>
 #include <tchar.h>
 
-#include "imgui.h"
+#include <imgui.h>
 #include <imgui_internal.h>
 #include "imgui_impl_dx9.h"
 #include "imgui_impl_win32.h"
@@ -13,6 +13,7 @@
 #include <font.h>
 
 string print;
+int Idx = 0;
 short ErrorCode;
 short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool AtkSkillWindow = false;
@@ -82,7 +83,6 @@ int CreateUI() {
 
     // Our state
     bool show_demo_window = false;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
@@ -123,7 +123,7 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Open"))
                         {
-                            if (FileSelectDialog(NULL, NULL, NULL, NULL) != -1) // Pulls up file open window and places the selected
+                            if (FileSelectDialog() != -1) // Pulls up file open window and places the selected
                             {                                                   // file's path in the filepathptr and filepath variables
                                 LoadAttackSkill(filepathptr);                   // Loads the selected file into memory and loads
                                                                                 // the raw data into the variables of the atkskill struct
@@ -140,12 +140,12 @@ int CreateUI() {
                         if (ImGui::MenuItem("Save"))
                         {
                             if (AtkSkillState != 0) {
-                                ofstream AtkSkillFile(filepathptr, ios::binary);  // Create a new ofstream variable, using
-                                                                                  // the name of the file that was opened.
-                                AtkSkillFile.write((char*)&AtkSkill, 144);        // Overwrites the file that was opened with
-                                                                                  // the new data.
+                                ofstream AtkSkillOut(filepathptr, ios::binary); // Create a new ofstream variable, using
+                                                                                // the name of the file that was opened.
+                                AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
+                                                                                // the new data.
                                 cout << "Saved attack skill to " << filepath << "\n";
-                                AtkSkillState = 2;                                // Causes a message to appear on the status bar
+                                AtkSkillState = 2;                              // Causes a message to appear on the status bar
                             }
                             else {
                                 cout << "Tried to save without opening a file, aborting...\n";
@@ -155,10 +155,10 @@ int CreateUI() {
                         if (ImGui::MenuItem("Save As"))
                         {
                             if (AtkSkillState != 0) {
-                                if (FileSaveDialog(NULL, NULL, NULL, NULL) != -1)    // Open a file save dialog and save to this
+                                if (FileSaveDialog() != -1)    // Open a file save dialog and save to this
                                 {                                                    // new file instead of overwriting the original.
-                                    ofstream AtkSkillFile(filepathptr, ios::binary);
-                                    AtkSkillFile.write((char*)&AtkSkill, 144);       // Write data.
+                                    ofstream AtkSkillOut(filepathptr, ios::binary);
+                                    AtkSkillOut.write((char*)&AtkSkill, 144);        // Write data.
                                     cout << "Saved attack skill to " << filepath << "\n";
                                     AtkSkillState = 2;
                                 }
@@ -184,9 +184,12 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Attack Skill Editor"))
                         {
-                            AtkSkillWindow = true; // Opens the Attack Skill Editor window
+                            AtkSkillWindow = !AtkSkillWindow; // Toggles the Attack Skill Editor window
                         }
                         ImGui::EndMenu();
+                    }
+                    if (ImGui::Button("Options")) {
+                        OptionsWindow = !OptionsWindow;
                     }
                     ImGui::EndMenuBar();
                 }
@@ -220,32 +223,59 @@ int CreateUI() {
                 const uint8_t s8_one = 1;
                 string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
                 ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));     // TODO: chop off the filepath and use only the name.
+                                                                          // See atkskill struct comments for more info.
+                InputShort("Skill Text ID", &AtkSkill.SkillTextID);
+                Tooltip("The skill ID from which to get the skill's name,\ndescription, etc.");
+                InputShort("Register ID", &AtkSkill.RegisterID);
+                Tooltip("The \"register\" / \"library\" of skills this skill\nwill belong to.");
+                InputShort("Skill ID", &AtkSkill.SkillID);
+                Tooltip("The skill's internal ID. This will determine what\nskill (if any) will be overwritten. This ID has no\nrelation to the IDs seen in-game.");
 
-                InputShort("Skill Text ID", &AtkSkill.SkillTextID);       // See comments in the atkskill struct for
-                InputShort("Register ID", &AtkSkill.RegisterID);          // more info on what these mean.There are
-                InputShort("Skill ID", &AtkSkill.SkillID);                // also lots of unknown data sections not
-                InputShort("Rarity Stars", &AtkSkill.RarityStars);        // listed here yet.
+                char* rarity_txt[] = {"1","2","3","4","5"};
+                AtkSkill.RarityStars = ComboShort("Rarity", rarity_txt, 5);
+                Tooltip("The skill's in-game rarity, displayed as stars.");
+
                 InputShort("Sound File ID", &AtkSkill.SoundFileID);
                 InputShort("Capsule Type", &AtkSkill.CapsuleType);
+
+                char* capsule_types[] = {"Aura Particle","Attack","Defense","Erase","Environmental","Status","Special"};
+                ImGui::Combo("Capsule Type", &Idx, capsule_types, IM_ARRAYSIZE(capsule_types), IM_ARRAYSIZE(capsule_types));
+                Tooltip("The skill's type. (Attack, Defense, Environmental, etc.)");
+
                 InputShort("School ID", &AtkSkill.SchoolID);
-                InputShort("Animation ID (Ground)", &AtkSkill.AnimationIDGround);
-                InputShort("Animation ID (Air)", &AtkSkill.AnimationIDAir);
+                Tooltip("The skill's school. (Nature, Optical, Ki, etc.)");
+                InputShort("Animation Profile (Ground)", &AtkSkill.AnimationProfileGround);
+                Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground.");
+                InputShort("Animation Profile (Air)", &AtkSkill.AnimationProfileAir);
+                Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air.");
                 InputShort("Multi Press 1", &AtkSkill.MultiPress1);
                 InputShort("Multi Press 2", &AtkSkill.MultiPress2);
                 InputShort("Double Skill 1", &AtkSkill.DoubleSkill1);
                 InputShort("Double Skill 2", &AtkSkill.DoubleSkill2);
                 InputShort("After Hit SFX", &AtkSkill.PostHitSFX);
                 InputShort("Start Up SFX", &AtkSkill.StartUpSFX);
+                Tooltip("The sound effect ID to be played when the skill\nis winding up / charging.");
                 InputShort("Collision SFX", &AtkSkill.CollisionSFX);
+                Tooltip("The sound effect ID to be played when the skill\ncollides with something.");
                 InputShort("Aura Cost", &AtkSkill.Cost);
+                Tooltip("The amount of Aura the skill costs.");
                 InputShort("Additional Aura Cost", &AtkSkill.ExtraCost);
+                Tooltip("Adds to the base Aura cost.");
                 InputShort("Health Penalty", &AtkSkill.HealthCost);
+                Tooltip("The amount of health to be taken from the user\nwhen the skill is cast.");
                 InputShort("# of Uses", &AtkSkill.SkillUses);
+                Tooltip("How many times the skill can be used. Set this\nto 0 for infinite uses.");
                 InputShort("Self Effect", &AtkSkill.SelfEffect);
                 InputShort("Button Restrictions", &AtkSkill.ButtonRestrictions);
                 InputShort("Requirements", &AtkSkill.Requirements);
+                Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = # of Skills Remaining in Deck\n7 = Aura\n9 = Level");
                 InputShort("Requirement Amount", &AtkSkill.ReqAmount);
-                InputShort("Ground/Air/Both", &AtkSkill.GroundAirBoth);
+                Tooltip("The required amount of the type specified above");
+
+                char* items[] = { "Ground","Air","Both" };
+                AtkSkill.GroundAirBoth = ComboShort("Air/Ground/Both", items, IM_ARRAYSIZE(items));
+                Tooltip("Whether the skill can be used on\nthe ground, in the air, or both.");
+
                 InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect);
                 InputShort("Applied Status ID", &AtkSkill.AppliedStatusID);
                 InputShort("Restrictions", &AtkSkill.Restriction);
@@ -273,6 +303,16 @@ int CreateUI() {
                 if (ImGui::Button("Close")) {
                     AtkSkillWindow = false; // Deactivates the window.
                 }
+                ImGui::End();
+            }
+
+            if (OptionsWindow)
+            {
+                ImGui::Begin("Settings");
+                char PhantomDustDir[275] = "C:\\Users\\joe\\Games\\Phantom Dust";
+                ImGui::InputText("Phantom Dust Game Folder", PhantomDustDir, IM_ARRAYSIZE(PhantomDustDir));
+                Tooltip("The folder containing PDUWP.exe. You must have a\n dumped copy of the game files to use this option.");
+
                 ImGui::End();
             }
         }

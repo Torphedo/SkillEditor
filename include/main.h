@@ -10,6 +10,8 @@ string filepath;
 char* filepathptr;
 
 fstream AtkSkillFile;
+bool OptionsWindow = false;
+static char PhantomDustDir[275];
 
 const COMDLG_FILTERSPEC fileTypes[] =
 {
@@ -17,6 +19,7 @@ const COMDLG_FILTERSPEC fileTypes[] =
 };
 
 void LoadAttackSkill(char* filename);
+void Tooltip(const char* text);
 
 typedef struct AttackSkill
 {
@@ -33,8 +36,8 @@ typedef struct AttackSkill
     short CapsuleType; // Aura, Atk, Def, etc.
     short unk4; // Pursuit has 01 for this.
     short SchoolID;
-    short AnimationIDGround;
-    short AnimationIDAir;
+    short AnimationProfileGround;
+    short AnimationProfileAir;
     short MultiPress1;
     short MultiPress2;
     short DoubleSkill1;
@@ -108,6 +111,12 @@ void InputUInt8(const char* label, void* p_data) {
     ImGui::InputScalar(label, ImGuiDataType_S8, p_data, true ? &s8_one : NULL, NULL, "%d");
 }
 
+short ComboShort(const char *label, const char *const *items, int item_count)
+{
+    static int SelectedItemInt;
+    ImGui::Combo(label, &SelectedItemInt, items, item_count);
+    return SelectedItemInt;
+}
 
 string PWSTR_to_string(PWSTR ws) {
     string result;
@@ -117,7 +126,7 @@ string PWSTR_to_string(PWSTR ws) {
     return result;
 }
 
-int WINAPI FileSelectDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
+int WINAPI FileSelectDialog()
 {
     // Confusing / overcomplicated way of opening a file dialog
     // taken from Microsoft's documentation. There's probably a
@@ -167,7 +176,7 @@ int WINAPI FileSelectDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int 
     return 0;
 }
 
-int WINAPI FileSaveDialog(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
+int WINAPI FileSaveDialog()
 {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (SUCCEEDED(hr))

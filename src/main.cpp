@@ -21,3 +21,8 @@ void LoadAttackSkill(char* filename)
 	AtkSkillFile.close();
 	return;
 }
+
+void Tooltip(const char* text) {
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("%s", text);
+}
