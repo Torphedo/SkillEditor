@@ -25,7 +25,8 @@ string PWSTR_to_string(PWSTR ws) {
 
 // ===== File I/O =====
 
-void LoadAttackSkill(char* filename);
+void LoadAttackSkill();
+void SaveAtkSkill(); 
 
 // ===== Custom ImGui Functions / Wrappers =====
 

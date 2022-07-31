@@ -165,6 +165,7 @@
     <ClInclude Include="include\font.h" />
     <ClInclude Include="include\main.h" />
     <ClInclude Include="include\setupUI.h" />
+    <ClInclude Include="include\structs.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\imgui\misc\debuggers\imgui.natvis" />

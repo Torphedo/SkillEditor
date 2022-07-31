@@ -16,13 +16,25 @@ int main()
 
 // ===== File I/O =====
 
-void LoadAttackSkill(char* filename)
+// Loads the current file into the AtkSkill struct
+void LoadAttackSkill()
 {
-	AtkSkillFile.open(filename, ios::in | ios::binary);      // Open file
+	AtkSkillFile.open(filepathptr, ios::in | ios::binary);      // Open file
 	AtkSkillFile.read((char*)&AtkSkill, (sizeof(AtkSkill))); // Read bytes into AttackSkill struct
 
 	AtkSkillFile.close();
 	return;
+}
+
+// Writes the currently open file to disk.
+void SaveAtkSkill()
+{
+    ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
+                                                    // the name of the file that was opened.
+
+    AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
+                                                    // the new data.
+    AtkSkillOut.close();
 }
 
 // ===== Custom ImGui Functions / Wrappers =====
