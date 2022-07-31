@@ -162,6 +162,10 @@ int CreateUI() {
                     {
                         AtkSkillWindow = !AtkSkillWindow; // Toggle Attack Skill Editor window
                     }
+                    if (ImGui::MenuItem("Load GSDATA"))
+                    {
+                        LoadGSDATA_Header();
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::Button("Options")) {
@@ -283,8 +287,10 @@ int CreateUI() {
         if (OptionsWindow)
         {
             ImGui::Begin("Settings");
-            char PhantomDustDir[275] = "C:\\Users\\joe\\Games\\Phantom Dust";
-            ImGui::InputText("Phantom Dust Game Folder", PhantomDustDir, IM_ARRAYSIZE(PhantomDustDir));
+            char temp_char[275];
+            strcpy_s(temp_char, PhantomDustDir.c_str());
+            ImGui::InputText("Phantom Dust Game Folder", temp_char, IM_ARRAYSIZE(temp_char));
+            PhantomDustDir = temp_char;
             Tooltip("The folder containing PDUWP.exe. You must have a\n dumped copy of the game files to use this option.");
 
             ImGui::End();

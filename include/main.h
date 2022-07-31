@@ -5,11 +5,17 @@
 #include <imgui_internal.h>
 #include <structs.h>
 
+
+extern "C" {
+#include <crc32/crc_32.c>
+}
+
 using namespace std;
 
 fstream AtkSkillFile;
+GSDataHeader gsdataheader;
 bool OptionsWindow = false;
-static char PhantomDustDir[275];
+string PhantomDustDir;
 
 string filepath;
 char* filepathptr;
@@ -26,7 +32,9 @@ string PWSTR_to_string(PWSTR ws) {
 // ===== File I/O =====
 
 void LoadAttackSkill();
-void SaveAtkSkill(); 
+void SaveAtkSkill();
+void LoadGSDATA_Header();
+void SaveGSDATA_Header();
 
 // ===== Custom ImGui Functions / Wrappers =====
 

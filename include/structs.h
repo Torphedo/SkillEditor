@@ -76,3 +76,14 @@ struct AttackSkill
     short AccuracyID;
     short AnimationHeight;
 };
+
+struct GSDataHeader
+{
+    int Filesize; // The size in bytes of the entire gsdata file
+    int unk0;// TBD
+    int unk1;// TBD
+    int unk2;// TBD
+    int VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
+    int SkillLimiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
+    char dummy[136];
+};
