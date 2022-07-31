@@ -221,7 +221,7 @@ int CreateUI() {
             {
                 string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
                 ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));     // TODO: chop off the filepath and use only the name.
-                                                                          // See atkskill struct comments for more info.
+                
                 InputShort("Skill Text ID", &AtkSkill.SkillTextID);
                 Tooltip("The skill ID from which to get the skill's name,\ndescription, etc.");
                 InputShort("Register ID", &AtkSkill.RegisterID);
@@ -236,8 +236,8 @@ int CreateUI() {
                 InputShort("Sound File ID", &AtkSkill.SoundFileID);
                 InputShort("Capsule Type", &AtkSkill.CapsuleType);
 
-                char* capsule_types[] = {"Aura Particle","Attack","Defense","Erase","Environmental","Status","Special"};
-                ImGui::Combo("Capsule Type", &Idx, capsule_types, IM_ARRAYSIZE(capsule_types), IM_ARRAYSIZE(capsule_types));
+                // char* capsule_types[] = {"Aura Particle","Attack","Defense","Erase","Environmental","Status","Special"};
+                // ImGui::Combo("Capsule Type", &Idx, capsule_types, IM_ARRAYSIZE(capsule_types), IM_ARRAYSIZE(capsule_types));
                 Tooltip("The skill's type. (Attack, Defense, Environmental, etc.)");
 
                 InputShort("School ID", &AtkSkill.SchoolID);

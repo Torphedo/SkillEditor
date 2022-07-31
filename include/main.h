@@ -3,120 +3,17 @@
 #include <stdint.h>
 #include <string>
 #include <imgui_internal.h>
+#include <structs.h>
 
 using namespace std;
-
-string filepath;
-char* filepathptr;
 
 fstream AtkSkillFile;
 bool OptionsWindow = false;
 static char PhantomDustDir[275];
 
-const COMDLG_FILTERSPEC fileTypes[] =
-{
-    { L"Skill File", L"*.skill;" },
-};
-
-void LoadAttackSkill(char* filename);
-void Tooltip(const char* text);
-
-typedef struct AttackSkill
-{
-    int unkint;
-    short unk0;
-    short unk1;
-    short SkillTextID;
-    short unk2;
-    short RegisterID;
-    short SkillID;
-    short RarityStars; // n + 1
-    short unk3;
-    short SoundFileID;
-    short CapsuleType; // Aura, Atk, Def, etc.
-    short unk4; // Pursuit has 01 for this.
-    short SchoolID;
-    short AnimationProfileGround;
-    short AnimationProfileAir;
-    short MultiPress1;
-    short MultiPress2;
-    short DoubleSkill1;
-    short DoubleSkill2;
-    short unk5;
-    short PostHitSFX;
-    short StartUpSFX;
-    short CollisionSFX;
-    short Cost;
-    short CostEffect;
-    short ExtraCost;
-    short HealthCost;
-    short SkillUses;
-    short SkillUsageUnk1;
-    short SkillUsageUnk2;
-    short SkillUsageUnk3;
-    short unk6;
-    short unk7;
-    short unk8;
-    short unk9;
-    short unk10;
-    short unk11;
-    short SelfEffect;
-    short ButtonRestrictions;
-    short Requirements;
-    short ReqAmount;
-    short GroundAirBoth; // 00 00, 01 00, or 02 00
-    short SkillButtonEffect; // ???
-    short unk12;
-    short AppliedStatusID;
-    short Restriction;
-    short StrengthEffect; // ???
-    short Damage;
-    short EffectDuration; // Misc effects?
-    short TargetHand; // Hand-in-hand with HitEffectSkills
-    short unk13;
-    short HitEffectSkills; // 01 = Erase skill on hit. Only used on Lightning Sword in vanilla.
-    short Increase; // 09 = Health, 0B = Lvl (Increase = atk) // Increase stat by the damage value
-    uint8_t StatusEnabler; // Status ID won't apply unless this is 2C
-    uint8_t StatusDuration; // Status ID Duration
-    short unk14;
-    short ProjectileProperties; // 02 = Penetrate Defense
-    short ProjectileID; // See spreadsheet.
-    short CollisionSkillID; // ???
-    short HomingRangeFirstHit;  // First hit
-    short HomingRangeSecondHit; // Knock down (if 0, no stagger at all)
-    short HomingRangeThirdHit;  // Combo end (removing this makes infinite range)
-    short unk15;
-    short unk16;
-    short unk17;
-    short unknown; // Downed Hit Animation or Projectile Behaviour
-    uint8_t SkillDuration;
-    uint8_t HitRange;
-    short ExpandSkillWidth;
-    short AnimationSize;
-    short ProjectileSpeed; // Can also be projectile rain count
-    short AccuracyID;
-    short AnimationHeight;
-}atkskill;
-
-void InputShort(const char *label, void *p_data) {
-    // ImGui didn't have pre-made functions for short or uint8 input
-    // boxes, so I made my own.
-
-    const short s16_one = 1;
-    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, true ? &s16_one : NULL, NULL, "%d");
-}
-
-void InputUInt8(const char* label, void* p_data) {
-    const short s8_one = 1;
-    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, true ? &s8_one : NULL, NULL, "%d");
-}
-
-short ComboShort(const char *label, const char *const *items, int item_count)
-{
-    static int SelectedItemInt;
-    ImGui::Combo(label, &SelectedItemInt, items, item_count);
-    return SelectedItemInt;
-}
+string filepath;
+char* filepathptr;
+const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" }; // For file dialogs
 
 string PWSTR_to_string(PWSTR ws) {
     string result;
@@ -125,6 +22,19 @@ string PWSTR_to_string(PWSTR ws) {
         result += (char)*ws;
     return result;
 }
+
+// ===== File I/O =====
+
+void LoadAttackSkill(char* filename);
+
+// ===== Custom ImGui Functions / Wrappers =====
+
+void Tooltip(const char* text);
+void InputShort(const char* label, void* p_data);
+void InputUInt8(const char* label, void* p_data);
+short ComboShort(const char* label, const char* const* items, int item_count);
+
+// ===== Windows Explorer Dialogs =====
 
 int WINAPI FileSelectDialog()
 {
