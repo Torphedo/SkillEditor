@@ -219,8 +219,6 @@ int CreateUI() {
 
             if (AtkSkillWindow)
             {
-                const short s16_one = 1;
-                const uint8_t s8_one = 1;
                 string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
                 ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));     // TODO: chop off the filepath and use only the name.
                                                                           // See atkskill struct comments for more info.
