@@ -1,6 +1,6 @@
 #pragma once
 
-typedef struct AttackSkill
+struct AttackSkill
 {
     int unkint;
     short unk0;
@@ -75,4 +75,4 @@ typedef struct AttackSkill
     short ProjectileSpeed; // Can also be projectile rain count
     short AccuracyID;
     short AnimationHeight;
-}atkskill;
+};
