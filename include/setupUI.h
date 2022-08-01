@@ -103,6 +103,17 @@ int CreateUI() {
             if (ImGui::BeginMenuBar()) {
                 if (ImGui::BeginMenu("File"))
                 {
+                    if (ImGui::MenuItem("New"))
+                    {
+                        if (MultiselectInvoke() != -1)
+                        {
+                            SkillPackWindow = true;
+                        }
+                        else {
+                            cout << "Skill selection canceled.\n";
+                            ErrorCode = 2;
+                        }
+                    }
                     if (ImGui::MenuItem("Open"))
                     {
                         if (FileSelectDialog() != -1) // Open a file open dialog
@@ -114,7 +125,7 @@ int CreateUI() {
                         }
                         else
                         {
-                            cout << "File selection cancelled.\n";
+                            cout << "File selection canceled.\n";
                             ErrorCode = 1;
                         }
                     }
@@ -141,7 +152,7 @@ int CreateUI() {
                             }
                             else
                             {
-                                cout << "File selection cancelled.\n";
+                                cout << "File selection canceled.\n";
                                 ErrorCode = 1;
                             }
                         }
@@ -316,6 +327,20 @@ int CreateUI() {
             ImGui::InputText("Phantom Dust Game Folder", temp_char, IM_ARRAYSIZE(temp_char));
             PhantomDustDir = temp_char;
             Tooltip("The folder containing PDUWP.exe. You must have a\n dumped copy of the game files to use this option.");
+
+            ImGui::End();
+        }
+
+        if (SkillPackWindow)
+        {
+            ImGui::Begin("Enter a name for your skill pack: ");
+            strcpy_s(packname, SkillPackName.c_str());
+            ImGui::InputText("test", packname, IM_ARRAYSIZE(packname));
+            SkillPackName = packname;
+
+            if (ImGui::Button("Save")) {
+                SaveSkillPack();
+            }
 
             ImGui::End();
         }

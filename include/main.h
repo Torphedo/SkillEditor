@@ -13,8 +13,15 @@ extern "C" {
 using namespace std;
 
 string PhantomDustDir;
+string SkillPackName;
+char packname[32] = "                               ";
 string filepath;
+
+string* multiselectpath;
+
 char* filepathptr;
+
+int MultiSelectCount;
 
 fstream AtkSkillFile;
 
@@ -24,6 +31,8 @@ atkskill skillarray[751];
 int* gsdatamain;
 
 bool OptionsWindow = false;
+bool SkillPackWindow = false;
+
 const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" }; // For file dialogs
 
 string PWSTR_to_string(PWSTR ws) {
@@ -38,6 +47,7 @@ string PWSTR_to_string(PWSTR ws) {
 
 void LoadAttackSkill();
 void SaveAtkSkill();
+void SaveSkillPack();
 void LoadGSDATA();
 void SaveGSDATA();
 
@@ -98,6 +108,76 @@ int WINAPI FileSelectDialog()
         CoUninitialize();
     }
     return 0;
+}
+
+HRESULT MultiselectInvoke()
+{
+    IFileOpenDialog* pfd;
+
+    // CoCreate the dialog object.
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+
+    if (SUCCEEDED(hr))
+    {
+        DWORD dwOptions;
+        // Specify multiselect.
+        hr = pfd->GetOptions(&dwOptions);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = pfd->SetOptions(dwOptions | FOS_ALLOWMULTISELECT);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            // Show the Open dialog.
+            hr = pfd->Show(NULL);
+
+            if (SUCCEEDED(hr))
+            {
+                // Obtain the result of the user interaction.
+                IShellItemArray* psiaResults;
+                hr = pfd->GetResults(&psiaResults);
+
+                if (SUCCEEDED(hr))
+                {
+                    PWSTR pszFilePath = NULL;
+                    DWORD dwNumItems = 0; // number of items in multiple selection
+                    std::wstring strSelected; // will hold file paths of selected items
+
+                    hr = psiaResults->GetCount(&dwNumItems);  // get number of selected items
+
+                    // Loop through IShellItemArray and construct string for display
+                    for (DWORD i = 0; i < dwNumItems; i++)
+                    {
+                        IShellItem* psi = NULL;
+                        MultiSelectCount = dwNumItems;
+
+                        hr = psiaResults->GetItemAt(i, &psi); // get a selected item from the IShellItemArray
+
+                        if (SUCCEEDED(hr))
+                        {
+                            hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                            if (SUCCEEDED(hr))
+                            {
+                                multiselectpath = new string[dwNumItems];
+                                multiselectpath[i] = PWSTR_to_string(pszFilePath);;
+
+                                cout << multiselectpath[i] << "\n";
+
+                                CoTaskMemFree(pszFilePath);
+                            }
+
+                            psi->Release();
+                        }
+                    }
+                }
+            }
+        }
+        pfd->Release();
+    }
+    return hr;
 }
 
 int WINAPI FileSaveDialog()

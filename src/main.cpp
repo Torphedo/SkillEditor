@@ -37,22 +37,42 @@ void SaveAtkSkill()
     AtkSkillOut.close();
 }
 
+void SaveSkillPack()
+{
+    ofstream SkillPackOut(filepathptr, ios::binary);
+    short FormatVersion = 1;
+    short SkillCount = 1;
+    int pad[3] = { 0,0,0 };
+
+    SkillPackOut.write((char*)&packname, sizeof(packname));
+    SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion));
+    SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount));
+    SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
+
+    SkillPackOut.write((char*)&AtkSkill, 144);
+    SkillPackOut.close();
+    cout << "Saved skill pack to " << filepath << "\n";
+    SkillPackWindow = false;
+}
+
 void LoadGSDATA()
 {
     char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.bin").c_str());
+    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.dat").c_str());
 
     GSDataStream.open(gsdatapath, ios::in | ios::binary); // Open file
     GSDataStream.read((char*)&gsdataheader, (sizeof(gsdataheader))); // Read bytes into gsdataheader struct
 
     char test[] = "test";
     uint32_t hash = crc32buf(test, (IM_ARRAYSIZE(test) - 1));
-    cout << hash << "\n";
+    // cout << hash << "\n";
 
     GSDataStream.read((char*)skillarray, (sizeof(skillarray)));
 
-    gsdatamain = new int[((gsdataheader.Filesize - 108304)/4)];
-    GSDataStream.read((char*)gsdatamain, (sizeof(int) * (gsdataheader.Filesize - 108304) / 4));
+    int datasize = (sizeof(gsdataheader) + sizeof(skillarray)) / 4;
+
+    gsdatamain = new int[((gsdataheader.Filesize - datasize))];
+    GSDataStream.read((char*)gsdatamain, (datasize * 4)); // Multiplied by 4 because each int is 4 bytes
 
     GSDataStream.close();
 }
