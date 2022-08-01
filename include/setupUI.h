@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <tchar.h>
+#include <filesystem>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -158,18 +159,41 @@ int CreateUI() {
                 }
                 if (ImGui::BeginMenu("Edit"))
                 {
-                    if (ImGui::MenuItem("Attack Skill Editor"))
-                    {
-                        AtkSkillWindow = !AtkSkillWindow; // Toggle Attack Skill Editor window
-                    }
+                    filesystem::path gsdatapath{ (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.dat") };
                     if (ImGui::MenuItem("Load GSDATA"))
                     {
-                        LoadGSDATA_Header();
+                        if (filesystem::exists(gsdatapath)) // Check if GSData exists
+                        {
+                            LoadGSDATA();
+                        }
+                        else
+                        {
+                            cout << "Invalid Phantom Dust folder.\n";
+                        }
+                    }
+                    if (ImGui::MenuItem("Save GSDATA"))
+                    {
+                        if (filesystem::exists(gsdatapath)) // Check if GSData exists
+                        {
+                            SaveGSDATA();
+                        }
+                        else
+                        {
+                            cout << "Invalid Phantom Dust folder.\n";
+                        }
                     }
                     ImGui::EndMenu();
                 }
                 if (ImGui::Button("Options")) {
                     OptionsWindow = !OptionsWindow; // Toggle Options window
+                }
+                if (ImGui::BeginMenu("Window"))
+                {
+                    if (ImGui::MenuItem("Attack Skill Editor"))
+                    {
+                        AtkSkillWindow = !AtkSkillWindow; // Toggle Attack Skill Editor window
+                    }
+                    ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
             }

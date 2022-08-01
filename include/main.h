@@ -12,13 +12,18 @@ extern "C" {
 
 using namespace std;
 
-fstream AtkSkillFile;
-GSDataHeader gsdataheader;
-bool OptionsWindow = false;
 string PhantomDustDir;
-
 string filepath;
 char* filepathptr;
+
+fstream AtkSkillFile;
+
+fstream GSDataStream;
+GSDataHeader gsdataheader;
+atkskill skillarray[751];
+int* gsdatamain;
+
+bool OptionsWindow = false;
 const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" }; // For file dialogs
 
 string PWSTR_to_string(PWSTR ws) {
@@ -33,8 +38,8 @@ string PWSTR_to_string(PWSTR ws) {
 
 void LoadAttackSkill();
 void SaveAtkSkill();
-void LoadGSDATA_Header();
-void SaveGSDATA_Header();
+void LoadGSDATA();
+void SaveGSDATA();
 
 // ===== Custom ImGui Functions / Wrappers =====
 

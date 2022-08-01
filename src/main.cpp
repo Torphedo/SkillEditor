@@ -37,33 +37,40 @@ void SaveAtkSkill()
     AtkSkillOut.close();
 }
 
-void LoadGSDATA_Header()
+void LoadGSDATA()
 {
-    fstream GSDataHeaderStream;
-
     char gsdatapath[275];
     strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.bin").c_str());
-    GSDataHeaderStream.open(gsdatapath, ios::in | ios::binary);      // Open file
-    GSDataHeaderStream.read((char*)&gsdataheader, (sizeof(gsdataheader))); // Read bytes into AttackSkill struct
-    GSDataHeaderStream.close();
+
+    GSDataStream.open(gsdatapath, ios::in | ios::binary); // Open file
+    GSDataStream.read((char*)&gsdataheader, (sizeof(gsdataheader))); // Read bytes into gsdataheader struct
 
     char test[] = "test";
     uint32_t hash = crc32buf(test, (IM_ARRAYSIZE(test) - 1));
     cout << hash << "\n";
-    SaveGSDATA_Header();
-    return;
+
+    GSDataStream.read((char*)skillarray, (sizeof(skillarray)));
+
+    gsdatamain = new int[((gsdataheader.Filesize - 108304)/4)];
+    GSDataStream.read((char*)gsdatamain, (sizeof(int) * (gsdataheader.Filesize - 108304) / 4));
+
+    GSDataStream.close();
 }
 
-void SaveGSDATA_Header()
+void SaveGSDATA()
 {
     char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.bin").c_str());
-    ofstream GSDataHeaderOut(gsdatapath, ios::binary); // Creates a new ofstream variable, using
-                                                       // the name of the file that was opened.
+    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\data.bin").c_str());
+    ofstream GSDataOut(gsdatapath, ios::binary); // Creates a new ofstream variable, using
+                                                 // the name of the file that was opened.
 
-    GSDataHeaderOut.write((char*)&gsdataheader, sizeof(gsdataheader)); // Overwrites the file that was opened with
-                                                    // the new data.
-    GSDataHeaderOut.close();
+    GSDataOut.write((char*)&gsdataheader, 160);  // Overwrites the file that was opened with
+
+    GSDataOut.write((char*)&skillarray, sizeof(skillarray));  // Overwrites the file that was opened with
+
+    GSDataOut.write((char*)gsdatamain, (gsdataheader.Filesize - 108304));
+    GSDataOut.close();
+    return;
 }
 
 // ===== Custom ImGui Functions / Wrappers =====
