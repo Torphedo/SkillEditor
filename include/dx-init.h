@@ -41,8 +41,8 @@ void CleanupDeviceD3D()
 void ResetDevice()
 {
     ImGui_ImplDX9_InvalidateDeviceObjects();
-    HRESULT hr = g_pd3dDevice->Reset(&g_d3dpp);
-    if (hr == D3DERR_INVALIDCALL)
+    HRESULT hresult = g_pd3dDevice->Reset(&g_d3dpp);
+    if (hresult == D3DERR_INVALIDCALL)
         IM_ASSERT(0);
     ImGui_ImplDX9_CreateDeviceObjects();
 }

@@ -103,7 +103,7 @@ int CreateUI() {
             if (ImGui::BeginMenuBar()) {
                 if (ImGui::BeginMenu("File"))
                 {
-                    if (ImGui::MenuItem("New"))
+                    if (ImGui::MenuItem("New Skill Pack"))
                     {
                         if (SUCCEEDED(MultiselectInvoke()))
                         {
@@ -114,20 +114,40 @@ int CreateUI() {
                             ErrorCode = 2;
                         }
                     }
-                    if (ImGui::MenuItem("Open"))
+                    if (ImGui::BeginMenu("Open"))
                     {
-                        if (FileSelectDialog() != -1) // Open a file open dialog
+                        if (ImGui::MenuItem("Skill"))
                         {
-                            LoadAttackSkill();        // Loads the current file into the atkskill struct
-                            cout << "Imported attack skill " << filepath << "\n";
-                            AtkSkillState = 1;        // Causes a message to appear on the status bar
-                            AtkSkillWindow = true;    // Opens the Attack Skill Editor window
+                            if (FileSelectDialog() != -1) // Open a file open dialog
+                            {
+                                LoadAttackSkill();        // Loads the current file into the atkskill struct
+                                cout << "Imported attack skill " << filepath << "\n";
+                                AtkSkillState = 1;        // Causes a message to appear on the status bar
+                                AtkSkillWindow = true;    // Opens the Attack Skill Editor window
+                            }
+                            else
+                            {
+                                cout << "File selection canceled.\n";
+                                ErrorCode = 1;
+                            }
                         }
-                        else
+                        if (ImGui::MenuItem("Install Skill Pack"))
                         {
-                            cout << "File selection canceled.\n";
-                            ErrorCode = 1;
+                            if (SUCCEEDED(MultiselectInvoke())) // Open a multiple file open dialog
+                            {
+                                InstallSkillPack();
+                                for (int i = 0; i < MultiSelectCount; i++)
+                                {
+                                    cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                }
+                            }
+                            else
+                            {
+                                cout << "File selection canceled.\n";
+                                ErrorCode = 1;
+                            }
                         }
+                        ImGui::EndMenu();
                     }
                     if (ImGui::MenuItem("Save"))
                     {
@@ -170,28 +190,13 @@ int CreateUI() {
                 }
                 if (ImGui::BeginMenu("Edit"))
                 {
-                    filesystem::path gsdatapath{ (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\gsdata_en.dat") };
                     if (ImGui::MenuItem("Load GSDATA"))
                     {
-                        if (filesystem::exists(gsdatapath)) // Check if GSData exists
-                        {
-                            LoadGSDATA();
-                        }
-                        else
-                        {
-                            cout << "Invalid Phantom Dust folder.\n";
-                        }
+                        LoadGSDATA();
                     }
                     if (ImGui::MenuItem("Save GSDATA"))
                     {
-                        if (filesystem::exists(gsdatapath)) // Check if GSData exists
-                        {
-                            SaveGSDATA();
-                        }
-                        else
-                        {
-                            cout << "Invalid Phantom Dust folder.\n";
-                        }
+                        SaveGSDATA();
                     }
                     ImGui::EndMenu();
                 }

@@ -87,3 +87,11 @@ struct GSDataHeader
     int SkillLimiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
     char dummy[136];
 };
+
+typedef struct SkillPackHeaderV1
+{
+    char Name[32];
+    short FormatVersion;
+    short SkillCount;
+    char pad[12];
+};

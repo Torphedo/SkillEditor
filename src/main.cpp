@@ -75,17 +75,61 @@ void SaveSkillPack()
     SkillPackWindow = false;
 }
 
-void LoadGSDATA()
+void InstallSkillPack()
 {
-    char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\gsdata_en.dat").c_str());
+    if (LoadGSDATA() == 0)
+    {
+        int* Filesize;
+        Filesize = new int[MultiSelectCount];
+        fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
+                               // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
+        int BlobSize = 0;
+        for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
+        {
+            fstream SkillPackIn;
+            SkillPackHeaderV1 header;
+            SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
+            SkillPackIn.read((char*)&header, sizeof(header));
+            Filesize[n] = std::filesystem::file_size(multiselectpath[n]);
+
+            for (int n = 0; n < header.SkillCount; n++)
+            {
+                atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
+                SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
+                skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+            }
+        }
+        for (int n = 0; n < MultiSelectCount; n++)
+        {
+            BlobSize += Filesize[n];
+        }
+        SkillPackBlobData = new char[BlobSize];
+        for (int n = 0; n < MultiSelectCount; n++)
+        {
+            SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
+            SkillPackBlob.read(SkillPackBlobData, BlobSize);
+        }
+        SkillPackBlob.close();
+
+        uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
+        gsdataheader.VersionNum = (int) hash;
+        cout << hash << "\n";
+
+        SaveGSDATA();
+    }
+}
+
+int LoadGSDATA()
+{
+    filesystem::path gsdatapath{ (PhantomDustDir + (string)"\\Assets\\Data\\gstorage\\gsdata_en.dat") };
+    if (!filesystem::exists(gsdatapath))
+    {
+        cout << "Invalid Phantom Dust folder.\n";
+        return 1; // Failure
+    }
 
     GSDataStream.open(gsdatapath, ios::in | ios::binary); // Open file
     GSDataStream.read((char*)&gsdataheader, (sizeof(gsdataheader))); // Read bytes into gsdataheader struct
-
-    char test[] = "test";
-    uint32_t hash = crc32buf(test, (IM_ARRAYSIZE(test) - 1));
-    cout << hash << "\n";
 
     GSDataStream.read((char*)skillarray, (sizeof(skillarray)));
 
@@ -95,12 +139,17 @@ void LoadGSDATA()
     GSDataStream.read((char*)gsdatamain, (datasize * 4)); // Multiplied by 4 because each int is 4 bytes
 
     GSDataStream.close();
+    return 0; // Success
 }
 
-void SaveGSDATA()
+int SaveGSDATA()
 {
-    char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\data.bin").c_str());
+    filesystem::path gsdatapath{ (PhantomDustDir + (string)"\\Assets\\Data\\gstorage\\gsdata_en.dat") };
+    if (!filesystem::exists(gsdatapath))
+    {
+        cout << "Invalid Phantom Dust folder.\n";
+        return 1; // Failure
+    }
     ofstream GSDataOut(gsdatapath, ios::binary); // Creates a new ofstream variable, using
                                                  // the name of the file that was opened.
 
@@ -110,7 +159,7 @@ void SaveGSDATA()
 
     GSDataOut.write((char*)gsdatamain, (gsdataheader.Filesize - 108304));
     GSDataOut.close();
-    return;
+    return 0; // Success
 }
 
 // ===== Custom ImGui Functions / Wrappers =====

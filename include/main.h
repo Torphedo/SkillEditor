@@ -28,6 +28,7 @@ fstream GSDataStream; // fstream for gsdata
 GSDataHeader gsdataheader; // First 160 bytes of gsdata
 atkskill skillarray[751];  // Array of 751 skill data blocks
 int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
+char* SkillPackBlobData;
 
 // ===== User Input Variables =====
 
@@ -58,8 +59,9 @@ string PWSTR_to_string(PWSTR ws) {
 void LoadAttackSkill();
 void SaveAtkSkill();
 void SaveSkillPack();
-void LoadGSDATA();
-void SaveGSDATA();
+void InstallSkillPack();
+int LoadGSDATA();
+int SaveGSDATA();
 
 // ===== Custom ImGui Functions / Wrappers =====
 
@@ -117,7 +119,7 @@ HRESULT MultiselectInvoke()
     IFileOpenDialog* pfd;
     
     // CoCreate the dialog object.
-    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+    hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
     
     if (SUCCEEDED(hr))
     {
