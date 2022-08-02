@@ -170,7 +170,7 @@ int CreateUI() {
                 }
                 if (ImGui::BeginMenu("Edit"))
                 {
-                    filesystem::path gsdatapath{ (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.dat") };
+                    filesystem::path gsdatapath{ (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\gsdata_en.dat") };
                     if (ImGui::MenuItem("Load GSDATA"))
                     {
                         if (filesystem::exists(gsdatapath)) // Check if GSData exists
@@ -322,10 +322,7 @@ int CreateUI() {
         if (OptionsWindow)
         {
             ImGui::Begin("Settings");
-            char temp_char[275];
-            strcpy_s(temp_char, PhantomDustDir.c_str());
-            ImGui::InputText("Phantom Dust Game Folder", temp_char, IM_ARRAYSIZE(temp_char));
-            PhantomDustDir = temp_char;
+            ImGui::InputText("Phantom Dust Game Folder", PhantomDustDir, IM_ARRAYSIZE(PhantomDustDir));
             Tooltip("The folder containing PDUWP.exe. You must have a\n dumped copy of the game files to use this option.");
 
             ImGui::End();
@@ -334,9 +331,7 @@ int CreateUI() {
         if (SkillPackWindow)
         {
             ImGui::Begin("Enter a name for your skill pack: ");
-            strcpy_s(packname, SkillPackName.c_str());
             ImGui::InputText("test", packname, IM_ARRAYSIZE(packname));
-            SkillPackName = packname;
 
             if (ImGui::Button("Save")) {
                 if (SUCCEEDED(FileSaveDialog()))

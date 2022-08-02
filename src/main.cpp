@@ -78,14 +78,14 @@ void SaveSkillPack()
 void LoadGSDATA()
 {
     char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\gsdata_en.dat").c_str());
+    strcpy_s(gsdatapath, (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\gsdata_en.dat").c_str());
 
     GSDataStream.open(gsdatapath, ios::in | ios::binary); // Open file
     GSDataStream.read((char*)&gsdataheader, (sizeof(gsdataheader))); // Read bytes into gsdataheader struct
 
     char test[] = "test";
     uint32_t hash = crc32buf(test, (IM_ARRAYSIZE(test) - 1));
-    // cout << hash << "\n";
+    cout << hash << "\n";
 
     GSDataStream.read((char*)skillarray, (sizeof(skillarray)));
 
@@ -100,7 +100,7 @@ void LoadGSDATA()
 void SaveGSDATA()
 {
     char gsdatapath[275];
-    strcpy_s(gsdatapath, (PhantomDustDir + "\\Assets\\Data\\gstorage\\data.bin").c_str());
+    strcpy_s(gsdatapath, (PhantomDustDir + (string) "\\Assets\\Data\\gstorage\\data.bin").c_str());
     ofstream GSDataOut(gsdatapath, ios::binary); // Creates a new ofstream variable, using
                                                  // the name of the file that was opened.
 

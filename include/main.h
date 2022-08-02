@@ -12,30 +12,35 @@ extern "C" {
 
 using namespace std;
 
+// ===== File Dialog Variables =====
+
+const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" };
 HRESULT hr;
-
-string PhantomDustDir;
-string SkillPackName;
-char packname[32];
 string filepath;
-
-string* multiselectpath;
-
 char* filepathptr;
-
+string* multiselectpath;
 DWORD MultiSelectCount;
 
-fstream AtkSkillFile;
+// ===== File I/O Variables & Shared Data =====
 
-fstream GSDataStream;
-GSDataHeader gsdataheader;
-atkskill skillarray[751];
-int* gsdatamain;
+fstream AtkSkillFile; // fstream for Attack Skill files
+fstream GSDataStream; // fstream for gsdata
+GSDataHeader gsdataheader; // First 160 bytes of gsdata
+atkskill skillarray[751];  // Array of 751 skill data blocks
+int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
 
+// ===== User Input Variables =====
+
+char packname[32];
+char PhantomDustDir[275];
+
+// ===== UI Variables =====
 bool OptionsWindow = false;
 bool SkillPackWindow = false;
 
-const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" }; // For file dialogs
+
+// ========== Custom Functions ==========
+
 
 string PWSTR_to_string(PWSTR ws) {
     string result;
