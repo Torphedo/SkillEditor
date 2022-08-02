@@ -10,7 +10,9 @@ using namespace std;
 
 int main()
 {
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     CreateUI(); // Main UI loop, see setupUI.h.
+    CoUninitialize();
 }
 
 
@@ -41,15 +43,33 @@ void SaveSkillPack()
 {
     ofstream SkillPackOut(filepathptr, ios::binary);
     short FormatVersion = 1;
-    short SkillCount = 1;
+    short SkillCount = MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
-    SkillPackOut.write((char*)&packname, sizeof(packname));
-    SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion));
-    SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount));
+    SkillPackOut.write((char*)&packname, sizeof(packname)); // 32 characters for the name
+    SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
+    SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
 
-    SkillPackOut.write((char*)&AtkSkill, 144);
+    for (DWORD i = 0; i < MultiSelectCount; i++)
+    {
+        int size = std::filesystem::file_size(multiselectpath[i]);
+        if (size == 144) // Only allow skill data to be written if the skill file is the correct size
+        {
+            fstream SkillStream; // fstream for the skill files selected by the user
+            char skilldata[144]; // 144 byte buffer to read / write skill data from
+            SkillStream.open(multiselectpath[i], ios::in | ios::binary);
+            SkillStream.read((char*)&skilldata, 144); // Read skill data from the file to our skilldata buffer
+            cout << "Writing from " << multiselectpath[i] << "...\n";
+            SkillPackOut.write((char*)&skilldata, 144); // Writing to skill pack
+            SkillStream.close();
+        }
+        else
+        {
+            cout << "Invalid skill filesize. Write skipped.";
+        }
+    }
+
     SkillPackOut.close();
     cout << "Saved skill pack to " << filepath << "\n";
     SkillPackWindow = false;

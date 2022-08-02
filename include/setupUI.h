@@ -105,7 +105,7 @@ int CreateUI() {
                 {
                     if (ImGui::MenuItem("New"))
                     {
-                        if (MultiselectInvoke() != -1)
+                        if (SUCCEEDED(MultiselectInvoke()))
                         {
                             SkillPackWindow = true;
                         }
@@ -339,7 +339,10 @@ int CreateUI() {
             SkillPackName = packname;
 
             if (ImGui::Button("Save")) {
-                SaveSkillPack();
+                if (SUCCEEDED(FileSaveDialog()))
+                {
+                    SaveSkillPack();
+                }
             }
 
             ImGui::End();
