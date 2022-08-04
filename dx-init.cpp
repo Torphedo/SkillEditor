@@ -1,5 +1,9 @@
 #include <dx-init.h>
 
+LPDIRECT3D9              g_pD3D = NULL;
+LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
+D3DPRESENT_PARAMETERS    g_d3dpp = {};
+
 bool CreateDeviceD3D(HWND hWnd)
 {
     if ((g_pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL)

@@ -6,9 +6,9 @@
 #include <tchar.h>
 
 // Data
-static LPDIRECT3D9              g_pD3D = NULL;
-static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
-static D3DPRESENT_PARAMETERS    g_d3dpp = {};
+extern LPDIRECT3D9              g_pD3D;
+extern LPDIRECT3DDEVICE9        g_pd3dDevice;
+extern D3DPRESENT_PARAMETERS    g_d3dpp;
 
 // Helper functions
 
