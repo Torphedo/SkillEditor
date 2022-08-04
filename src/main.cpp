@@ -46,7 +46,6 @@ char PhantomDustDir[275];
 
 int main()
 {
-    pid = GetProcessIDByName(L"PDUWP.exe");
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     CreateUI(); // Main UI loop, see UI.h.
     CoUninitialize();
@@ -228,6 +227,7 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
 
 void AttachToProcess()
 {
+    pid = GetProcessIDByName(L"PDUWP.exe");
     EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!EsperHandle)
     {
@@ -274,21 +274,12 @@ int SaveGSDataToRAM()
     return 0; // Success
 }
 
-bool cmp(const char* str1, const char* str2) {
-    if (strcmp(str1, str2) < 0) return true;
-    else return false;
-}
-
 void InstallSkillPackToRAM()
 {
     if (LoadGSDataFromRAM() == 0)
     {
-        vector<string> strArray = (*multiselectpath);
-        std::sort(*multiselectpath, *(multiselectpath + MultiSelectCount - 1), cmp);
-        for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
-        {
-            cout << multiselectpath[n];
-        }
+        std::vector<string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
+        std::sort(strArray.begin(), strArray.end());
         int* Filesize;
         Filesize = new int[MultiSelectCount];
         fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
