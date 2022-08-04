@@ -157,6 +157,7 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_dx9.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="UI.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>

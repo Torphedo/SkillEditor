@@ -1,5 +1,8 @@
 // File: 'DroidSans.ttf' (190044 bytes)
 // Exported using binary_to_compressed_c.cpp
+#pragma once
+
+
 static const char DroidSans_compressed_data_base85[167935+1] =
     "7])#######i*ol@'/###I),##d-LhLYqH##$Z;99=$$$$?X[V6X?'o/(RdL<lgo<W+guH2biSxXdGxF>-DNJHFQRrm(tgS/7HJf=5`WZ_h_@4(B>uu#&]n42Wj7/SZ->>#e2M>6aNV=B"
     "HxM0hr.GY>Md68%f1XGH9N7*7-&1GDVci21_Lk7DPaaN.2xv4AZ&-p/e_(*HB<G##<l+G-Vq>Z%+1HkEYsWLR;p%##P^>>#b&#:C]Z$h'u*)##0i(##^TDUCF19sc0%i9;1=o92f'TqL"
