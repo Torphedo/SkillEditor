@@ -94,4 +94,4 @@ typedef struct SkillPackHeaderV1
     short FormatVersion;
     short SkillCount;
     char pad[12];
-};
+}packheader1;

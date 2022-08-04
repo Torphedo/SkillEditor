@@ -136,7 +136,7 @@ int CreateUI() {
                             if (SUCCEEDED(MultiselectInvoke())) // Open a multiple file open dialog
                             {
                                 InstallSkillPack();
-                                for (int i = 0; i < MultiSelectCount; i++)
+                                for (unsigned int i = 0; i < MultiSelectCount; i++)
                                 {
                                     cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }

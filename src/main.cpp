@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 #include <main.h>
 #include <setupUI.h>
@@ -10,7 +11,9 @@ using namespace std;
 
 int main()
 {
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    std::thread CoInitThread(COM_Init); // Multithreaded CoInitialize so that it doesn't slow down the UI init.
+    CoInitThread.join();
+
     CreateUI(); // Main UI loop, see setupUI.h.
     CoUninitialize();
 }
@@ -43,7 +46,7 @@ void SaveSkillPack()
 {
     ofstream SkillPackOut(filepathptr, ios::binary);
     short FormatVersion = 1;
-    short SkillCount = MultiSelectCount; // Skill count == # of files selected
+    short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
     SkillPackOut.write((char*)&packname, sizeof(packname)); // 32 characters for the name
@@ -53,7 +56,7 @@ void SaveSkillPack()
 
     for (DWORD i = 0; i < MultiSelectCount; i++)
     {
-        int size = std::filesystem::file_size(multiselectpath[i]);
+        int size = (int) std::filesystem::file_size(multiselectpath[i]);
         if (size == 144) // Only allow skill data to be written if the skill file is the correct size
         {
             fstream SkillStream; // fstream for the skill files selected by the user
@@ -84,27 +87,27 @@ void InstallSkillPack()
         fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
                                // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
         int BlobSize = 0;
-        for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
+        for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
             fstream SkillPackIn;
             SkillPackHeaderV1 header;
             SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
             SkillPackIn.read((char*)&header, sizeof(header));
-            Filesize[n] = std::filesystem::file_size(multiselectpath[n]);
+            Filesize[n] = (int) std::filesystem::file_size(multiselectpath[n]);
 
-            for (int n = 0; n < header.SkillCount; n++)
+            for (int i = 0; i < header.SkillCount; i++)
             {
                 atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
                 SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
                 skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
             }
         }
-        for (int n = 0; n < MultiSelectCount; n++)
+        for (unsigned int n = 0; n < MultiSelectCount; n++)
         {
             BlobSize += Filesize[n];
         }
         SkillPackBlobData = new char[BlobSize];
-        for (int n = 0; n < MultiSelectCount; n++)
+        for (unsigned int n = 0; n < MultiSelectCount; n++)
         {
             SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
             SkillPackBlob.read(SkillPackBlobData, BlobSize);

@@ -54,6 +54,11 @@ string PWSTR_to_string(PWSTR ws) {
     return result;
 }
 
+void COM_Init()
+{
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+}
+
 // ===== File I/O =====
 
 void LoadAttackSkill();
