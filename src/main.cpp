@@ -6,16 +6,17 @@
 #include <thread>
 
 #include <main.h>
-#include <setupUI.h>
+#include <UI.h>
 using namespace std;
 
 int main()
 {
     std::thread CoInitThread(COM_Init); // Multithreaded CoInitialize so that it doesn't slow down the UI init.
-    CoInitThread.join();
 
     CreateUI(); // Main UI loop, see setupUI.h.
     CoUninitialize();
+    CoInitThread.join();
+    return 0;
 }
 
 

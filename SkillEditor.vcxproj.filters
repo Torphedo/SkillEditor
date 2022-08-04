@@ -60,7 +60,7 @@
     <ClInclude Include="include\dx-init.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\setupUI.h">
+    <ClInclude Include="include\UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\font.h">
