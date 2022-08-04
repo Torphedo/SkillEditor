@@ -2,6 +2,12 @@
 #include <main.h>
 #include <UI.h>
 
+short ErrorCode;
+bool OptionsWindow = false;
+bool SkillPackWindow = false;
+short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
+bool AtkSkillWindow = false;
+
 int CreateUI() {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -324,6 +330,7 @@ int CreateUI() {
                 if (SUCCEEDED(FileSaveDialog()))
                 {
                     SaveSkillPack();
+                    SkillPackWindow = false;
                 }
             }
 

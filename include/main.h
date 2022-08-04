@@ -14,55 +14,27 @@
 #include <imgui_internal.h>
 #include <structs.h>
 
-
-extern "C" {
-#include <crc32/crc_32.c>
-}
-
 using namespace std;
 
 // ===== File Dialog Variables =====
 
-const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" };
-HRESULT hr;
-string filepath;
-char* filepathptr;
-string* multiselectpath;
-DWORD MultiSelectCount;
+extern string filepath;
+extern string* multiselectpath;
+extern DWORD MultiSelectCount;
 
 // ===== File I/O Variables & Shared Data =====
 
-fstream AtkSkillFile; // fstream for Attack Skill files
-AttackSkill AtkSkill; // Attack skill struct
-fstream GSDataStream; // fstream for gsdata
-GSDataHeader gsdataheader; // First 160 bytes of gsdata
-atkskill skillarray[751];  // Array of 751 skill data blocks
-int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
-char* SkillPackBlobData;
+extern AttackSkill AtkSkill; // Attack skill struct
 
 // ===== User Input Variables =====
 
-char packname[32];
-char PhantomDustDir[275];
-
-// ===== UI Variables =====
-bool OptionsWindow = false;
-bool SkillPackWindow = false;
-short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
-bool AtkSkillWindow = false;
-
-
+extern char packname[32];
+extern char PhantomDustDir[275];
 
 // ========== Custom Functions ==========
 
 
-string PWSTR_to_string(PWSTR ws) {
-    string result;
-    result.reserve(wcslen(ws));
-    for (; *ws; ws++)
-        result += (char)*ws;
-    return result;
-}
+string PWSTR_to_string(PWSTR ws);
 
 // ===== File I/O =====
 

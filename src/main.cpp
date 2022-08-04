@@ -1,16 +1,58 @@
 
 #include <main.h>
 #include <UI.h>
+
+extern "C" {
+#include <crc32/crc_32.c>
+}
+
 using namespace std;
+
+// ===== File Dialog Variables =====
+
+const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" };
+HRESULT hr;
+
+char* filepathptr;
+string filepath;
+
+string* multiselectpath;
+DWORD MultiSelectCount = 0;
+
+// ===== File I/O Variables & Shared Data =====
+
+fstream AtkSkillFile; // fstream for Attack Skill files
+
+fstream GSDataStream; // fstream for gsdata
+GSDataHeader gsdataheader; // First 160 bytes of gsdata
+atkskill skillarray[751];  // Array of 751 skill data blocks
+AttackSkill AtkSkill;
+int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
+
+char* SkillPackBlobData;
+
+// ===== User Input Variables =====
+
+char packname[32];
+char PhantomDustDir[275];
+
 
 int main()
 {
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    CreateUI(); // Main UI loop, see setupUI.h.
+    CreateUI(); // Main UI loop, see UI.h.
     CoUninitialize();
     return 0;
 }
 
+
+string PWSTR_to_string(PWSTR ws) {
+    string result;
+    result.reserve(wcslen(ws));
+    for (; *ws; ws++)
+        result += (char)*ws;
+    return result;
+}
 
 // ===== File I/O =====
 
@@ -67,8 +109,7 @@ void SaveSkillPack()
     }
 
     SkillPackOut.close();
-    cout << "Saved skill pack to " << filepath << "\n";
-    SkillPackWindow = false;
+    cout << "Saved skill pack to " << filepathptr << "\n";
 }
 
 void InstallSkillPack()

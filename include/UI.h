@@ -9,7 +9,4 @@
 #include <dx-init.h>
 #include <font.h>
 
-int Idx = 0;
-short ErrorCode;
-
 int CreateUI();
