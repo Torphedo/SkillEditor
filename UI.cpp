@@ -185,6 +185,10 @@ int CreateUI() {
                     {
                         SaveGSDATA();
                     }
+                    if (ImGui::MenuItem("Attach to Phantom Dust"))
+                    {
+                        AttachToProcess();
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::Button("Options")) {
@@ -195,6 +199,18 @@ int CreateUI() {
                     if (ImGui::MenuItem("Attack Skill Editor"))
                     {
                         AtkSkillWindow = !AtkSkillWindow; // Toggle Attack Skill Editor window
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Game"))
+                {
+                    if (ImGui::MenuItem("Freeze Phantom Dust"))
+                    {
+                        PauseGame();
+                    }
+                    if (ImGui::MenuItem("Unfreeze Phantom Dust"))
+                    {
+                        UnpauseGame();
                     }
                     ImGui::EndMenu();
                 }

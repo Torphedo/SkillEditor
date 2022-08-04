@@ -11,6 +11,8 @@
 #include <tchar.h>
 #include <filesystem>
 
+#include <tlhelp32.h>
+
 #include <imgui_internal.h>
 #include <structs.h>
 
@@ -44,6 +46,13 @@ void SaveSkillPack();
 void InstallSkillPack();
 int LoadGSDATA();
 int SaveGSDATA();
+
+// ===== Debugging the PDUWP Process =====
+
+DWORD GetProcessIDByName(LPCTSTR ProcessName);
+void AttachToProcess();
+void PauseGame();
+void UnpauseGame();
 
 // ===== Custom ImGui Functions / Wrappers =====
 

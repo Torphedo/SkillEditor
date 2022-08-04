@@ -31,6 +31,10 @@ int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load f
 
 char* SkillPackBlobData;
 
+// ===== Process Editing Variables =====
+
+DWORD pid;
+
 // ===== User Input Variables =====
 
 char packname[32];
@@ -39,6 +43,7 @@ char PhantomDustDir[275];
 
 int main()
 {
+    pid = GetProcessIDByName(L"PDUWP.exe");
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     CreateUI(); // Main UI loop, see UI.h.
     CoUninitialize();
@@ -197,6 +202,55 @@ int SaveGSDATA()
     GSDataOut.write((char*)gsdatamain, (gsdataheader.Filesize - 108304));
     GSDataOut.close();
     return 0; // Success
+}
+
+// ===== Process Editing Functions =====
+
+DWORD GetProcessIDByName(LPCTSTR ProcessName)
+{
+    PROCESSENTRY32 pt;
+    HANDLE hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    pt.dwSize = sizeof(PROCESSENTRY32);
+    if (Process32First(hsnap, &pt)) { // must call this first
+        do {
+            if (!lstrcmpi(pt.szExeFile, ProcessName)) {
+                CloseHandle(hsnap);
+                return pt.th32ProcessID;
+            }
+        } while (Process32Next(hsnap, &pt));
+    }
+    CloseHandle(hsnap); // close handle on failure
+    return 0;
+}
+
+void AttachToProcess()
+{
+    HANDLE process = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (!process)
+    {
+        cout << "Failed to attach to process.\n";
+        return;
+    }
+
+    uintptr_t baseAddress = 0x7FF6B9E29250;
+    int data = 0;
+    SIZE_T BytesReadCount;
+    if (process != 0)
+    {
+        ReadProcessMemory(process, (LPVOID)baseAddress, &data, sizeof(data), &BytesReadCount);
+    }
+    cout << "Game version: " << data << "\n";
+    return;
+ }
+
+void PauseGame()
+{
+    DebugActiveProcess(pid);
+}
+
+void UnpauseGame()
+{
+    DebugActiveProcessStop(pid);
 }
 
 // ===== Custom ImGui Functions / Wrappers =====
