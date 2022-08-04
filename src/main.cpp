@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <vector>
 
 #include <main.h>
 #include <UI.h>
@@ -34,6 +36,7 @@ char* SkillPackBlobData;
 // ===== Process Editing Variables =====
 
 DWORD pid;
+HANDLE EsperHandle;
 
 // ===== User Input Variables =====
 
@@ -225,8 +228,8 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
 
 void AttachToProcess()
 {
-    HANDLE process = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-    if (!process)
+    EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (!EsperHandle)
     {
         cout << "Failed to attach to process.\n";
         return;
@@ -235,13 +238,96 @@ void AttachToProcess()
     uintptr_t baseAddress = 0x7FF6B9E29250;
     int data = 0;
     SIZE_T BytesReadCount;
-    if (process != 0)
+    if (EsperHandle != 0)
     {
-        ReadProcessMemory(process, (LPVOID)baseAddress, &data, sizeof(data), &BytesReadCount);
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &data, sizeof(data), &BytesReadCount);
     }
     cout << "Game version: " << data << "\n";
     return;
  }
+
+int LoadGSDataFromRAM()
+{
+    uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
+    SIZE_T BytesReadCount;
+    // 7FF6B9DF52E0
+    if (EsperHandle != 0)
+    {
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), &BytesReadCount);
+        baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), &BytesReadCount);
+    }
+    return 0; // Success
+}
+
+int SaveGSDataToRAM()
+{
+    uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
+    SIZE_T BytesReadCount;
+    // 7FF6B9DF52E0
+    if (EsperHandle != 0)
+    {
+        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), &BytesReadCount);
+        baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
+        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), &BytesReadCount);
+    }
+    return 0; // Success
+}
+
+bool cmp(const char* str1, const char* str2) {
+    if (strcmp(str1, str2) < 0) return true;
+    else return false;
+}
+
+void InstallSkillPackToRAM()
+{
+    if (LoadGSDataFromRAM() == 0)
+    {
+        vector<string> strArray = (*multiselectpath);
+        std::sort(*multiselectpath, *(multiselectpath + MultiSelectCount - 1), cmp);
+        for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
+        {
+            cout << multiselectpath[n];
+        }
+        int* Filesize;
+        Filesize = new int[MultiSelectCount];
+        fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
+                               // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
+        int BlobSize = 0;
+        for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
+        {
+            fstream SkillPackIn;
+            SkillPackHeaderV1 header;
+            SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
+            SkillPackIn.read((char*)&header, sizeof(header));
+            Filesize[n] = (int)std::filesystem::file_size(multiselectpath[n]);
+
+            for (int i = 0; i < header.SkillCount; i++)
+            {
+                atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
+                SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
+                skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+            }
+        }
+        for (unsigned int n = 0; n < MultiSelectCount; n++)
+        {
+            BlobSize += Filesize[n];
+        }
+        SkillPackBlobData = new char[BlobSize];
+        for (unsigned int n = 0; n < MultiSelectCount; n++)
+        {
+            SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
+            SkillPackBlob.read(SkillPackBlobData, BlobSize);
+        }
+        SkillPackBlob.close();
+
+        uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
+        gsdataheader.VersionNum = (int)hash;
+        cout << hash << "\n";
+
+        SaveGSDataToRAM();
+    }
+}
 
 void PauseGame()
 {

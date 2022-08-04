@@ -51,6 +51,9 @@ int SaveGSDATA();
 
 DWORD GetProcessIDByName(LPCTSTR ProcessName);
 void AttachToProcess();
+int LoadGSDataFromRAM();
+int SaveGSDataToRAM();
+void InstallSkillPackToRAM();
 void PauseGame();
 void UnpauseGame();
 

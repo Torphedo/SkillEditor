@@ -185,10 +185,6 @@ int CreateUI() {
                     {
                         SaveGSDATA();
                     }
-                    if (ImGui::MenuItem("Attach to Phantom Dust"))
-                    {
-                        AttachToProcess();
-                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::Button("Options")) {
@@ -211,6 +207,28 @@ int CreateUI() {
                     if (ImGui::MenuItem("Unfreeze Phantom Dust"))
                     {
                         UnpauseGame();
+                    }
+                    if (ImGui::MenuItem("Read GSData"))
+                    {
+                        AttachToProcess();
+                        LoadGSDataFromRAM();
+                    }
+                    if (ImGui::MenuItem("Install Skill Pack"))
+                    {
+                        AttachToProcess();
+                        if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                        {
+                            InstallSkillPackToRAM();
+                            for (unsigned int i = 0; i < MultiSelectCount; i++)
+                            {
+                                cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                            }
+                        }
+                        else
+                        {
+                            cout << "File selection canceled.\n";
+                            ErrorCode = 1;
+                        }
                     }
                     ImGui::EndMenu();
                 }
@@ -340,7 +358,7 @@ int CreateUI() {
         if (SkillPackWindow)
         {
             ImGui::Begin("Enter a name for your skill pack: ");
-            ImGui::InputText("test", packname, IM_ARRAYSIZE(packname));
+            ImGui::InputText("Skill Pack Name", packname, IM_ARRAYSIZE(packname));
 
             if (ImGui::Button("Save")) {
                 if (SUCCEEDED(FileSaveDialog()))
