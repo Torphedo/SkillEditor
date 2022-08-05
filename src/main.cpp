@@ -267,8 +267,6 @@ void InstallSkillPackToRAM()
         std::vector<string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
 
-        int* Filesize;
-        Filesize = new int[MultiSelectCount];
         int BlobSize = 0;
         for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
@@ -276,7 +274,7 @@ void InstallSkillPackToRAM()
             SkillPackHeaderV1 header;
             SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
             SkillPackIn.read((char*)&header, sizeof(header));
-            Filesize[n] = (int)std::filesystem::file_size(multiselectpath[n]);
+            BlobSize += (int)std::filesystem::file_size(multiselectpath[n]);
 
             for (int i = 0; i < header.SkillCount; i++)
             {
@@ -284,10 +282,6 @@ void InstallSkillPackToRAM()
                 SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
                 skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
             }
-        }
-        for (unsigned int n = 0; n < MultiSelectCount; n++)
-        {
-            BlobSize += Filesize[n];
         }
         char* SkillPackBlobData;
         SkillPackBlobData = new char[BlobSize];
@@ -304,7 +298,6 @@ void InstallSkillPackToRAM()
         gsdataheader.VersionNum = (int)hash;
         cout << "New version number: " << hash << endl;
 
-        delete[] Filesize;
         delete[] SkillPackBlobData;
 
         SaveGSDataToRAM();
