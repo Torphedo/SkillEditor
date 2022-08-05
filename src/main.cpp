@@ -38,6 +38,7 @@ int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load f
 
 DWORD pid;
 HANDLE EsperHandle;
+uintptr_t baseAddress;
 
 // ===== User Input Variables =====
 
@@ -238,6 +239,40 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
     return 0;
 }
 
+char* GetAddressOfData(DWORD pid, const char* data, size_t len)
+{
+    if (EsperHandle)
+    {
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+
+        MEMORY_BASIC_INFORMATION info;
+        std::vector<char> chunk;
+        char* p = 0;
+        while (p < si.lpMaximumApplicationAddress)
+        {
+            if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
+            {
+                p = (char*)0x7FF6198D0000; // First address in 0x7FF000000000 area that isn't invalid
+                chunk.resize(0x603000);    // This range should cover all possible addresses for gsdata. The next chunk is invalid.
+                SIZE_T bytesRead;
+                if (ReadProcessMemory(EsperHandle, p, &chunk[0], 0x603000, &bytesRead))
+                {
+                    for (size_t i = 0; i < (bytesRead - len); ++i)
+                    {
+                        if (memcmp(data, &chunk[i], len) == 0)
+                        {
+                            return (char*)p + i;
+                        }
+                    }
+                }
+                p += info.RegionSize;
+            }
+        }
+    }
+    return 0;
+}
+
 void AttachToProcess()
 {
     pid = GetProcessIDByName(L"PDUWP.exe");
@@ -246,33 +281,48 @@ void AttachToProcess()
     {
         cout << "Failed to attach to process.\n";
     }
+    char gsdata[24] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00,0x8C,0x00,0x00,0x00,0x76,0x01,0x00,0x00 };
+    baseAddress = (uintptr_t) GetAddressOfData(pid, gsdata, 24);
+
     return;
  }
 
 int LoadGSDataFromRAM()
 {
-    uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
     if (EsperHandle != 0)
     {
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        cout << GetLastError() << endl;
-        baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
+        if (GetLastError() != 1400 && GetLastError() != 0)
+        {
+            cout << "Process Read Error Code: " << GetLastError() << endl;
+        }
+        baseAddress += 160; // Address where the skills begin.
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        cout << GetLastError() << endl;
+        if (GetLastError() != 1400 && GetLastError() != 0)
+        {
+            cout << "Process Read Error Code: " << GetLastError() << endl;
+        }
+        baseAddress -= 160;
     }
     return 0;
 }
 
 int SaveGSDataToRAM()
 {
-    uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
     if (EsperHandle != 0)
     {
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        cout << GetLastError() << endl;
-        baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
+        if (GetLastError() != 1400 && GetLastError() != 0)
+        {
+            cout << "Process Write Error Code: " << GetLastError() << endl;
+        }
+        baseAddress += 160; // Address where the skills begin.
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        cout << GetLastError() << endl;
+        if (GetLastError() != 1400 && GetLastError() != 0)
+        {
+            cout << "Process Write Error Code: " << GetLastError() << endl;
+        }
+        baseAddress -= 160;
     }
     return 0;
 }
