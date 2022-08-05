@@ -45,9 +45,9 @@ string PWSTR_to_string(PWSTR ws);
 void LoadAttackSkill();
 void SaveAtkSkill();
 void SaveSkillPack();
-void InstallSkillPack();
-int LoadGSDATA();
-int SaveGSDATA();
+// void InstallSkillPack();
+// int LoadGSDATA();
+// int SaveGSDATA();
 
 // ===== Debugging the PDUWP Process =====
 

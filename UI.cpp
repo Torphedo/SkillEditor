@@ -141,7 +141,7 @@ int CreateUI() {
                             {
                                 if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                                 {
-                                    InstallSkillPack();
+                                    // InstallSkillPack();
                                     for (unsigned int i = 0; i < MultiSelectCount; i++)
                                     {
                                         cout << "Installed skill pack " << multiselectpath[i] << ".\n";
@@ -201,11 +201,11 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Load GSDATA"))
                         {
-                            LoadGSDATA();
+                            // LoadGSDATA();
                         }
                         if (ImGui::MenuItem("Save GSDATA"))
                         {
-                            SaveGSDATA();
+                            // SaveGSDATA();
                         }
                         ImGui::EndMenu();
                     }
