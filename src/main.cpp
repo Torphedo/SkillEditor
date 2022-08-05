@@ -241,29 +241,25 @@ void AttachToProcess()
 int LoadGSDataFromRAM()
 {
     uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
-    SIZE_T BytesReadCount;
-    // 7FF6B9DF52E0
     if (EsperHandle != 0)
     {
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), &BytesReadCount);
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
         baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), &BytesReadCount);
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
     }
-    return 0; // Success
+    return 0;
 }
 
 int SaveGSDataToRAM()
 {
     uintptr_t baseAddress = 0x7FF6B9DF5240; // Memory address where gsdata starts. Found with HxD.
-    SIZE_T BytesReadCount;
-    // 7FF6B9DF52E0
     if (EsperHandle != 0)
     {
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), &BytesReadCount);
+        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
         baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), &BytesReadCount);
+        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
     }
-    return 0; // Success
+    return 0;
 }
 
 void InstallSkillPackToRAM()
@@ -271,7 +267,8 @@ void InstallSkillPackToRAM()
     if (LoadGSDataFromRAM() == 0)
     {
         std::vector<string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
-        std::sort(strArray.begin(), strArray.end());
+        std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
+
         int* Filesize;
         Filesize = new int[MultiSelectCount];
         fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
