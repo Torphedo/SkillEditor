@@ -89,6 +89,12 @@ void SaveAtkSkill()
     uintptr_t baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
     WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
     cout << "Wrote skill data to memory.\n";
+    uint32_t hash = crc32buf((char*)&AtkSkill, 144);
+    gsdataheader.VersionNum = (int)hash;
+    cout << "New version number: " << hash << endl;
+
+    baseAddress = 0x7FF6B9DF5240;
+    WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
 }
 
 void SaveSkillPack()
@@ -313,11 +319,13 @@ void InstallSkillPackToRAM()
 
 void PauseGame()
 {
+    pid = GetProcessIDByName(L"PDUWP.exe");
     DebugActiveProcess(pid);
 }
 
 void UnpauseGame()
 {
+    pid = GetProcessIDByName(L"PDUWP.exe");
     DebugActiveProcessStop(pid);
 }
 
