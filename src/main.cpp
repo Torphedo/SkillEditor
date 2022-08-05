@@ -14,7 +14,8 @@ bool DebugMode = false;
 
 // ===== File Dialog Variables =====
 
-const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" };
+const COMDLG_FILTERSPEC skillfile[] = { L"Skill File", L"*.skill;" };
+const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
 HRESULT hr;
 
 char* filepathptr;
@@ -350,7 +351,7 @@ short ComboShort(const char* label, const char* const* items, int item_count)
 
 // ===== Windows File Dialogs =====
 
-int WINAPI FileSelectDialog()
+int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC *fileTypes)
 {
     IFileOpenDialog* pFileOpen;
 
@@ -360,7 +361,7 @@ int WINAPI FileSelectDialog()
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
-        hr = pFileOpen->SetFileTypes(ARRAYSIZE(fileTypes), fileTypes);
+        hr = pFileOpen->SetFileTypes(2, fileTypes);
         hr = pFileOpen->Show(NULL);
 
         // Get the file name from the dialog box.
@@ -413,6 +414,7 @@ HRESULT MultiSelectWindow()
         if (SUCCEEDED(hr))
         {
             // Show the Open dialog.
+            hr = pfd->SetDefaultExtension(L".bin");
             hr = pfd->Show(NULL);
 
             if (SUCCEEDED(hr))
@@ -463,7 +465,7 @@ HRESULT MultiSelectWindow()
     return hr;
 }
 
-int WINAPI FileSaveDialog()
+int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC *fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
 
@@ -473,8 +475,8 @@ int WINAPI FileSaveDialog()
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
-        hr = pFileOpen->SetFileTypes(ARRAYSIZE(fileTypes), fileTypes);
-        hr = pFileOpen->SetDefaultExtension(L".skill");
+        hr = pFileOpen->SetFileTypes(IM_ARRAYSIZE(skillpack), fileTypes);
+        hr = pFileOpen->SetDefaultExtension(DefaultExtension);
         hr = pFileOpen->Show(NULL);
 
         // Get the file name from the dialog box.

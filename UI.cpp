@@ -105,7 +105,7 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Skill"))
                         {
-                            if (FileSelectDialog() != -1) // Open a file open dialog
+                            if (FileSelectDialog(skillfile) != -1) // Open a file open dialog
                             {
                                 LoadAttackSkill();        // Loads the current file into the atkskill struct
                                 cout << "Imported attack skill " << filepath << "\n";
@@ -171,7 +171,7 @@ int CreateUI() {
                     if (ImGui::MenuItem("Save As"))
                     {
                         if (AtkSkillState != 0) {
-                            if (FileSaveDialog() != -1) // Open a file save dialog and save to a new file
+                            if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
                             {
                                 SaveAtkSkill();         // Write data.
                                 cout << "Saved attack skill to " << filepath << "\n";
@@ -391,7 +391,7 @@ int CreateUI() {
             ImGui::InputText("Skill Pack Name", packname, IM_ARRAYSIZE(packname));
 
             if (ImGui::Button("Save")) {
-                if (SUCCEEDED(FileSaveDialog()))
+                if (SUCCEEDED(FileSaveDialog(skillpack, L".bin")))
                 {
                     SaveSkillPack();
                     SkillPackWindow = false;

@@ -26,6 +26,9 @@ extern string filepath;
 extern string* multiselectpath;
 extern DWORD MultiSelectCount;
 
+extern const COMDLG_FILTERSPEC skillfile[];
+extern const COMDLG_FILTERSPEC skillpack[];
+
 // ===== File I/O Variables & Shared Data =====
 
 extern AttackSkill AtkSkill; // Attack skill struct
@@ -69,5 +72,5 @@ short ComboShort(const char* label, const char* const* items, int item_count);
 // ===== Windows Explorer Dialogs =====
 
 HRESULT MultiSelectWindow();
-int WINAPI FileSelectDialog();
-int WINAPI FileSaveDialog();
+int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC* fileTypes);
+int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC* fileTypes, LPCWSTR DefaultExtension);
