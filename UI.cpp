@@ -120,9 +120,10 @@ int CreateUI() {
                         }
                         if (ImGui::MenuItem("Install Skill Pack"))
                         {
+                            AttachToProcess();
                             if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                             {
-                                InstallSkillPack();
+                                InstallSkillPackToRAM();
                                 for (unsigned int i = 0; i < MultiSelectCount; i++)
                                 {
                                     cout << "Installed skill pack " << multiselectpath[i] << ".\n";
@@ -132,6 +133,25 @@ int CreateUI() {
                             {
                                 cout << "File selection canceled.\n";
                                 ErrorCode = 1;
+                            }
+                        }
+                        if (DebugMode)
+                        {
+                            if (ImGui::MenuItem("Install Skill Pack to Disk"))
+                            {
+                                if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                                {
+                                    InstallSkillPack();
+                                    for (unsigned int i = 0; i < MultiSelectCount; i++)
+                                    {
+                                        cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "File selection canceled.\n";
+                                    ErrorCode = 1;
+                                }
                             }
                         }
                         ImGui::EndMenu();
@@ -175,20 +195,27 @@ int CreateUI() {
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::BeginMenu("Edit"))
+                if (DebugMode)
                 {
-                    if (ImGui::MenuItem("Load GSDATA"))
+                    if (ImGui::BeginMenu("Edit") && DebugMode)
                     {
-                        LoadGSDATA();
+                        if (ImGui::MenuItem("Load GSDATA"))
+                        {
+                            LoadGSDATA();
+                        }
+                        if (ImGui::MenuItem("Save GSDATA"))
+                        {
+                            SaveGSDATA();
+                        }
+                        ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Save GSDATA"))
-                    {
-                        SaveGSDATA();
-                    }
-                    ImGui::EndMenu();
                 }
-                if (ImGui::Button("Options")) {
-                    OptionsWindow = !OptionsWindow; // Toggle Options window
+                if (DebugMode)
+                {
+                    if (ImGui::Button("Options"))
+                    {
+                        OptionsWindow = !OptionsWindow; // Toggle Options window
+                    }
                 }
                 if (ImGui::BeginMenu("Window"))
                 {
@@ -208,26 +235,29 @@ int CreateUI() {
                     {
                         UnpauseGame();
                     }
-                    if (ImGui::MenuItem("Read GSData"))
+                    if (DebugMode)
                     {
-                        AttachToProcess();
-                        LoadGSDataFromRAM();
-                    }
-                    if (ImGui::MenuItem("Install Skill Pack"))
-                    {
-                        AttachToProcess();
-                        if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                        if (ImGui::MenuItem("Read GSData") && DebugMode)
                         {
-                            InstallSkillPackToRAM();
-                            for (unsigned int i = 0; i < MultiSelectCount; i++)
-                            {
-                                cout << "Installed skill pack " << multiselectpath[i] << ".\n";
-                            }
+                            AttachToProcess();
+                            LoadGSDataFromRAM();
                         }
-                        else
+                        if (ImGui::MenuItem("Install Skill Pack"))
                         {
-                            cout << "File selection canceled.\n";
-                            ErrorCode = 1;
+                            AttachToProcess();
+                            if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                            {
+                                InstallSkillPackToRAM();
+                                for (unsigned int i = 0; i < MultiSelectCount; i++)
+                                {
+                                    cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                }
+                            }
+                            else
+                            {
+                                cout << "File selection canceled.\n";
+                                ErrorCode = 1;
+                            }
                         }
                     }
                     ImGui::EndMenu();

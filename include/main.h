@@ -18,6 +18,8 @@
 
 using namespace std;
 
+extern bool DebugMode;
+
 // ===== File Dialog Variables =====
 
 extern string filepath;

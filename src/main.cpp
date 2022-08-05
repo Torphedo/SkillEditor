@@ -10,6 +10,8 @@ extern "C" {
 
 using namespace std;
 
+bool DebugMode = false;
+
 // ===== File Dialog Variables =====
 
 const COMDLG_FILTERSPEC fileTypes[] = { L"Skill File", L"*.skill;" };
@@ -242,7 +244,6 @@ void AttachToProcess()
     {
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &data, sizeof(data), &BytesReadCount);
     }
-    cout << "Game version: " << data << "\n";
     return;
  }
 
@@ -314,7 +315,7 @@ void InstallSkillPackToRAM()
 
         uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
         gsdataheader.VersionNum = (int)hash;
-        cout << hash << "\n";
+        cout << "New version number: " << hash << endl;
 
         SaveGSDataToRAM();
     }
