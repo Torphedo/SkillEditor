@@ -255,8 +255,10 @@ int LoadGSDataFromRAM()
     if (EsperHandle != 0)
     {
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
+        cout << GetLastError() << endl;
         baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
+        cout << GetLastError() << endl;
     }
     return 0;
 }
@@ -267,8 +269,10 @@ int SaveGSDataToRAM()
     if (EsperHandle != 0)
     {
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
+        cout << GetLastError() << endl;
         baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
+        cout << GetLastError() << endl;
     }
     return 0;
 }
