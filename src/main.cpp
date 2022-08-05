@@ -39,6 +39,7 @@ int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load f
 DWORD pid;
 HANDLE EsperHandle;
 uintptr_t baseAddress;
+const char gsdata[24] = {0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00,0x8C,0x00,0x00,0x00,0x76,0x01,0x00,0x00};
 
 // ===== User Input Variables =====
 
@@ -86,16 +87,18 @@ void SaveAtkSkill()
     AtkSkillOut.close();
 
     skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
-    AttachToProcess();
-    uintptr_t baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
-    WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-    cout << "Wrote skill data to memory.\n";
+
     uint32_t hash = crc32buf((char*)&AtkSkill, 144);
     gsdataheader.VersionNum = (int)hash;
-    cout << "New version number: " << hash << endl;
 
-    baseAddress = 0x7FF6B9DF5240;
-    WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
+    AttachToProcess();
+    SaveGSDataToRAM();
+    cout << "Wrote skill data to memory.\n";
+    if (DebugMode)
+    {
+        cout << "New version number: " << hash << endl; // I want it to be slightly harder for new users to figure out
+                                                        // how the hashing works, so hiding the version number change here.
+    }
 }
 
 void SaveSkillPack()
@@ -239,7 +242,7 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
     return 0;
 }
 
-char* GetAddressOfData(DWORD pid, const char* data, size_t len)
+char* GetAddressOfData(const char* data, size_t len)
 {
     if (EsperHandle)
     {
@@ -281,8 +284,10 @@ void AttachToProcess()
     {
         cout << "Failed to attach to process.\n";
     }
-    char gsdata[24] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00,0x8C,0x00,0x00,0x00,0x76,0x01,0x00,0x00 };
-    baseAddress = (uintptr_t) GetAddressOfData(pid, gsdata, 24);
+    if (gsdataheader.VersionNum == 140) // We know this will fail & crash otherwise
+    {
+        baseAddress = (uintptr_t)GetAddressOfData(gsdata, 24);
+    }
 
     return;
  }
@@ -292,13 +297,13 @@ int LoadGSDataFromRAM()
     if (EsperHandle != 0)
     {
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 0)
+        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             cout << "Process Read Error Code: " << GetLastError() << endl;
         }
         baseAddress += 160; // Address where the skills begin.
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 0)
+        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             cout << "Process Read Error Code: " << GetLastError() << endl;
         }
@@ -312,13 +317,13 @@ int SaveGSDataToRAM()
     if (EsperHandle != 0)
     {
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 0)
+        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             cout << "Process Write Error Code: " << GetLastError() << endl;
         }
         baseAddress += 160; // Address where the skills begin.
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 0)
+        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             cout << "Process Write Error Code: " << GetLastError() << endl;
         }
