@@ -82,6 +82,12 @@ void SaveAtkSkill()
     AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
                                                     // the new data.
     AtkSkillOut.close();
+
+    skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+    AttachToProcess();
+    uintptr_t baseAddress = 0x7FF6B9DF52E0; // Address where the skills begin.
+    WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
+    cout << "Wrote skill data to memory.\n";
 }
 
 void SaveSkillPack()
