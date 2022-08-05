@@ -33,8 +33,6 @@ atkskill skillarray[751];  // Array of 751 skill data blocks
 AttackSkill AtkSkill;
 int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
 
-char* SkillPackBlobData;
-
 // ===== Process Editing Variables =====
 
 DWORD pid;
@@ -271,8 +269,6 @@ void InstallSkillPackToRAM()
 
         int* Filesize;
         Filesize = new int[MultiSelectCount];
-        fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
-                               // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
         int BlobSize = 0;
         for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
@@ -293,7 +289,10 @@ void InstallSkillPackToRAM()
         {
             BlobSize += Filesize[n];
         }
+        char* SkillPackBlobData;
         SkillPackBlobData = new char[BlobSize];
+        fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
+                               // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
         for (unsigned int n = 0; n < MultiSelectCount; n++)
         {
             SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
@@ -304,6 +303,9 @@ void InstallSkillPackToRAM()
         uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
         gsdataheader.VersionNum = (int)hash;
         cout << "New version number: " << hash << endl;
+
+        delete[] Filesize;
+        delete[] SkillPackBlobData;
 
         SaveGSDataToRAM();
     }
