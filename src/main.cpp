@@ -234,15 +234,6 @@ void AttachToProcess()
     if (!EsperHandle)
     {
         cout << "Failed to attach to process.\n";
-        return;
-    }
-
-    uintptr_t baseAddress = 0x7FF6B9E29250;
-    int data = 0;
-    SIZE_T BytesReadCount;
-    if (EsperHandle != 0)
-    {
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &data, sizeof(data), &BytesReadCount);
     }
     return;
  }
