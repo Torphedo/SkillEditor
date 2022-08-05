@@ -55,7 +55,7 @@ int CreateUI() {
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
     // Loads font data from font.h
-    ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(DroidSans_compressed_data_base85, 16.0f);
+    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 19.0f);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);

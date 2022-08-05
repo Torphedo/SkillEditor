@@ -7,6 +7,5 @@
 #include <d3d9.h>
 
 #include <dx-init.h>
-#include <font.h>
 
 int CreateUI();
