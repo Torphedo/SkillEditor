@@ -7,6 +7,54 @@ bool OptionsWindow = false;
 bool SkillPackWindow = false;
 short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool AtkSkillWindow = false;
+short timer;
+bool GamePaused = false;
+
+void SafeAtkSave()
+{
+    if (AtkSkillState != 0) {
+        SaveAtkSkill();    // Write data.
+        cout << "Saved attack skill to " << filepath << "\n";
+        AtkSkillState = 2; // Causes a message to appear on the status bar
+    }
+    else {
+        cout << "Tried to save without opening a file, aborting...\n";
+        ErrorCode = 2;
+    }
+}
+
+void SafeAtkSaveAs()
+{
+    if (AtkSkillState != 0) {
+        if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
+        {
+            SaveAtkSkill();         // Write data.
+            cout << "Saved attack skill to " << filepath << "\n";
+            AtkSkillState = 2;
+        }
+        else
+        {
+            cout << "File selection canceled.\n";
+            ErrorCode = 1;
+        }
+    }
+    else {
+        cout << "Tried to save without opening a file, aborting...\n";
+        ErrorCode = 2;
+    }
+}
+
+void SafeNewPack()
+{
+    if (SUCCEEDED(MultiSelectWindow()))
+    {
+        SkillPackWindow = true;
+    }
+    else {
+        cout << "Skill selection canceled.\n";
+        ErrorCode = 2;
+    }
+}
 
 int CreateUI() {
     // Create application window
@@ -90,16 +138,9 @@ int CreateUI() {
             if (ImGui::BeginMenuBar()) {
                 if (ImGui::BeginMenu("File"))
                 {
-                    if (ImGui::MenuItem("New Skill Pack"))
+                    if (ImGui::MenuItem("New Skill Pack", "Ctrl + N"))
                     {
-                        if (SUCCEEDED(MultiSelectWindow()))
-                        {
-                            SkillPackWindow = true;
-                        }
-                        else {
-                            cout << "Skill selection canceled.\n";
-                            ErrorCode = 2;
-                        }
+                        SafeNewPack();
                     }
                     if (ImGui::BeginMenu("Open"))
                     {
@@ -156,37 +197,13 @@ int CreateUI() {
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::MenuItem("Save"))
+                    if (ImGui::MenuItem("Save", "Ctrl + S"))
                     {
-                        if (AtkSkillState != 0) {
-                            SaveAtkSkill();    // Write data.
-                            cout << "Saved attack skill to " << filepath << "\n";
-                            AtkSkillState = 2; // Causes a message to appear on the status bar
-                        }
-                        else {
-                            cout << "Tried to save without opening a file, aborting...\n";
-                            ErrorCode = 2;
-                        }
+                        SafeAtkSave();
                     }
-                    if (ImGui::MenuItem("Save As"))
+                    if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                     {
-                        if (AtkSkillState != 0) {
-                            if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
-                            {
-                                SaveAtkSkill();         // Write data.
-                                cout << "Saved attack skill to " << filepath << "\n";
-                                AtkSkillState = 2;
-                            }
-                            else
-                            {
-                                cout << "File selection canceled.\n";
-                                ErrorCode = 1;
-                            }
-                        }
-                        else {
-                            cout << "Tried to save without opening a file, aborting...\n";
-                            ErrorCode = 2;
-                        }
+                        SafeAtkSaveAs();
                     }
 
                     if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -227,13 +244,15 @@ int CreateUI() {
                 }
                 if (ImGui::BeginMenu("Game"))
                 {
-                    if (ImGui::MenuItem("Freeze Phantom Dust"))
+                    if (ImGui::MenuItem("Freeze/Unfreeze PD"))
                     {
-                        PauseGame();
-                    }
-                    if (ImGui::MenuItem("Unfreeze Phantom Dust"))
-                    {
-                        UnpauseGame();
+                        if (GamePaused) {
+                            UnpauseGame();
+                        }
+                        else {
+                            PauseGame();
+                        }
+                        GamePaused = !GamePaused;
                     }
                     if (DebugMode)
                     {
@@ -265,6 +284,32 @@ int CreateUI() {
                 ImGui::EndMenuBar();
             }
             ImGui::End();
+        }
+
+        // Redundant AtkSkillState checks here, but it stops console spam.
+        // TODO: add a timer here to prevent more console spam.
+        if (timer == 0)
+        {
+            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
+            {
+                SafeAtkSave();
+                timer = 20;
+            }
+
+            if (GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
+            {
+                SafeAtkSaveAs();
+                timer = 20;
+            }
+
+            if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !SkillPackWindow)
+            {
+                SafeNewPack();
+                timer = 20;
+            }
+        }
+        else {
+            timer--;
         }
 
         if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {

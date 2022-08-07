@@ -24,7 +24,7 @@ extern bool DebugMode;
 
 extern string filepath;
 extern string* multiselectpath;
-extern DWORD MultiSelectCount;
+extern int MultiSelectCount;
 
 extern const COMDLG_FILTERSPEC skillfile[];
 extern const COMDLG_FILTERSPEC skillpack[];
@@ -55,7 +55,7 @@ void SaveSkillPack();
 // ===== Debugging the PDUWP Process =====
 
 DWORD GetProcessIDByName(LPCTSTR ProcessName);
-void AttachToProcess();
+bool AttachToProcess();
 char* GetAddressOfData(const char* data, size_t len);
 int LoadGSDataFromRAM();
 int SaveGSDataToRAM();

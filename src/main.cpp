@@ -22,7 +22,7 @@ char* filepathptr;
 string filepath;
 
 string* multiselectpath;
-DWORD MultiSelectCount = 0;
+int MultiSelectCount = 0;
 
 // ===== File I/O Variables & Shared Data =====
 
@@ -89,35 +89,35 @@ void SaveAtkSkill()
 
     skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 
-    uint32_t hash = crc32buf((char*)&AtkSkill, 144);
-    gsdataheader.VersionNum = (int)hash;
-
-    AttachToProcess();
-    SaveGSDataToRAM();
-    cout << "Wrote skill data to memory.\n";
-    if (DebugMode)
+    if (AttachToProcess())
     {
-        cout << "New version number: " << hash << endl; // I want it to be slightly harder for new users to figure out
-                                                        // how the hashing works, so hiding the version number change here.
+        // Expensive calc, no point doing it unless we can access the version number
+        uint32_t hash = crc32buf((char*)&AtkSkill, 144);
+        gsdataheader.VersionNum = (int)hash;
+
+        SaveGSDataToRAM();
+        cout << "Wrote skill data to memory.\n";
+        if (DebugMode)
+        {
+            cout << "New version number: " << hash << endl; // I want it to be slightly harder for new users to figure out
+                                                            // how the hashing works, so hiding the version number change here.
+        }
     }
 }
 
 void SaveSkillPack()
 {
     ofstream SkillPackOut(filepathptr, ios::binary);
-    short FormatVersion = 1;
-    short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
     SkillPackOut.write((char*)&packname, sizeof(packname)); // 32 characters for the name
-    SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
-    SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
+    SkillPackOut.write((char*)(short) 1, 2); // Format version (this is v1)
+    SkillPackOut.write((char*)(short) MultiSelectCount, 2); // Skill count
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
 
     for (DWORD i = 0; i < MultiSelectCount; i++)
     {
-        int size = (int) std::filesystem::file_size(multiselectpath[i]);
-        if (size == 144) // Only allow skill data to be written if the skill file is the correct size
+        if (filesystem::file_size(multiselectpath[i]) == 144) // Only allow skill data to be written if the skill file is the correct size
         {
             fstream SkillStream; // fstream for the skill files selected by the user
             char skilldata[144]; // 144 byte buffer to read / write skill data from
@@ -277,20 +277,21 @@ char* GetAddressOfData(const char* data, size_t len)
     return 0;
 }
 
-void AttachToProcess()
+bool AttachToProcess()
 {
     pid = GetProcessIDByName(L"PDUWP.exe");
     EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!EsperHandle)
     {
         cout << "Failed to attach to process.\n";
+        return false;
     }
     if (gsdataheader.VersionNum == 140) // We know this will fail & crash otherwise
     {
         baseAddress = (uintptr_t)GetAddressOfData(gsdata, 24);
     }
 
-    return;
+    return true;
  }
 
 int LoadGSDataFromRAM()
