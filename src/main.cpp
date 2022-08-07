@@ -108,30 +108,33 @@ void SaveAtkSkill()
 void SaveSkillPack()
 {
     ofstream SkillPackOut(filepathptr, ios::binary);
+    fstream SkillStream; // fstream for the skill files selected by the user
+    char skilldata[144]; // 144 byte buffer to read / write skill data from
+    short FormatVersion = 1;
+    short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
     SkillPackOut.write((char*)&packname, sizeof(packname)); // 32 characters for the name
-    SkillPackOut.write((char*)(short) 1, 2); // Format version (this is v1)
-    SkillPackOut.write((char*)(short) MultiSelectCount, 2); // Skill count
+    SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
+    SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
 
     for (DWORD i = 0; i < MultiSelectCount; i++)
     {
         if (filesystem::file_size(multiselectpath[i]) == 144) // Only allow skill data to be written if the skill file is the correct size
         {
-            fstream SkillStream; // fstream for the skill files selected by the user
-            char skilldata[144]; // 144 byte buffer to read / write skill data from
             SkillStream.open(multiselectpath[i], ios::in | ios::binary);
             SkillStream.read((char*)&skilldata, 144); // Read skill data from the file to our skilldata buffer
+            SkillStream.seekg(0);
             cout << "Writing from " << multiselectpath[i] << "...\n";
             SkillPackOut.write((char*)&skilldata, 144); // Writing to skill pack
-            SkillStream.close();
         }
         else
         {
-            cout << "Invalid skill filesize. Write skipped.";
+            cout << "Invalid skill filesize. Write skipped.\n";
         }
     }
+    SkillStream.close();
 
     SkillPackOut.close();
     cout << "Saved skill pack to " << filepathptr << "\n";
