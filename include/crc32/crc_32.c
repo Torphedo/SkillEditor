@@ -60,36 +60,6 @@ uint32_t updateCRC32(unsigned char ch, uint32_t crc)
     return UPDC32(ch, crc);
 }
 
-bool crc32file(char* name, uint32_t* crc, long* charcnt)
-{
-    FILE* fin;
-    uint32_t oldcrc32;
-    int c;
-
-    oldcrc32 = 0xFFFFFFFF; *charcnt = 0;
-    if ((fin = fopen(name, "r")) == NULL)
-    {
-        perror(name);
-        return false;
-    }
-    while ((c = getc(fin)) != EOF)
-    {
-        ++* charcnt;
-        oldcrc32 = UPDC32(c, oldcrc32);
-    }
-
-    if (ferror(fin))
-    {
-        perror(name);
-        *charcnt = -1;
-    }
-    fclose(fin);
-
-    *crc = oldcrc32 = ~oldcrc32;
-
-    return true;
-}
-
 uint32_t crc32buf(char* buf, size_t len)
 {
     uint32_t oldcrc32;
