@@ -161,7 +161,7 @@ int CreateUI() {
                         }
                         if (ImGui::MenuItem("Install Skill Pack"))
                         {
-                            AttachToProcess();
+                            GetProcess();
                             if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                             {
                                 InstallSkillPackToRAM();
@@ -244,10 +244,11 @@ int CreateUI() {
                 }
                 if (ImGui::BeginMenu("Game"))
                 {
-                    if (ImGui::MenuItem("Freeze/Unfreeze PD"))
+                    if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
                     {
                         if (GamePaused) {
                             UnpauseGame();
+                            GamePaused = true;
                         }
                         else {
                             PauseGame();
@@ -258,12 +259,12 @@ int CreateUI() {
                     {
                         if (ImGui::MenuItem("Read GSData") && DebugMode)
                         {
-                            AttachToProcess();
+                            GetProcess();
                             LoadGSDataFromRAM();
                         }
                         if (ImGui::MenuItem("Install Skill Pack"))
                         {
-                            AttachToProcess();
+                            GetProcess();
                             if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                             {
                                 InstallSkillPackToRAM();

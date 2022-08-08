@@ -36,11 +36,12 @@ int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load f
 
 // ===== Process Editing Variables =====
 
-DWORD pid;
+DWORD pid = 0;
 HANDLE EsperHandle;
 uintptr_t baseAddress;
 const char gsdata[24] = {0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00,0x8C,0x00,0x00,0x00,0x76,0x01,0x00,0x00};
 // ^ This causes a lot of warnings, should fix this later. (TODO)
+
 
 // ===== User Input Variables =====
 
@@ -89,7 +90,7 @@ void SaveAtkSkill()
 
     skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 
-    if (AttachToProcess())
+    if (GetProcess())
     {
         // Expensive calc, no point doing it unless we can access the version number
         uint32_t hash = crc32buf((char*)&AtkSkill, 144);
@@ -255,21 +256,23 @@ char* GetAddressOfData(const char* data, size_t len)
 
         MEMORY_BASIC_INFORMATION info;
         std::vector<char> chunk;
-        char* p = 0;
+        char* p = (char*)0x7FF600000000;
         while (p < si.lpMaximumApplicationAddress)
         {
             if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
             {
-                p = (char*)0x7FF6198D0000; // First address in 0x7FF000000000 area that isn't invalid
-                chunk.resize(0x603000);    // This range should cover all possible addresses for gsdata. The next chunk is invalid.
-                SIZE_T bytesRead;
-                if (ReadProcessMemory(EsperHandle, p, &chunk[0], 0x603000, &bytesRead))
+                if (info.State == MEM_COMMIT)   // If this is a valid chunk of memory
                 {
-                    for (size_t i = 0; i < (bytesRead - len); ++i)
+                    chunk.resize(info.RegionSize);
+                    SIZE_T bytesRead;
+                    if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
                     {
-                        if (memcmp(data, &chunk[i], len) == 0)
+                        for (size_t i = 0; i < (bytesRead - len); ++i)
                         {
-                            return (char*)p + i;
+                            if (memcmp(data, &chunk[i], len) == 0)
+                            {
+                                return (char*)p + i;
+                            }
                         }
                     }
                 }
@@ -280,8 +283,9 @@ char* GetAddressOfData(const char* data, size_t len)
     return 0;
 }
 
-bool AttachToProcess()
+bool GetProcess()
 {
+    DWORD cache = pid;
     pid = GetProcessIDByName(L"PDUWP.exe");
     EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!EsperHandle)
@@ -289,7 +293,7 @@ bool AttachToProcess()
         cout << "Failed to attach to process.\n";
         return false;
     }
-    if (gsdataheader.VersionNum == 140) // We know this will fail & crash otherwise
+    if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
     {
         baseAddress = (uintptr_t)GetAddressOfData(gsdata, 24);
     }

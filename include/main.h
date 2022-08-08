@@ -52,10 +52,10 @@ void SaveSkillPack();
 // int LoadGSDATA();
 // int SaveGSDATA();
 
-// ===== Debugging the PDUWP Process =====
+// ===== PDUWP Memory Editing =====
 
 DWORD GetProcessIDByName(LPCTSTR ProcessName);
-bool AttachToProcess();
+bool GetProcess();
 char* GetAddressOfData(const char* data, size_t len);
 int LoadGSDataFromRAM();
 int SaveGSDataToRAM();
