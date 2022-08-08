@@ -165,7 +165,7 @@ int CreateUI() {
                             if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                             {
                                 InstallSkillPackToRAM();
-                                for (unsigned int i = 0; i < MultiSelectCount; i++)
+                                for (int i = 0; i < MultiSelectCount; i++)
                                 {
                                     cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }
@@ -183,7 +183,7 @@ int CreateUI() {
                                 if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                                 {
                                     // InstallSkillPack();
-                                    for (unsigned int i = 0; i < MultiSelectCount; i++)
+                                    for (int i = 0; i < MultiSelectCount; i++)
                                     {
                                         cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                     }
@@ -268,7 +268,7 @@ int CreateUI() {
                             if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
                             {
                                 InstallSkillPackToRAM();
-                                for (unsigned int i = 0; i < MultiSelectCount; i++)
+                                for (int i = 0; i < MultiSelectCount; i++)
                                 {
                                     cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }
