@@ -120,7 +120,7 @@ void SaveSkillPack()
     SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
 
-    for (DWORD i = 0; i < MultiSelectCount; i++)
+    for (int i = 0; i < MultiSelectCount; i++)
     {
         if (filesystem::file_size(multiselectpath[i]) == 144) // Only allow skill data to be written if the skill file is the correct size
         {
@@ -349,7 +349,7 @@ void InstallSkillPackToRAM()
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
 
         int BlobSize = 0;
-        for (unsigned int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
+        for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
             fstream SkillPackIn;
             SkillPackHeaderV1 header;
@@ -368,7 +368,7 @@ void InstallSkillPackToRAM()
         SkillPackBlobData = new char[BlobSize];
         fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
                                // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
-        for (unsigned int n = 0; n < MultiSelectCount; n++)
+        for (int n = 0; n < MultiSelectCount; n++)
         {
             SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
             SkillPackBlob.read(SkillPackBlobData, BlobSize);
