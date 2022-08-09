@@ -238,21 +238,23 @@ int CreateUI() {
         }
 
         // Redundant AtkSkillState checks here, but it stops console spam.
-        // TODO: add a timer here to prevent more console spam.
         if (timer == 0)
         {
+            // Save: Ctrl + S
             if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
             {
                 SafeAtkSave();
                 timer = 20;
             }
 
+            // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
             {
                 SafeAtkSaveAs();
                 timer = 20;
             }
 
+            // New: Ctrl + N
             if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !RenderSkillPackWindow)
             {
                 SafeNewPack();
@@ -260,7 +262,7 @@ int CreateUI() {
             }
         }
         else {
-            timer--;
+            timer--; // Decrement cooldown timer until it hits 0
         }
 
         if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
