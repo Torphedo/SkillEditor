@@ -23,10 +23,10 @@ extern bool DebugMode;
 // ===== UI Variables =====
 
 extern short ErrorCode;
-extern bool OptionsWindow = false;
-extern bool RenderSkillPackWindow = false;
-extern short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
-extern bool RenderAtkSkillWindow = false;
+extern bool OptionsWindow;
+extern bool RenderSkillPackWindow;
+extern short AtkSkillState; // 0 = None, 1 = Opened, 2 = Saved
+extern bool RenderAtkSkillWindow;
 
 // ===== File Dialog Variables =====
 

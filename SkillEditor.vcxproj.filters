@@ -34,10 +34,13 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
+    <ClCompile Include="src\dx-init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dx-init.cpp">
+    <ClCompile Include="src\UI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -67,6 +70,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\editors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
