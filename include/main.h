@@ -20,6 +20,14 @@ using namespace std;
 
 extern bool DebugMode;
 
+// ===== UI Variables =====
+
+extern short ErrorCode;
+extern bool OptionsWindow = false;
+extern bool RenderSkillPackWindow = false;
+extern short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
+extern bool RenderAtkSkillWindow = false;
+
 // ===== File Dialog Variables =====
 
 extern string filepath;
