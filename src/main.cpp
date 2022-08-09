@@ -421,15 +421,6 @@ void InputUInt8(const char* label, void* p_data) {
     ImGui::InputScalar(label, ImGuiDataType_S8, p_data, true ? &s8_one : NULL, NULL, "%d");
 }
 
-short ComboShort(const char* label, const char* const* items, int item_count)
-{
-    // Using int as a wrapper then returning it as a short. Narrowing conversion isn't an
-    // issue because the index isn't ever going to be over 32767.
-    static int SelectedItemInt;
-    ImGui::Combo(label, &SelectedItemInt, items, item_count);
-    return (short)SelectedItemInt; // Explicit conversion to avoid compiler warning
-}
-
 // ===== Windows File Dialogs =====
 
 int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC *fileTypes)

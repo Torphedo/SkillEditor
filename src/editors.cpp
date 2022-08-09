@@ -69,7 +69,7 @@ void AtkSkillWindow()
     Tooltip("The skill's internal ID. This will determine what\nskill (if any) will be overwritten. This ID has no\nrelation to the IDs seen in-game.");
 
     char* rarity_txt[] = { "1","2","3","4","5" };
-    AtkSkill.RarityStars = ComboShort("Rarity", rarity_txt, 5);
+    ImGui::Combo("Rarity", (int*) &AtkSkill.RarityStars, rarity_txt, 5);
     Tooltip("The skill's in-game rarity, displayed as stars.");
 
     InputShort("Sound File ID", &AtkSkill.SoundFileID);
@@ -110,7 +110,7 @@ void AtkSkillWindow()
     Tooltip("The required amount of the type specified above");
 
     char* items[] = { "Ground","Air","Both" };
-    AtkSkill.GroundAirBoth = ComboShort("Air/Ground/Both", items, IM_ARRAYSIZE(items));
+    ImGui::Combo("Air/Ground/Both", (int*)&AtkSkill.GroundAirBoth, items, IM_ARRAYSIZE(items));
     Tooltip("Whether the skill can be used on\nthe ground, in the air, or both.");
 
     InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect);

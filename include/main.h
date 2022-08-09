@@ -76,7 +76,6 @@ void UnpauseGame();
 void Tooltip(const char* text);
 void InputShort(const char* label, void* p_data);
 void InputUInt8(const char* label, void* p_data);
-short ComboShort(const char* label, const char* const* items, int item_count);
 
 // ===== Windows Explorer Dialogs =====
 
