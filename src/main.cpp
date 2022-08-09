@@ -408,7 +408,7 @@ void Tooltip(const char* text)
 }
 
 // ImGui didn't have pre-made functions for short
-// or uint8 input / combo boxes, so I made my own.
+// or uint8 input boxes, so I made my own.
 
 const short s8_one = 1;
 const short s16_one = 1;
