@@ -399,9 +399,12 @@ void UnpauseGame()
 
 // ===== Custom ImGui Functions / Wrappers =====
 
-void Tooltip(const char* text) {
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("%s", text);
+void Tooltip(const char* text)
+{
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("%s", text);
+    }
 }
 
 // ImGui didn't have pre-made functions for short
@@ -420,6 +423,8 @@ void InputUInt8(const char* label, void* p_data) {
 
 short ComboShort(const char* label, const char* const* items, int item_count)
 {
+    // Using int as a wrapper then returning it as a short. Narrowing conversion isn't an
+    // issue because the index isn't ever going to be over 32767.
     static int SelectedItemInt;
     ImGui::Combo(label, &SelectedItemInt, items, item_count);
     return (short)SelectedItemInt; // Explicit conversion to avoid compiler warning
