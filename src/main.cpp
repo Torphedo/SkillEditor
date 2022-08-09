@@ -410,14 +410,15 @@ void Tooltip(const char* text)
 // ImGui didn't have pre-made functions for short
 // or uint8 input / combo boxes, so I made my own.
 
+const short s8_one = 1;
+const short s16_one = 1;
 void InputShort(const char* label, void* p_data)
 {
-    const short s16_one = 1;
     ImGui::InputScalar(label, ImGuiDataType_S16, p_data, true ? &s16_one : NULL, NULL, "%d");
 }
 
-void InputUInt8(const char* label, void* p_data) {
-    const short s8_one = 1;
+void InputUInt8(const char* label, void* p_data)
+{
     ImGui::InputScalar(label, ImGuiDataType_S8, p_data, true ? &s8_one : NULL, NULL, "%d");
 }
 
