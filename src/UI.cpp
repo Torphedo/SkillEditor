@@ -162,28 +162,6 @@ int CreateUI() {
                     }
                     ImGui::EndMenu();
                 }
-                if (DebugMode)
-                {
-                    if (ImGui::BeginMenu("Edit") && DebugMode)
-                    {
-                        if (ImGui::MenuItem("Load GSDATA"))
-                        {
-                            // LoadGSDATA();
-                        }
-                        if (ImGui::MenuItem("Save GSDATA"))
-                        {
-                            // SaveGSDATA();
-                        }
-                        ImGui::EndMenu();
-                    }
-                }
-                if (DebugMode)
-                {
-                    if (ImGui::Button("Options"))
-                    {
-                        OptionsWindow = !OptionsWindow; // Toggle Options window
-                    }
-                }
                 if (ImGui::BeginMenu("Window"))
                 {
                     if (ImGui::MenuItem("Attack Skill Editor"))
@@ -204,31 +182,6 @@ int CreateUI() {
                             PauseGame();
                         }
                         GamePaused = !GamePaused;
-                    }
-                    if (DebugMode)
-                    {
-                        if (ImGui::MenuItem("Read GSData") && DebugMode)
-                        {
-                            GetProcess();
-                            LoadGSDataFromRAM();
-                        }
-                        if (ImGui::MenuItem("Install Skill Pack"))
-                        {
-                            GetProcess();
-                            if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
-                            {
-                                InstallSkillPackToRAM();
-                                for (int i = 0; i < MultiSelectCount; i++)
-                                {
-                                    cout << "Installed skill pack " << multiselectpath[i] << ".\n";
-                                }
-                            }
-                            else
-                            {
-                                cout << "File selection canceled.\n";
-                                ErrorCode = 1;
-                            }
-                        }
                     }
                     ImGui::EndMenu();
                 }
