@@ -4,6 +4,8 @@
 #include <main.h>
 #include <editors.h>
 
+using std::cout;
+
 short ErrorCode;
 bool OptionsWindow = false;
 bool RenderSkillPackWindow = false;
@@ -58,7 +60,7 @@ void SafeNewPack()
 
 void AtkSkillWindow()
 {
-    string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
+    std::string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
     ImGui::Begin(const_cast<char*>(WindowTitle.c_str()));     // TODO: chop off the filepath and use only the name.
 
     InputShort("Skill Text ID", &AtkSkill.SkillTextID);

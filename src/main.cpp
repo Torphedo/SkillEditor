@@ -8,7 +8,7 @@ extern "C" {
 #include <crc32/crc_32.c>
 }
 
-using namespace std;
+using std::ios, std::cout;
 
 bool DebugMode = false;
 
@@ -19,16 +19,16 @@ const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
 HRESULT hr;
 
 char* filepathptr;
-string filepath;
+std::string filepath;
 
-string* multiselectpath;
+std::string* multiselectpath;
 int MultiSelectCount = 0;
 
 // ===== File I/O Variables & Shared Data =====
 
-fstream AtkSkillFile; // fstream for Attack Skill files
+std::fstream AtkSkillFile; // fstream for Attack Skill files
 
-fstream GSDataStream; // fstream for gsdata
+std::fstream GSDataStream; // fstream for gsdata
 GSDataHeader gsdataheader; // First 160 bytes of gsdata
 atkskill skillarray[751];  // Array of 751 skill data blocks
 AttackSkill AtkSkill;
@@ -58,8 +58,8 @@ int main()
 }
 
 
-string PWSTR_to_string(PWSTR ws) {
-    string result;
+std::string PWSTR_to_string(PWSTR ws) {
+    std::string result;
     result.reserve(wcslen(ws));
     for (; *ws; ws++)
         result += (char)*ws;
@@ -81,8 +81,8 @@ void LoadAttackSkill()
 // Writes the currently open file to disk.
 void SaveAtkSkill()
 {
-    ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
-                                                    // the name of the file that was opened.
+    std::ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
+                                                         // the name of the file that was opened.
 
     AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
                                                     // the new data.
@@ -100,7 +100,7 @@ void SaveAtkSkill()
         cout << "Wrote skill data to memory.\n";
         if (DebugMode)
         {
-            cout << "New version number: " << hash << endl; // I want it to be slightly harder for new users to figure out
+            cout << "New version number: " << hash << "\n"; // I want it to be slightly harder for new users to figure out
                                                             // how the hashing works, so hiding the version number change here.
         }
     }
@@ -108,8 +108,8 @@ void SaveAtkSkill()
 
 void SaveSkillPack()
 {
-    ofstream SkillPackOut(filepathptr, ios::binary);
-    fstream SkillStream; // fstream for the skill files selected by the user
+    std::ofstream SkillPackOut(filepathptr, ios::binary);
+    std::fstream SkillStream; // fstream for the skill files selected by the user
     char skilldata[144]; // 144 byte buffer to read / write skill data from
     short FormatVersion = 1;
     short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
@@ -122,7 +122,7 @@ void SaveSkillPack()
 
     for (int i = 0; i < MultiSelectCount; i++)
     {
-        if (filesystem::file_size(multiselectpath[i]) == 144) // Only allow skill data to be written if the skill file is the correct size
+        if (std::filesystem::file_size(multiselectpath[i]) == 144) // Only allow skill data to be written if the skill file is the correct size
         {
             SkillStream.open(multiselectpath[i], ios::in | ios::binary);
             SkillStream.read((char*)&skilldata, 144); // Read skill data from the file to our skilldata buffer
@@ -308,13 +308,13 @@ int LoadGSDataFromRAM()
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
-            cout << "Process Read Error Code: " << GetLastError() << endl;
+            cout << "Process Read Error Code: " << GetLastError() << "\n";
         }
         baseAddress += 160; // Address where the skills begin.
         ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
-            cout << "Process Read Error Code: " << GetLastError() << endl;
+            cout << "Process Read Error Code: " << GetLastError() << "\n";
         }
         baseAddress -= 160;
     }
@@ -328,13 +328,13 @@ int SaveGSDataToRAM()
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
-            cout << "Process Write Error Code: " << GetLastError() << endl;
+            cout << "Process Write Error Code: " << GetLastError() << "\n";
         }
         baseAddress += 160; // Address where the skills begin.
         WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
-            cout << "Process Write Error Code: " << GetLastError() << endl;
+            cout << "Process Write Error Code: " << GetLastError() << "\n";
         }
         baseAddress -= 160;
     }
@@ -345,13 +345,13 @@ void InstallSkillPackToRAM()
 {
     if (LoadGSDataFromRAM() == 0)
     {
-        std::vector<string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
+        std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
 
         int BlobSize = 0;
         for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
-            fstream SkillPackIn;
+            std::fstream SkillPackIn;
             SkillPackHeaderV1 header;
             SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
             SkillPackIn.read((char*)&header, sizeof(header));
@@ -366,8 +366,8 @@ void InstallSkillPackToRAM()
         }
         char* SkillPackBlobData;
         SkillPackBlobData = new char[BlobSize];
-        fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
-                               // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
+        std::fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
+                                    // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
         for (int n = 0; n < MultiSelectCount; n++)
         {
             SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
@@ -377,7 +377,7 @@ void InstallSkillPackToRAM()
 
         uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
         gsdataheader.VersionNum = (int)hash;
-        cout << "New version number: " << hash << endl;
+        cout << "New version number: " << hash << "\n";
 
         delete[] SkillPackBlobData;
 
@@ -506,7 +506,7 @@ HRESULT MultiSelectWindow()
 
                     if (SUCCEEDED(hr))
                     {
-                        multiselectpath = new string[dwNumItems];
+                        multiselectpath = new std::string[dwNumItems];
                         // Loop through IShellItemArray and construct string for display
                         for (DWORD i = 0; i < dwNumItems; i++)
                         {

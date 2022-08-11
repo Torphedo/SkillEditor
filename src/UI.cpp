@@ -3,6 +3,8 @@
 #include <UI.h>
 #include <editors.h>
 
+using std::cout;
+
 short timer;
 bool GamePaused = false;
 
@@ -220,7 +222,7 @@ int CreateUI() {
 
         if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
             if (ImGui::BeginMenuBar()) {
-                string print;
+                std::string print;
                 if (AtkSkillState == 1) {
                     print = "Imported attack skill " + filepath; // Status messages about importing
                                                                  // and saving files.

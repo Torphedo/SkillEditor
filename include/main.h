@@ -16,8 +16,6 @@
 #include <imgui_internal.h>
 #include <structs.h>
 
-using namespace std;
-
 extern bool DebugMode;
 
 // ===== UI Variables =====
@@ -30,8 +28,8 @@ extern bool RenderAtkSkillWindow;
 
 // ===== File Dialog Variables =====
 
-extern string filepath;
-extern string* multiselectpath;
+extern std::string filepath;
+extern std::string* multiselectpath;
 extern int MultiSelectCount;
 
 extern const COMDLG_FILTERSPEC skillfile[];
@@ -49,7 +47,7 @@ extern char PhantomDustDir[275];
 // ========== Custom Functions ==========
 
 
-string PWSTR_to_string(PWSTR ws);
+std::string PWSTR_to_string(PWSTR ws);
 
 // ===== File I/O =====
 
