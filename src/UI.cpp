@@ -7,6 +7,7 @@ using std::cout;
 
 short timer;
 bool GamePaused = false;
+bool HexEditor = false;
 
 int CreateUI() {
     // Create application window
@@ -170,6 +171,14 @@ int CreateUI() {
                     {
                         RenderAtkSkillWindow = !RenderAtkSkillWindow; // Toggle Attack Skill Editor window
                     }
+                    if (ImGui::MenuItem("Skill Hex Editor"))
+                    {
+                        GetProcess();
+                        if (LoadGSDataFromRAM() == 0)
+                        {
+                            HexEditor = !HexEditor;
+                        }
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Game"))
@@ -242,11 +251,17 @@ int CreateUI() {
             ImGui::End();
         }
 
+        if (HexEditor)
+        {
+            HexEditorWindow(4);
+        }
+
         if (RenderAtkSkillWindow)
         {
             AtkSkillWindow();
         }
 
+        // Unused
         if (OptionsWindow)
         {
             ImGui::Begin("Settings");

@@ -168,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="include\dx-init.h" />
     <ClInclude Include="include\editors.h" />
+    <ClInclude Include="include\hex_editor\imgui_hex_editor.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />
     <ClInclude Include="include\imgui\imgui_internal.h" />

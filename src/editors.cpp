@@ -3,6 +3,7 @@
 
 #include <main.h>
 #include <editors.h>
+#include <hex_editor/imgui_hex_editor.h>
 
 using std::cout;
 
@@ -11,6 +12,8 @@ bool OptionsWindow = false;
 bool RenderSkillPackWindow = false;
 short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool RenderAtkSkillWindow = false;
+
+static MemoryEditor hex_edit;
 
 void SafeAtkSave()
 {
@@ -145,6 +148,12 @@ void AtkSkillWindow()
         RenderAtkSkillWindow = false; // Deactivates the window.
     }
     ImGui::End();
+}
+
+void HexEditorWindow(short Idx)
+{
+    hex_edit.ReadOnly = false;
+    hex_edit.DrawWindow("Hex Editor", &skillarray[4], 144);
 }
 
 void SkillPackWindow()

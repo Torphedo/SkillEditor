@@ -38,6 +38,7 @@ extern const COMDLG_FILTERSPEC skillpack[];
 // ===== File I/O Variables & Shared Data =====
 
 extern AttackSkill AtkSkill; // Attack skill struct
+extern atkskill skillarray[751];
 
 // ===== User Input Variables =====
 
