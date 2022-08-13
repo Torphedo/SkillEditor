@@ -255,12 +255,13 @@ char* GetAddressOfData(const uint8_t* data, size_t len)
 
         MEMORY_BASIC_INFORMATION info;
         std::vector<char> chunk;
-        char* p = (char*)0x7FF600000000;
+        char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
         while (p < si.lpMaximumApplicationAddress)
         {
+            // Loop through memory pages to find one that's actually being used by the game
             if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
             {
-                if (info.State == MEM_COMMIT)   // If this is a valid chunk of memory
+                if (info.State == MEM_COMMIT) // If this is a valid chunk of memory
                 {
                     chunk.resize(info.RegionSize);
                     SIZE_T bytesRead;
@@ -268,6 +269,7 @@ char* GetAddressOfData(const uint8_t* data, size_t len)
                     {
                         for (size_t i = 0; i < (bytesRead - len); ++i)
                         {
+                            // Check if the address matches the supplied data
                             if (memcmp(data, &chunk[i], len) == 0)
                             {
                                 return (char*)p + i;
