@@ -67,7 +67,7 @@ typedef struct AttackSkill
     short unk15;
     short unk16;
     short unk17;
-    short unknown; // Downed Hit Animation or Projectile Behaviour
+    short ProjectileBehaviour; // Downed Hit Animation or Projectile Behaviour
     uint8_t SkillDuration;
     uint8_t HitRange;
     short ExpandSkillWidth;

@@ -12,6 +12,7 @@ bool OptionsWindow = false;
 bool RenderSkillPackWindow = false;
 short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool RenderAtkSkillWindow = false;
+bool RenderDocumentationWindow = false;
 
 static MemoryEditor hex_edit;
 
@@ -59,6 +60,23 @@ void SafeNewPack()
         cout << "Skill selection canceled.\n";
         ErrorCode = 2;
     }
+}
+
+void DocumentationWindow()
+{
+    ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Documentation");
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("DocTabs", tab_bar_flags))
+    {
+        if (ImGui::BeginTabItem("Attack Skills"))
+        {
+            ImGui::Text("Attack Skill Documentation\nblah blah blah blah blah");
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+    ImGui::End();
 }
 
 void AtkSkillWindow()
@@ -121,6 +139,8 @@ void AtkSkillWindow()
         Tooltip("The sound effect ID to be played when the skill\ncollides with something.");
         InputShort("Aura Cost", &AtkSkill.Cost);
         Tooltip("The amount of Aura the skill costs.");
+        InputShort("Cost Effect", &AtkSkill.CostEffect);
+        Tooltip("Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura");
         InputShort("Additional Aura Cost", &AtkSkill.ExtraCost);
         Tooltip("Adds to the base Aura cost.");
         InputShort("Health Penalty", &AtkSkill.HealthCost);
@@ -128,13 +148,13 @@ void AtkSkillWindow()
         InputShort("# of Uses", &AtkSkill.SkillUses);
         Tooltip("How many times the skill can be used. Set this\nto 0 for infinite uses.");
         InputShort("Self Effect", &AtkSkill.SelfEffect);
-        ImGui::TableNextColumn();
+        Tooltip("An effect to be applied to the user. Undocumented,\nneeds more research.");
         InputShort("Button Restrictions", &AtkSkill.ButtonRestrictions);
         ImGui::TableNextColumn();
         InputShort("Requirement Type", &AtkSkill.Requirements);
-        Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = # of Skills Remaining in Deck\n7 = Aura\n9 = Level");
+        Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level");
         InputShort("Requirement Amount", &AtkSkill.ReqAmount);
-        Tooltip("The required amount of the type specified in the previous box");
+        Tooltip("The required amount of the type specified in\nthe previous box");
 
         ImGui::SetNextItemWidth(200);
         char* items[] = { "Ground","Air","Both" };
@@ -144,7 +164,7 @@ void AtkSkillWindow()
         InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect);
         ImGui::TableNextColumn();
         InputShort("Applied Status ID", &AtkSkill.AppliedStatusID);
-        ImGui::TableNextColumn();
+        Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poision\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
         InputShort("Restrictions", &AtkSkill.Restriction);
         ImGui::TableNextColumn();
         InputShort("Strength Effect", &AtkSkill.StrengthEffect);
@@ -175,6 +195,13 @@ void AtkSkillWindow()
         ImGui::TableNextColumn();
         InputShort("Combo End", &AtkSkill.HomingRangeThirdHit);
         ImGui::TableNextColumn();
+        InputShort("Projectile Behaviour ID", &AtkSkill.ProjectileBehaviour);
+        ImGui::TableNextColumn();
+        if (AtkSkill.ProjectileBehaviour > 20)
+        {
+            // The game will crash if this is over 0x14
+            AtkSkill.ProjectileBehaviour = 20;
+        }
         InputUInt8("Skill Duration", &AtkSkill.SkillDuration);
         ImGui::TableNextColumn();
         InputUInt8("Hit Range", &AtkSkill.HitRange);

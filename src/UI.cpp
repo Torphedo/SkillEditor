@@ -179,6 +179,10 @@ int CreateUI() {
                             HexEditor = !HexEditor;
                         }
                     }
+                    if (ImGui::MenuItem("Documentation"))
+                    {
+                        RenderDocumentationWindow = !RenderDocumentationWindow;
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Game"))
@@ -260,6 +264,12 @@ int CreateUI() {
         {
             AtkSkillWindow();
         }
+
+        if (RenderDocumentationWindow)
+        {
+            DocumentationWindow();
+        }
+
 
         if (RenderSkillPackWindow)
         {

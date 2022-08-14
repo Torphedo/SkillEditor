@@ -25,6 +25,7 @@ extern bool OptionsWindow;
 extern bool RenderSkillPackWindow;
 extern short AtkSkillState; // 0 = None, 1 = Opened, 2 = Saved
 extern bool RenderAtkSkillWindow;
+extern bool RenderDocumentationWindow;
 
 // ===== File Dialog Variables =====
 
