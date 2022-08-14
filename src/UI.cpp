@@ -261,16 +261,6 @@ int CreateUI() {
             AtkSkillWindow();
         }
 
-        // Unused
-        if (OptionsWindow)
-        {
-            ImGui::Begin("Settings");
-            ImGui::InputText("Phantom Dust Game Folder", PhantomDustDir, IM_ARRAYSIZE(PhantomDustDir));
-            Tooltip("The folder containing PDUWP.exe. You must have a\n dumped copy of the game files to use this option.");
-
-            ImGui::End();
-        }
-
         if (RenderSkillPackWindow)
         {
             SkillPackWindow();
