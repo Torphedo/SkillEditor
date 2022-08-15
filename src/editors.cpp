@@ -14,6 +14,8 @@ short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
 bool RenderAtkSkillWindow = false;
 bool RenderDocumentationWindow = false;
 
+int SelectIdx = 0;
+
 static MemoryEditor hex_edit;
 
 void SafeAtkSave()
@@ -64,14 +66,37 @@ void SafeNewPack()
 
 void DocumentationWindow()
 {
-    ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Documentation");
-    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-    if (ImGui::BeginTabBar("DocTabs", tab_bar_flags))
+    ImGui::SetNextWindowSize(ImVec2(650, 300), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Documentation", &RenderDocumentationWindow))
+    {
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::BeginTabBar("DocTabs"))
     {
         if (ImGui::BeginTabItem("Attack Skills"))
         {
-            ImGui::Text("Attack Skill Documentation\nblah blah blah blah blah");
+            ImGui::BeginChild("left pane", ImVec2(200, 0), true);
+            for (int i = 0; i < IM_ARRAYSIZE(DocumentationLabels); i++)
+            {
+                // Selectable object for every string in the list
+                if (ImGui::Selectable(const_cast<char*>(DocumentationLabels[i].c_str())))
+                {
+                    SelectIdx = i;
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::SameLine();
+
+            ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
+            char* label = const_cast<char*>(DocumentationText[SelectIdx].c_str());
+            ImGui::Text(const_cast<char*>(DocumentationLabels[SelectIdx].c_str()));
+            ImGui::Text("\n");
+            ImGui::Text(label);
+
+            ImGui::EndChild();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
