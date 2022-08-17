@@ -103,13 +103,13 @@ int CreateUI() {
                             {
                                 LoadAttackSkill();        // Loads the current file into the atkskill struct
                                 cout << "Imported attack skill " << filepath << "\n";
-                                AtkSkillState = 1;        // Causes a message to appear on the status bar
-                                RenderAtkSkillWindow = true;    // Opens the Attack Skill Editor window
+                                UI.AtkSkillState = 1;        // Causes a message to appear on the status bar
+                                UI.RenderAtkSkillWindow = true;    // Opens the Attack Skill Editor window
                             }
                             else
                             {
                                 cout << "File selection canceled.\n";
-                                ErrorCode = 1;
+                                UI.ErrorCode = 1;
                             }
                         }
                         if (ImGui::MenuItem("Install Skill Pack"))
@@ -126,7 +126,7 @@ int CreateUI() {
                             else
                             {
                                 cout << "File selection canceled.\n";
-                                ErrorCode = 1;
+                                UI.ErrorCode = 1;
                             }
                         }
                         if (DebugMode)
@@ -144,7 +144,7 @@ int CreateUI() {
                                 else
                                 {
                                     cout << "File selection canceled.\n";
-                                    ErrorCode = 1;
+                                    UI.ErrorCode = 1;
                                 }
                             }
                         }
@@ -169,7 +169,7 @@ int CreateUI() {
                 {
                     if (ImGui::MenuItem("Attack Skill Editor"))
                     {
-                        RenderAtkSkillWindow = !RenderAtkSkillWindow; // Toggle Attack Skill Editor window
+                        UI.RenderAtkSkillWindow = !UI.RenderAtkSkillWindow; // Toggle Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Skill Hex Editor"))
                     {
@@ -181,7 +181,7 @@ int CreateUI() {
                     }
                     if (ImGui::MenuItem("Documentation"))
                     {
-                        RenderDocumentationWindow = !RenderDocumentationWindow;
+                        UI.RenderDocumentationWindow = !UI.RenderDocumentationWindow;
                     }
                     ImGui::EndMenu();
                 }
@@ -209,21 +209,21 @@ int CreateUI() {
         if (timer == 0)
         {
             // Save: Ctrl + S
-            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
+            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000 && UI.AtkSkillState != 0)
             {
                 SafeAtkSave();
                 timer = 20;
             }
 
             // Save As: Ctrl + Shift + S
-            if (GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState('S') & 0x8000 && AtkSkillState != 0)
+            if (GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState('S') & 0x8000 && UI.AtkSkillState != 0)
             {
                 SafeAtkSaveAs();
                 timer = 20;
             }
 
             // New: Ctrl + N
-            if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !RenderSkillPackWindow)
+            if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !UI.NewSkillPack)
             {
                 SafeNewPack();
                 timer = 20;
@@ -236,17 +236,17 @@ int CreateUI() {
         if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
             if (ImGui::BeginMenuBar()) {
                 std::string print;
-                if (AtkSkillState == 1) {
+                if (UI.AtkSkillState == 1) {
                     print = "Imported attack skill " + filepath; // Status messages about importing
                                                                  // and saving files.
                 }
-                else if (AtkSkillState == 2) {
+                else if (UI.AtkSkillState == 2) {
                     print = "Saved attack skill to " + filepath;
                 }
-                else if (ErrorCode == 1) {
+                else if (UI.ErrorCode == 1) {
                     print = "File selection cancelled.";
                 }
-                else if (ErrorCode == 2) {
+                else if (UI.ErrorCode == 2) {
                     print = "Tried to save without opening a file, aborting...";
                 }
                 ImGui::Text(const_cast<char*>(print.c_str()));
@@ -260,18 +260,18 @@ int CreateUI() {
             HexEditorWindow(4);
         }
 
-        if (RenderAtkSkillWindow)
+        if (UI.RenderAtkSkillWindow)
         {
             AtkSkillWindow();
         }
 
-        if (RenderDocumentationWindow)
+        if (UI.RenderDocumentationWindow)
         {
             DocumentationWindow();
         }
 
 
-        if (RenderSkillPackWindow)
+        if (UI.NewSkillPack)
         {
             SkillPackWindow();
         }

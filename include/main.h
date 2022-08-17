@@ -20,12 +20,14 @@ extern bool DebugMode;
 
 // ===== UI Variables =====
 
-extern short ErrorCode;
-extern bool OptionsWindow;
-extern bool RenderSkillPackWindow;
-extern short AtkSkillState; // 0 = None, 1 = Opened, 2 = Saved
-extern bool RenderAtkSkillWindow;
-extern bool RenderDocumentationWindow;
+typedef struct
+{
+	short ErrorCode;
+	bool NewSkillPack;
+	short AtkSkillState; // 0 = None, 1 = Opened, 2 = Saved
+	bool RenderAtkSkillWindow;
+	bool RenderDocumentationWindow;
+}windowvars; extern windowvars UI;
 
 // ===== File Dialog Variables =====
 

@@ -10,12 +10,7 @@
 
 using std::cout;
 
-short ErrorCode;
-bool OptionsWindow = false;
-bool RenderSkillPackWindow = false;
-short AtkSkillState = 0; // 0 = None, 1 = Opened, 2 = Saved
-bool RenderAtkSkillWindow = false;
-bool RenderDocumentationWindow = false;
+windowvars UI;
 
 int SelectIdx = 0;
 
@@ -25,35 +20,35 @@ void Markdown(const std::string& markdown_); // Markdown function prototype
 
 void SafeAtkSave()
 {
-    if (AtkSkillState != 0) {
+    if (UI.AtkSkillState != 0) {
         SaveAtkSkill();    // Write data.
         cout << "Saved attack skill to " << filepath << "\n";
-        AtkSkillState = 2; // Causes a message to appear on the status bar
+        UI.AtkSkillState = 2; // Causes a message to appear on the status bar
     }
     else {
         cout << "Tried to save without opening a file, aborting...\n";
-        ErrorCode = 2;
+        UI.ErrorCode = 2;
     }
 }
 
 void SafeAtkSaveAs()
 {
-    if (AtkSkillState != 0) {
+    if (UI.AtkSkillState != 0) {
         if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
         {
             SaveAtkSkill();         // Write data.
             cout << "Saved attack skill to " << filepath << "\n";
-            AtkSkillState = 2;
+            UI.AtkSkillState = 2;
         }
         else
         {
             cout << "File selection canceled.\n";
-            ErrorCode = 1;
+            UI.ErrorCode = 1;
         }
     }
     else {
         cout << "Tried to save without opening a file, aborting...\n";
-        ErrorCode = 2;
+        UI.ErrorCode = 2;
     }
 }
 
@@ -61,18 +56,18 @@ void SafeNewPack()
 {
     if (SUCCEEDED(MultiSelectWindow()))
     {
-        RenderSkillPackWindow = true;
+        UI.NewSkillPack = true;
     }
     else {
         cout << "Skill selection canceled.\n";
-        ErrorCode = 2;
+        UI.ErrorCode = 2;
     }
 }
 
 void DocumentationWindow()
 {
     ImGui::SetNextWindowSize(ImVec2(650, 300), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Documentation", &RenderDocumentationWindow))
+    if (!ImGui::Begin("Documentation", &UI.RenderDocumentationWindow))
     {
         ImGui::End();
         return;
@@ -249,7 +244,7 @@ void AtkSkillWindow()
 
     if (ImGui::Button("Close")) 
     {
-        RenderAtkSkillWindow = false; // Deactivates the window.
+        UI.RenderAtkSkillWindow = false; // Deactivates the window.
     }
     ImGui::PopStyleVar();
     ImGui::End();
@@ -258,7 +253,7 @@ void AtkSkillWindow()
 void HexEditorWindow(short Idx)
 {
     hex_edit.ReadOnly = false;
-    hex_edit.DrawWindow("Hex Editor", &skillarray[4], 144);
+    hex_edit.DrawWindow("Hex Editor", &skillarray[Idx], 144);
 }
 
 void SkillPackWindow()
@@ -271,7 +266,7 @@ void SkillPackWindow()
         if (SUCCEEDED(FileSaveDialog(skillpack, L".bin")))
         {
             SaveSkillPack();
-            RenderSkillPackWindow = false;
+            UI.NewSkillPack = false;
         }
     }
 
