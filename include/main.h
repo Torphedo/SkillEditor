@@ -64,7 +64,6 @@ void SaveSkillPack();
 
 DWORD GetProcessIDByName(LPCTSTR ProcessName);
 bool GetProcess();
-char* GetAddressOfData(const uint8_t* data, size_t len);
 int LoadGSDataFromRAM();
 int SaveGSDataToRAM();
 void InstallSkillPackToRAM();

@@ -246,44 +246,6 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
     return 0;
 }
 
-char* GetAddressOfData(const uint8_t* data, size_t len)
-{
-    if (EsperHandle)
-    {
-        SYSTEM_INFO si;
-        GetSystemInfo(&si);
-
-        MEMORY_BASIC_INFORMATION info;
-        std::vector<char> chunk;
-        char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
-        while (p < si.lpMaximumApplicationAddress)
-        {
-            // Loop through memory pages to find one that's actually being used by the game
-            if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
-            {
-                if (info.State == MEM_COMMIT) // If this is a valid chunk of memory
-                {
-                    chunk.resize(info.RegionSize);
-                    SIZE_T bytesRead;
-                    if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
-                    {
-                        for (size_t i = 0; i < (bytesRead - len); ++i)
-                        {
-                            // Check if the address matches the supplied data
-                            if (memcmp(data, &chunk[i], len) == 0)
-                            {
-                                return (char*)p + i;
-                            }
-                        }
-                    }
-                }
-                p += info.RegionSize;
-            }
-        }
-    }
-    return 0;
-}
-
 bool GetProcess()
 {
     DWORD cache = pid;
@@ -296,7 +258,40 @@ bool GetProcess()
     }
     if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
     {
-        baseAddress = (uintptr_t)GetAddressOfData(gsdata, 16);
+        if (EsperHandle)
+        {
+            SYSTEM_INFO si;
+            GetSystemInfo(&si);
+
+            MEMORY_BASIC_INFORMATION info;
+            std::vector<char> chunk;
+            char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
+            while (p < si.lpMaximumApplicationAddress)
+            {
+                // Loop through memory pages to find one that's actually being used by the game
+                if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
+                {
+                    if (info.State == MEM_COMMIT) // If this is a valid page of memory
+                    {
+                        chunk.resize(info.RegionSize);
+                        SIZE_T bytesRead;
+                        if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
+                        {
+                            for (size_t i = 0; i < (bytesRead - 16); ++i)
+                            {
+                                // Check if the 16 bytes at the current address matches gsdata
+                                if (memcmp(gsdata, &chunk[i], 16) == 0)
+                                {
+                                    baseAddress = (uintptr_t) p + i;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    p += info.RegionSize;
+                }
+            }
+        }
     }
 
     return true;
