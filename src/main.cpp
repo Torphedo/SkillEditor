@@ -80,28 +80,32 @@ void LoadAttackSkill()
 // Writes the currently open file to disk.
 void SaveAtkSkill()
 {
-    std::ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
-                                                         // the name of the file that was opened.
-
-    AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
-                                                    // the new data.
-    AtkSkillOut.close();
-
-    skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
-
-    if (GetProcess())
+    if (OpenedAttackSkill)
     {
-        // Expensive calc, no point doing it unless we can access the version number
-        uint32_t hash = crc32buf((char*)&AtkSkill, 144);
-        gsdataheader.VersionNum = (int)hash;
+        std::ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
+                                                             // the name of the file that was opened.
 
-        SaveGSDataToRAM();
-        cout << "Wrote skill data to memory.\n";
-        if (DebugMode)
+        AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
+                                                        // the new data.
+        AtkSkillOut.close();
+        cout << "Saved attack skill to " << filepath << "\n";
+
+        skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+
+        if (GetProcess())
         {
-            cout << "New version number: " << hash << "\n"; // I want it to be slightly harder for new users to figure out
-                                                            // how the hashing works, so hiding the version number change here.
+            // Only perform hash if the game is running
+            gsdataheader.VersionNum = crc32buf((char*)&AtkSkill, 144);
+
+            SaveGSDataToRAM();
+            cout << "Wrote skill data to memory.\n";
+            // To make it slightly harder for new users to figure out how the hashing works, it won't be printed out every time.
+            // cout << "New version number: " << gsdataheader.VersionNum << "\n";
         }
+    }
+    else
+    {
+        cout << "Tried to save without opening a file, aborting...\n";
     }
 }
 

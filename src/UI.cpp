@@ -152,33 +152,17 @@ int CreateUI() {
                     }
                     if (ImGui::MenuItem("Save", "Ctrl + S"))
                     {
-                        if (OpenedAttackSkill)
-                        {
-                            SaveAtkSkill();    // Write data.
-                            cout << "Saved attack skill to " << filepath << "\n";
-                        }
-                        else
-                        {
-                            cout << "Tried to save without opening a file, aborting...\n";
-                        }
+                        SaveAtkSkill();
                     }
                     if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                     {
-                        if (OpenedAttackSkill)
+                        if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
                         {
-                            if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
-                            {
-                                SaveAtkSkill(); // Write data.
-                                cout << "Saved attack skill to " << filepath << "\n";
-                            }
-                            else
-                            {
-                                cout << "File selection canceled.\n";
-                            }
+                            SaveAtkSkill(); // Write data.
                         }
                         else
                         {
-                            cout << "Tried to save without opening a file, aborting...\n";
+                            cout << "File selection canceled.\n";
                         }
                     }
 
@@ -233,33 +217,24 @@ int CreateUI() {
             // Save: Ctrl + S
             if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000)
             {
-                if (OpenedAttackSkill)
-                {
+                timer = 20;
 
-                    // Save As: Ctrl + Shift + S
-                    if (GetKeyState(VK_SHIFT))
+                // Save As: Ctrl + Shift + S
+                if (GetKeyState(VK_SHIFT))
+                {
+                    if (FileSaveDialog(skillfile, L".skill") != -1)
                     {
-                        if (FileSaveDialog(skillfile, L".skill") != -1)
-                        {
-                            SaveAtkSkill();    // Write data.
-                            cout << "Saved attack skill to " << filepath << "\n";
-                        }
-                        else
-                        {
-                            cout << "File selection cancelled.\n";
-                        }
+                        SaveAtkSkill(); // Write data.
                     }
                     else
                     {
-                        SaveAtkSkill();    // Write data.
-                        cout << "Saved attack skill to " << filepath << "\n";
+                        cout << "File selection cancelled.\n";
                     }
                 }
                 else
                 {
-                    cout << "Tried to save without opening a file, aborting...\n";
+                    SaveAtkSkill(); // Write data.
                 }
-                timer = 20;
             }
 
             // New: Ctrl + N
