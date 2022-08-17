@@ -175,6 +175,7 @@
     <ClInclude Include="include\imgui\backends\imgui_impl_dx9.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="include\main.h" />
+    <ClInclude Include="include\markdown\imgui_markdown.h" />
     <ClInclude Include="include\UI.h" />
     <ClInclude Include="include\structs.h" />
   </ItemGroup>

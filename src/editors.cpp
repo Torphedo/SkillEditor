@@ -4,6 +4,9 @@
 #include <main.h>
 #include <editors.h>
 #include <hex_editor/imgui_hex_editor.h>
+#include <markdown/imgui_markdown.h>
+
+#include "Shellapi.h"
 
 using std::cout;
 
@@ -17,6 +20,8 @@ bool RenderDocumentationWindow = false;
 int SelectIdx = 0;
 
 static MemoryEditor hex_edit;
+
+void Markdown(const std::string& markdown_); // Markdown function prototype
 
 void SafeAtkSave()
 {
@@ -91,10 +96,8 @@ void DocumentationWindow()
             ImGui::SameLine();
 
             ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
-            char* label = const_cast<char*>(DocumentationText[SelectIdx].c_str());
-            ImGui::Text(const_cast<char*>(DocumentationLabels[SelectIdx].c_str()));
-            ImGui::Text("\n");
-            ImGui::Text(label);
+            // Renders the item name as an H1, then the description on a new line.
+            Markdown("# " + DocumentationLabels[SelectIdx] + "\n" + DocumentationText[SelectIdx]);
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -273,4 +276,106 @@ void SkillPackWindow()
     }
 
     ImGui::End();
+}
+
+
+// Markdown setup stuff
+
+static ImFont* H1 = NULL;
+static ImFont* H2 = NULL;
+static ImFont* H3 = NULL;
+
+static ImGui::MarkdownConfig mdConfig;
+void LinkCallback(ImGui::MarkdownLinkCallbackData data_)
+{
+    std::string url(data_.link, data_.linkLength);
+    if (!data_.isImage)
+    {
+        ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+    }
+}
+
+inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData data_)
+{
+    // In your application you would load an image based on data_ input. Here we just use the imgui font texture.
+    ImTextureID image = ImGui::GetIO().Fonts->TexID;
+    // > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
+    ImGui::MarkdownImageData imageData;
+    imageData.isValid = true;
+    imageData.useLinkCallback = false;
+    imageData.user_texture_id = image;
+    imageData.size = ImVec2(40.0f, 20.0f);
+
+    // For image resize when available size.x > image width, add
+    ImVec2 const contentSize = ImGui::GetContentRegionAvail();
+    if (imageData.size.x > contentSize.x)
+    {
+        float const ratio = imageData.size.y / imageData.size.x;
+        imageData.size.x = contentSize.x;
+        imageData.size.y = contentSize.x * ratio;
+    }
+
+    return imageData;
+}
+
+void LoadFonts(float fontSize_)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
+    // Base font
+    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSize_);
+    // Bold headings H2 and H3
+    H2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSize_); // Bold font, I don't have one so I'm just using the same font
+    H3 = mdConfig.headingFormats[1].font;
+    // bold heading H1
+    float fontSizeH1 = fontSize_ * 1.1f;
+    H1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSizeH1); // Also supposed to be bold
+}
+
+void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
+{
+    // Call the default first so any settings can be overwritten by our implementation.
+    // Alternatively could be called or not called in a switch statement on a case by case basis.
+    // See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
+    ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
+
+    switch (markdownFormatInfo_.type)
+    {
+        // example: change the colour of heading level 2
+    case ImGui::MarkdownFormatType::HEADING:
+    {
+        if (markdownFormatInfo_.level == 2)
+        {
+            if (start_)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+            }
+            else
+            {
+                ImGui::PopStyleColor();
+            }
+        }
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+}
+
+void Markdown(const std::string& markdown_)
+{
+    // You can make your own Markdown function with your prefered string container and markdown config.
+    // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
+    mdConfig.linkCallback = LinkCallback;
+    mdConfig.tooltipCallback = NULL;
+    mdConfig.imageCallback = ImageCallback;
+    mdConfig.linkIcon = NULL; // Was "ICON_FA_LINK" in example
+    mdConfig.headingFormats[0] = { H1, true };
+    mdConfig.headingFormats[1] = { H2, true };
+    mdConfig.headingFormats[2] = { H3, false };
+    mdConfig.userData = NULL;
+    mdConfig.formatCallback = ExampleMarkdownFormatCallback;
+    ImGui::Markdown(markdown_.c_str(), markdown_.length(), mdConfig);
 }
