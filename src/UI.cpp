@@ -7,7 +7,7 @@ using std::cout;
 
 short timer;
 bool GamePaused = false;
-bool HexEditor = false;
+bool OpenedAttackSkill = false;
 
 int CreateUI() {
     // Create application window
@@ -103,8 +103,8 @@ int CreateUI() {
                             {
                                 LoadAttackSkill();        // Loads the current file into the atkskill struct
                                 cout << "Imported attack skill " << filepath << "\n";
-                                UI.AtkSkillState = 1;        // Causes a message to appear on the status bar
-                                UI.RenderAtkSkillWindow = true;    // Opens the Attack Skill Editor window
+                                OpenedAttackSkill = true;
+                                UI.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
                             }
                             else
                             {
@@ -152,11 +152,34 @@ int CreateUI() {
                     }
                     if (ImGui::MenuItem("Save", "Ctrl + S"))
                     {
-                        SafeAtkSave();
+                        if (OpenedAttackSkill)
+                        {
+                            SaveAtkSkill();    // Write data.
+                            cout << "Saved attack skill to " << filepath << "\n";
+                        }
+                        else
+                        {
+                            cout << "Tried to save without opening a file, aborting...\n";
+                        }
                     }
                     if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                     {
-                        SafeAtkSaveAs();
+                        if (OpenedAttackSkill)
+                        {
+                            if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
+                            {
+                                SaveAtkSkill(); // Write data.
+                                cout << "Saved attack skill to " << filepath << "\n";
+                            }
+                            else
+                            {
+                                cout << "File selection canceled.\n";
+                            }
+                        }
+                        else
+                        {
+                            cout << "Tried to save without opening a file, aborting...\n";
+                        }
                     }
 
                     if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -169,19 +192,19 @@ int CreateUI() {
                 {
                     if (ImGui::MenuItem("Attack Skill Editor"))
                     {
-                        UI.RenderAtkSkillWindow = !UI.RenderAtkSkillWindow; // Toggle Attack Skill Editor window
+                        UI.AttackSkillEditor = !UI.AttackSkillEditor; // Toggle Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Skill Hex Editor"))
                     {
                         GetProcess();
                         if (LoadGSDataFromRAM() == 0)
                         {
-                            HexEditor = !HexEditor;
+                            UI.HexEditor = !UI.HexEditor;
                         }
                     }
                     if (ImGui::MenuItem("Documentation"))
                     {
-                        UI.RenderDocumentationWindow = !UI.RenderDocumentationWindow;
+                        UI.Documentation = !UI.Documentation;
                     }
                     ImGui::EndMenu();
                 }
@@ -205,20 +228,37 @@ int CreateUI() {
             ImGui::End();
         }
 
-        // Redundant AtkSkillState checks here, but it stops console spam.
         if (timer == 0)
         {
             // Save: Ctrl + S
-            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000 && UI.AtkSkillState != 0)
+            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000)
             {
-                SafeAtkSave();
-                timer = 20;
-            }
+                if (OpenedAttackSkill)
+                {
 
-            // Save As: Ctrl + Shift + S
-            if (GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState('S') & 0x8000 && UI.AtkSkillState != 0)
-            {
-                SafeAtkSaveAs();
+                    // Save As: Ctrl + Shift + S
+                    if (GetKeyState(VK_SHIFT))
+                    {
+                        if (FileSaveDialog(skillfile, L".skill") != -1)
+                        {
+                            SaveAtkSkill();    // Write data.
+                            cout << "Saved attack skill to " << filepath << "\n";
+                        }
+                        else
+                        {
+                            cout << "File selection cancelled.\n";
+                        }
+                    }
+                    else
+                    {
+                        SaveAtkSkill();    // Write data.
+                        cout << "Saved attack skill to " << filepath << "\n";
+                    }
+                }
+                else
+                {
+                    cout << "Tried to save without opening a file, aborting...\n";
+                }
                 timer = 20;
             }
 
@@ -229,43 +269,22 @@ int CreateUI() {
                 timer = 20;
             }
         }
-        else {
+        else
+        {
             timer--; // Decrement cooldown timer until it hits 0
         }
 
-        if (ImGui::BeginViewportSideBar("StatusBar", viewport, ImGuiDir_Down, height, window_flags)) {
-            if (ImGui::BeginMenuBar()) {
-                std::string print;
-                if (UI.AtkSkillState == 1) {
-                    print = "Imported attack skill " + filepath; // Status messages about importing
-                                                                 // and saving files.
-                }
-                else if (UI.AtkSkillState == 2) {
-                    print = "Saved attack skill to " + filepath;
-                }
-                else if (UI.ErrorCode == 1) {
-                    print = "File selection cancelled.";
-                }
-                else if (UI.ErrorCode == 2) {
-                    print = "Tried to save without opening a file, aborting...";
-                }
-                ImGui::Text(const_cast<char*>(print.c_str()));
-                ImGui::EndMenuBar();
-            }
-            ImGui::End();
-        }
-
-        if (HexEditor)
+        if (UI.HexEditor)
         {
             HexEditorWindow(4);
         }
 
-        if (UI.RenderAtkSkillWindow)
+        if (UI.AttackSkillEditor)
         {
             AtkSkillWindow();
         }
 
-        if (UI.RenderDocumentationWindow)
+        if (UI.Documentation)
         {
             DocumentationWindow();
         }

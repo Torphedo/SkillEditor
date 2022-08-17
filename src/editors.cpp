@@ -18,40 +18,6 @@ static MemoryEditor hex_edit;
 
 void Markdown(const std::string& markdown_); // Markdown function prototype
 
-void SafeAtkSave()
-{
-    if (UI.AtkSkillState != 0) {
-        SaveAtkSkill();    // Write data.
-        cout << "Saved attack skill to " << filepath << "\n";
-        UI.AtkSkillState = 2; // Causes a message to appear on the status bar
-    }
-    else {
-        cout << "Tried to save without opening a file, aborting...\n";
-        UI.ErrorCode = 2;
-    }
-}
-
-void SafeAtkSaveAs()
-{
-    if (UI.AtkSkillState != 0) {
-        if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
-        {
-            SaveAtkSkill();         // Write data.
-            cout << "Saved attack skill to " << filepath << "\n";
-            UI.AtkSkillState = 2;
-        }
-        else
-        {
-            cout << "File selection canceled.\n";
-            UI.ErrorCode = 1;
-        }
-    }
-    else {
-        cout << "Tried to save without opening a file, aborting...\n";
-        UI.ErrorCode = 2;
-    }
-}
-
 void SafeNewPack()
 {
     if (SUCCEEDED(MultiSelectWindow()))
@@ -60,14 +26,13 @@ void SafeNewPack()
     }
     else {
         cout << "Skill selection canceled.\n";
-        UI.ErrorCode = 2;
     }
 }
 
 void DocumentationWindow()
 {
     ImGui::SetNextWindowSize(ImVec2(650, 300), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Documentation", &UI.RenderDocumentationWindow))
+    if (!ImGui::Begin("Documentation", &UI.Documentation))
     {
         ImGui::End();
         return;
@@ -244,7 +209,7 @@ void AtkSkillWindow()
 
     if (ImGui::Button("Close")) 
     {
-        UI.RenderAtkSkillWindow = false; // Deactivates the window.
+        UI.AttackSkillEditor = false; // Deactivates the window.
     }
     ImGui::PopStyleVar();
     ImGui::End();

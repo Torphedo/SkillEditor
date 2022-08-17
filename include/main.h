@@ -24,10 +24,12 @@ typedef struct
 {
 	short ErrorCode;
 	bool NewSkillPack;
-	short AtkSkillState; // 0 = None, 1 = Opened, 2 = Saved
-	bool RenderAtkSkillWindow;
-	bool RenderDocumentationWindow;
+	bool HexEditor;
+	bool AttackSkillEditor;
+	bool Documentation;
 }windowvars; extern windowvars UI;
+
+extern bool OpenedAttackSkill;
 
 // ===== File Dialog Variables =====
 
