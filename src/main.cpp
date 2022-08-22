@@ -80,7 +80,7 @@ void SaveSkillPack()
     short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
-    SkillPackOut.write((char*)&packname, sizeof(packname)); // 32 characters for the name
+    SkillPackOut.write((char*)&packname, 32); // 32 characters for the name
     SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
     SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
