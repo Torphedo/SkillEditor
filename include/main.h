@@ -7,11 +7,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-#include <thread>
-#include <tchar.h>
 #include <filesystem>
-
-#include <tlhelp32.h>
 
 #include <imgui_internal.h>
 #include <structs.h>
