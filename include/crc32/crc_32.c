@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 
 #define UPDC32(octet, crc) (crc_32_tab[((crc) ^ (octet)) & 0xff] ^ ((crc) >> 8));

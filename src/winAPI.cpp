@@ -1,6 +1,13 @@
 #include "winAPI.h"
 #include <main.h>
 
+char* filepath;
+std::string* multiselectpath;
+int MultiSelectCount = 0;
+
+const COMDLG_FILTERSPEC skillfile[] = { L"Skill File", L"*.skill;" };
+const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
+
 HRESULT hr;
 
 int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC* fileTypes)

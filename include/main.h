@@ -31,19 +31,8 @@ typedef struct
 
 extern bool OpenedAttackSkill;
 
-// ===== File Dialog Variables =====
-
-extern char* filepath;
-extern std::string* multiselectpath;
-extern int MultiSelectCount;
-
 extern const COMDLG_FILTERSPEC skillfile[];
 extern const COMDLG_FILTERSPEC skillpack[];
-
-// ===== File I/O Variables & Shared Data =====
-
-extern AttackSkill AtkSkill; // Attack skill struct
-extern atkskill skillarray[751];
 
 // ===== User Input Variables =====
 
@@ -74,9 +63,3 @@ void UnpauseGame();
 void Tooltip(const char* text);
 void InputShort(const char* label, void* p_data);
 void InputUInt8(const char* label, void* p_data);
-
-// ===== Windows Explorer Dialogs =====
-
-HRESULT MultiSelectWindow();
-int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC* fileTypes);
-int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC* fileTypes, LPCWSTR DefaultExtension);

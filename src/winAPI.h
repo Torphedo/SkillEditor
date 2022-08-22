@@ -2,9 +2,12 @@
 
 #include <Windows.h>
 #include <shobjidl.h>
+#include <string>
 
-const COMDLG_FILTERSPEC skillfile[] = { L"Skill File", L"*.skill;" };
-const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
+extern char* filepath;
+extern std::string* multiselectpath;
+extern int MultiSelectCount;
+
 extern HRESULT hr;
 
 HRESULT MultiSelectWindow();

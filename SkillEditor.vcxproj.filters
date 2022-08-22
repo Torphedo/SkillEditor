@@ -46,6 +46,12 @@
     <ClCompile Include="src\winAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\memory-editing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\crc32\crc_32.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\imgui\imconfig.h">
@@ -85,6 +91,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\winAPI.h" />
+    <ClInclude Include="src\memory-editing.h" />
+    <ClInclude Include="include\crc32\crc_32.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\imgui\misc\debuggers\imgui.natvis">

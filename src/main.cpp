@@ -4,38 +4,15 @@
 #include <main.h>
 #include <UI.h>
 #include "winAPI.h"
+#include "memory-editing.h"
 
 extern "C" {
-#include <crc32/crc_32.c>
+#include <crc32/crc_32.h>
 }
 
 using std::ios, std::cout;
 
 bool DebugMode = false;
-
-// ===== File Dialog Variables =====
-
-char* filepath;
-std::string* multiselectpath;
-int MultiSelectCount = 0;
-
-// ===== File I/O Variables & Shared Data =====
-
-std::fstream AtkSkillFile; // fstream for Attack Skill files
-
-std::fstream GSDataStream; // fstream for gsdata
-GSDataHeader gsdataheader; // First 160 bytes of gsdata
-atkskill skillarray[751];  // Array of 751 skill data blocks
-AttackSkill AtkSkill;
-int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
-
-// ===== Process Editing Variables =====
-
-DWORD pid = 0;
-HANDLE EsperHandle;
-uintptr_t baseAddress;
-const uint8_t gsdata[16] = {0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00};
-
 
 // ===== User Input Variables =====
 
@@ -216,172 +193,6 @@ void SaveSkillPack()
 //     GSDataOut.close();
 //     return 0; // Success
 // }
-
-// ===== Process Editing Functions =====
-
-DWORD GetProcessIDByName(LPCTSTR ProcessName)
-{
-    PROCESSENTRY32 pt;
-    HANDLE hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    pt.dwSize = sizeof(PROCESSENTRY32);
-    if (Process32First(hsnap, &pt)) { // must call this first
-        do {
-            if (!lstrcmpi(pt.szExeFile, ProcessName)) {
-                CloseHandle(hsnap);
-                return pt.th32ProcessID;
-            }
-        } while (Process32Next(hsnap, &pt));
-    }
-    CloseHandle(hsnap); // close handle on failure
-    return 0;
-}
-
-bool GetProcess()
-{
-    DWORD cache = pid;
-    pid = GetProcessIDByName(L"PDUWP.exe");
-    EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-    if (!EsperHandle)
-    {
-        cout << "Failed to attach to process.\n";
-        return false;
-    }
-    if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
-    {
-        if (EsperHandle)
-        {
-            SYSTEM_INFO si;
-            GetSystemInfo(&si);
-
-            MEMORY_BASIC_INFORMATION info;
-            std::vector<char> chunk;
-            char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
-            while (p < si.lpMaximumApplicationAddress)
-            {
-                // Loop through memory pages to find one that's actually being used by the game
-                if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
-                {
-                    if (info.State == MEM_COMMIT) // If this is a valid page of memory
-                    {
-                        chunk.resize(info.RegionSize);
-                        SIZE_T bytesRead;
-                        if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
-                        {
-                            for (size_t i = 0; i < (bytesRead - 16); ++i)
-                            {
-                                // Check if the 16 bytes at the current address matches gsdata
-                                if (memcmp(gsdata, &chunk[i], 16) == 0)
-                                {
-                                    baseAddress = (uintptr_t) p + i;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    p += info.RegionSize;
-                }
-            }
-        }
-    }
-
-    return true;
- }
-
-int LoadGSDataFromRAM()
-{
-    if (EsperHandle != 0)
-    {
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            cout << "Process Read Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress += 160; // Address where the skills begin.
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            cout << "Process Read Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress -= 160;
-    }
-    return 0;
-}
-
-int SaveGSDataToRAM()
-{
-    if (EsperHandle != 0)
-    {
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            cout << "Process Write Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress += 160; // Address where the skills begin.
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            cout << "Process Write Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress -= 160;
-    }
-    return 0;
-}
-
-void InstallSkillPackToRAM()
-{
-    if (LoadGSDataFromRAM() == 0)
-    {
-        std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
-        std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
-
-        int BlobSize = 0;
-        for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
-        {
-            std::fstream SkillPackIn;
-            SkillPackHeaderV1 header;
-            SkillPackIn.open(multiselectpath[n], ios::in | ios::binary);
-            SkillPackIn.read((char*)&header, sizeof(header));
-            BlobSize += (int)std::filesystem::file_size(multiselectpath[n]);
-
-            for (int i = 0; i < header.SkillCount; i++)
-            {
-                atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
-                SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
-                skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
-            }
-        }
-        char* SkillPackBlobData;
-        SkillPackBlobData = new char[BlobSize];
-        std::fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
-                                    // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
-        for (int n = 0; n < MultiSelectCount; n++)
-        {
-            SkillPackBlob.open(multiselectpath[n], ios::in | ios::binary);
-            SkillPackBlob.read(SkillPackBlobData, BlobSize);
-        }
-        SkillPackBlob.close();
-
-        uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
-        gsdataheader.VersionNum = (int)hash;
-        cout << "New version number: " << hash << "\n";
-
-        delete[] SkillPackBlobData;
-
-        SaveGSDataToRAM();
-    }
-}
-
-void PauseGame()
-{
-    pid = GetProcessIDByName(L"PDUWP.exe");
-    DebugActiveProcess(pid);
-}
-
-void UnpauseGame()
-{
-    pid = GetProcessIDByName(L"PDUWP.exe");
-    DebugActiveProcessStop(pid);
-}
 
 // ===== Custom ImGui Functions / Wrappers =====
 

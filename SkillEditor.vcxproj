@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\crc32\crc_32.c" />
     <ClCompile Include="src\dx-init.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />
     <ClCompile Include="include\imgui\imgui_draw.cpp" />
@@ -162,11 +163,13 @@
     <ClCompile Include="include\imgui\backends\imgui_impl_dx9.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="src\editors.cpp" />
+    <ClCompile Include="src\memory-editing.cpp" />
     <ClCompile Include="src\UI.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\winAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\crc32\crc_32.h" />
     <ClInclude Include="include\dx-init.h" />
     <ClInclude Include="include\editors.h" />
     <ClInclude Include="include\hex_editor\imgui_hex_editor.h" />
@@ -179,6 +182,7 @@
     <ClInclude Include="include\markdown\imgui_markdown.h" />
     <ClInclude Include="include\UI.h" />
     <ClInclude Include="include\structs.h" />
+    <ClInclude Include="src\memory-editing.h" />
     <ClInclude Include="src\winAPI.h" />
   </ItemGroup>
   <ItemGroup>

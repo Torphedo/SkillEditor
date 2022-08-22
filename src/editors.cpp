@@ -3,6 +3,8 @@
 
 #include <main.h>
 #include <editors.h>
+#include "winAPI.h"
+#include "memory-editing.h"
 #include <hex_editor/imgui_hex_editor.h>
 #include <markdown/imgui_markdown.h>
 

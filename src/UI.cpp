@@ -2,6 +2,7 @@
 #include <main.h>
 #include <UI.h>
 #include <editors.h>
+#include "winAPI.h"
 
 using std::cout;
 
