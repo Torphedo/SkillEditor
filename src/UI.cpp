@@ -3,6 +3,7 @@
 #include <UI.h>
 #include <editors.h>
 #include "winAPI.h"
+#include "memory-editing.h"
 
 using std::cout;
 

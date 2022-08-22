@@ -43,16 +43,6 @@ void SaveSkillPack();
 // int LoadGSDATA();
 // int SaveGSDATA();
 
-// ===== PDUWP Memory Editing =====
-
-DWORD GetProcessIDByName(LPCTSTR ProcessName);
-bool GetProcess();
-int LoadGSDataFromRAM();
-int SaveGSDataToRAM();
-void InstallSkillPackToRAM();
-void PauseGame();
-void UnpauseGame();
-
 // ===== Custom ImGui Functions / Wrappers =====
 
 void Tooltip(const char* text);
