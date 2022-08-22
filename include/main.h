@@ -33,7 +33,6 @@ extern const COMDLG_FILTERSPEC skillpack[];
 // ===== User Input Variables =====
 
 extern char packname[32];
-extern char PhantomDustDir[275];
 
 // ===== File I/O =====
 

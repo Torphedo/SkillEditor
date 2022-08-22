@@ -17,7 +17,6 @@ bool DebugMode = false;
 // ===== User Input Variables =====
 
 char packname[32];
-char PhantomDustDir[275];
 
 
 int main()
