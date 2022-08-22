@@ -50,11 +50,6 @@ extern atkskill skillarray[751];
 extern char packname[32];
 extern char PhantomDustDir[275];
 
-// ========== Custom Functions ==========
-
-
-char* PWSTR_to_char(PWSTR ws);
-
 // ===== File I/O =====
 
 void LoadAttackSkill();

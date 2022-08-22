@@ -54,17 +54,6 @@ int main()
     return 0;
 }
 
-
-char* PWSTR_to_char(PWSTR ws) {
-    std::string string;
-    string.reserve(wcslen(ws));
-    char* result;
-    for (; *ws; ws++)
-        string += (char)*ws;
-    result = (char*) string.c_str();
-    return result;
-}
-
 // ===== File I/O =====
 
 // Loads the current file into the AtkSkill struct
