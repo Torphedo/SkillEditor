@@ -43,6 +43,9 @@
     <ClCompile Include="src\editors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\winAPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\imgui\imconfig.h">
@@ -81,6 +84,7 @@
     <ClInclude Include="include\markdown\imgui_markdown.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\winAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\imgui\misc\debuggers\imgui.natvis">
