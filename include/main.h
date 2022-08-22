@@ -33,7 +33,7 @@ extern bool OpenedAttackSkill;
 
 // ===== File Dialog Variables =====
 
-extern std::string filepath;
+extern char* filepath;
 extern std::string* multiselectpath;
 extern int MultiSelectCount;
 
@@ -53,7 +53,7 @@ extern char PhantomDustDir[275];
 // ========== Custom Functions ==========
 
 
-std::string PWSTR_to_string(PWSTR ws);
+char* PWSTR_to_char(PWSTR ws);
 
 // ===== File I/O =====
 

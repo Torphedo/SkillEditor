@@ -18,9 +18,7 @@ const COMDLG_FILTERSPEC skillfile[] = { L"Skill File", L"*.skill;" };
 const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
 HRESULT hr;
 
-char* filepathptr;
-std::string filepath;
-
+char* filepath;
 std::string* multiselectpath;
 int MultiSelectCount = 0;
 
@@ -57,11 +55,13 @@ int main()
 }
 
 
-std::string PWSTR_to_string(PWSTR ws) {
-    std::string result;
-    result.reserve(wcslen(ws));
+char* PWSTR_to_char(PWSTR ws) {
+    std::string string;
+    string.reserve(wcslen(ws));
+    char* result;
     for (; *ws; ws++)
-        result += (char)*ws;
+        string += (char)*ws;
+    result = (char*) string.c_str();
     return result;
 }
 
@@ -70,7 +70,7 @@ std::string PWSTR_to_string(PWSTR ws) {
 // Loads the current file into the AtkSkill struct
 void LoadAttackSkill()
 {
-	AtkSkillFile.open(filepathptr, ios::in | ios::binary);   // Open file
+	AtkSkillFile.open(filepath, ios::in | ios::binary);   // Open file
 	AtkSkillFile.read((char*)&AtkSkill, (sizeof(AtkSkill))); // Read bytes into AttackSkill struct
 
 	AtkSkillFile.close();
@@ -82,7 +82,7 @@ void SaveAtkSkill()
 {
     if (OpenedAttackSkill)
     {
-        std::ofstream AtkSkillOut(filepathptr, ios::binary); // Creates a new ofstream variable, using
+        std::ofstream AtkSkillOut(filepath, ios::binary); // Creates a new ofstream variable, using
                                                              // the name of the file that was opened.
 
         AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
@@ -111,7 +111,7 @@ void SaveAtkSkill()
 
 void SaveSkillPack()
 {
-    std::ofstream SkillPackOut(filepathptr, ios::binary);
+    std::ofstream SkillPackOut(filepath, ios::binary);
     std::fstream SkillStream; // fstream for the skill files selected by the user
     char skilldata[144]; // 144 byte buffer to read / write skill data from
     short FormatVersion = 1;
@@ -141,7 +141,7 @@ void SaveSkillPack()
     SkillStream.close();
 
     SkillPackOut.close();
-    cout << "Saved skill pack to " << filepathptr << "\n";
+    cout << "Saved skill pack to " << filepath << "\n";
 }
 
 // void InstallSkillPack()
@@ -457,8 +457,11 @@ int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC *fileTypes)
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    filepath = PWSTR_to_string(pszFilePath);
-                    filepathptr = const_cast<char*>(filepath.c_str());
+                    // Converts the PWSTR filepath data to a char array
+                    filepath = new char[wcslen(pszFilePath)];
+                    wcstombs(filepath, pszFilePath, wcslen(pszFilePath) + 1);
+                    // Can't figure out how to use wcstombs_s()...
+
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();
@@ -524,8 +527,12 @@ HRESULT MultiSelectWindow()
 
                                 if (SUCCEEDED(hr))
                                 {
-                                    multiselectpath[i] = PWSTR_to_string(pszFilePath);
+                                    // Converts the PWSTR filepath data to a char array, which is then written to a string
+                                    char* temp = new char[wcslen(pszFilePath)];
+                                    wcstombs(temp, pszFilePath, wcslen(pszFilePath) + 1);
+                                    // Can't figure out how to use wcstombs_s()...
 
+                                    multiselectpath[i] = temp;
                                     CoTaskMemFree(pszFilePath);
                                 }
 
@@ -572,8 +579,11 @@ int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC *fileTypes, LPCWSTR DefaultExt
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    filepath = PWSTR_to_string(pszFilePath);
-                    filepathptr = const_cast<char*>(filepath.c_str());
+                    // Converts the PWSTR filepath data to a char array
+                    filepath = new char[wcslen(pszFilePath)];
+                    wcstombs(filepath, pszFilePath, wcslen(pszFilePath) + 1);
+                    // Can't figure out how to use wcstombs_s()...
+
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();

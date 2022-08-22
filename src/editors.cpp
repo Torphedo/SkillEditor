@@ -46,7 +46,7 @@ void DocumentationWindow()
             for (int i = 0; i < IM_ARRAYSIZE(DocumentationLabels); i++)
             {
                 // Selectable object for every string in the list
-                if (ImGui::Selectable(const_cast<char*>(DocumentationLabels[i].c_str())))
+                if (ImGui::Selectable(DocumentationLabels[i]))
                 {
                     SelectIdx = i;
                 }
@@ -57,7 +57,10 @@ void DocumentationWindow()
 
             ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
             // Renders the item name as an H1, then the description on a new line.
-            Markdown("# " + DocumentationLabels[SelectIdx] + "\n" + DocumentationText[SelectIdx]);
+            std::string md = "# ";
+            md += DocumentationLabels[SelectIdx];
+            md += DocumentationText[SelectIdx];
+            Markdown(md);
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -69,7 +72,8 @@ void DocumentationWindow()
 
 void AtkSkillWindow()
 {
-    std::string WindowTitle = "Attack Skill Editor - " + filepath; // Use filename in the window title.
+    std::string WindowTitle = "Attack Skill Editor - ";
+    WindowTitle += filepath; // Use filename in the window title.
     ImGui::SetNextWindowSize(ImVec2(600, 500), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin(const_cast<char*>(WindowTitle.c_str())))
     {
