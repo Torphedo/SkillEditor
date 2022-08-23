@@ -10,7 +10,7 @@
 #include <filesystem>
 
 #include <imgui_internal.h>
-#include <structs.h>
+#include "structs.h"
 
 extern bool DebugMode;
 

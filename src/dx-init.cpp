@@ -1,4 +1,4 @@
-#include <dx-init.h>
+#include "dx-init.h"
 
 LPDIRECT3D9              g_pD3D = NULL;
 LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;

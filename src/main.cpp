@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <vector>
 
-#include <main.h>
-#include <UI.h>
+#include "main.h"
+#include "UI.h"
 #include "winAPI.h"
 #include "memory-editing.h"
 

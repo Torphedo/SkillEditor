@@ -69,19 +69,19 @@
     <ClInclude Include="include\imgui\imgui_internal.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\main.h">
+    <ClInclude Include="src\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\dx-init.h">
+    <ClInclude Include="src\dx-init.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\UI.h">
+    <ClInclude Include="src\UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\structs.h">
+    <ClInclude Include="src\structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\editors.h">
+    <ClInclude Include="src\editors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\hex_editor\imgui_hex_editor.h">

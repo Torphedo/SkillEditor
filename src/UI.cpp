@@ -1,7 +1,7 @@
 #pragma once
-#include <main.h>
-#include <UI.h>
-#include <editors.h>
+#include "main.h"
+#include "UI.h"
+#include "editors.h"
 #include "winAPI.h"
 #include "memory-editing.h"
 

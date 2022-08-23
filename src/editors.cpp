@@ -1,8 +1,8 @@
 // Editor windows, custom functions to be triggered by the UI, and other miscellaneous
 // code that doesn't need to be in the main UI window file (UI.cpp)
 
-#include <main.h>
-#include <editors.h>
+#include "main.h"
+#include "editors.h"
 #include "winAPI.h"
 #include "memory-editing.h"
 #include <hex_editor/imgui_hex_editor.h>
