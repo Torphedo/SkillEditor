@@ -44,13 +44,16 @@ void SaveAtkSkill()
 {
     if (OpenedAttackSkill)
     {
-        std::ofstream AtkSkillOut(filepath, ios::binary); // Creates a new ofstream variable, using
-                                                             // the name of the file that was opened.
+        if (filepath != nullptr)
+        {
+            std::ofstream AtkSkillOut(filepath, ios::binary); // Creates a new ofstream variable, using
+                                                                 // the name of the file that was opened.
 
-        AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
-                                                        // the new data.
-        AtkSkillOut.close();
-        cout << "Saved attack skill to " << filepath << "\n";
+            AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
+                                                            // the new data.
+            AtkSkillOut.close();
+            cout << "Saved attack skill to " << filepath << "\n";
+        }
 
         skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 

@@ -19,7 +19,7 @@ extern "C" {
 DWORD pid = 0;
 HANDLE EsperHandle;
 uintptr_t baseAddress;
-const static uint8_t gsdata[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00 };
+constexpr static uint8_t gsdata[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00 };
 
 std::fstream AtkSkillFile; // fstream for Attack Skill files
 
@@ -83,6 +83,7 @@ bool GetProcess()
                                 if (memcmp(gsdata, &chunk[i], 16) == 0)
                                 {
                                     baseAddress = (uintptr_t)p + i;
+                                    LoadGSDataFromRAM();
                                     return true;
                                 }
                             }
@@ -107,7 +108,7 @@ int LoadGSDataFromRAM()
             std::cout << "Process Read Error Code: " << GetLastError() << "\n";
         }
         baseAddress += 160; // Address where the skills begin.
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
+        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, 751 * 144, NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             std::cout << "Process Read Error Code: " << GetLastError() << "\n";

@@ -74,10 +74,9 @@ void DocumentationWindow()
 
 void AtkSkillWindow()
 {
-    std::string WindowTitle = "Attack Skill Editor - ";
-    WindowTitle += filepath; // Use filename in the window title.
+    std::string WindowTitle = "Attack Skill Editor";
     ImGui::SetNextWindowSize(ImVec2(600, 500), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin(const_cast<char*>(WindowTitle.c_str())))
+    if (!ImGui::Begin("Attack Skill Editor", &UI.AttackSkillEditor))
     {
         ImGui::End();
         return;
@@ -213,10 +212,6 @@ void AtkSkillWindow()
         ImGui::EndTable();
     }
 
-    if (ImGui::Button("Close")) 
-    {
-        UI.AttackSkillEditor = false; // Deactivates the window.
-    }
     ImGui::PopStyleVar();
     ImGui::End();
 }

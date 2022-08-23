@@ -23,6 +23,7 @@ typedef struct
 	bool HexEditor;
 	bool AttackSkillEditor;
 	bool Documentation;
+	bool IDSelection;
 }windowvars; extern windowvars UI;
 
 extern bool OpenedAttackSkill;

@@ -10,6 +10,7 @@ using std::cout;
 short timer;
 bool GamePaused = false;
 bool OpenedAttackSkill = false;
+short ID = 0;
 
 int CreateUI() {
     // Create application window
@@ -99,7 +100,14 @@ int CreateUI() {
                     }
                     if (ImGui::BeginMenu("Open"))
                     {
-                        if (ImGui::MenuItem("Skill"))
+                        if (ImGui::MenuItem("Skill (From Memory)"))
+                        {
+                            if (GetProcess())
+                            {
+                                UI.IDSelection = true;
+                            }
+                        }
+                        if (ImGui::MenuItem("Skill File"))
                         {
                             if (FileSelectDialog(skillfile) != -1) // Open a file open dialog
                             {
@@ -249,6 +257,23 @@ int CreateUI() {
         else
         {
             timer--; // Decrement cooldown timer until it hits 0
+        }
+
+        if (UI.IDSelection)
+        {
+            ImGui::Begin("Input a skill ID: ");
+            InputShort("ID", &ID);
+
+            if (ImGui::Button("Open"))
+            {
+                memcpy(&AtkSkill, &skillarray[ID], 144);
+                cout << "Loaded skill with ID " << ID << ".\n";
+                OpenedAttackSkill = true;
+                UI.IDSelection = false;      // Close this window
+                UI.AttackSkillEditor = true; // Opens the Attack Skill Editor window
+            }
+
+            ImGui::End();
         }
 
         if (UI.HexEditor)
