@@ -172,14 +172,14 @@
     <ClInclude Include="include\crc32\crc_32.h" />
     <ClInclude Include="src\dx-init.h" />
     <ClInclude Include="src\editors.h" />
-    <ClInclude Include="include\hex_editor\imgui_hex_editor.h" />
+    <ClInclude Include="include\imgui_hex_editor.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />
     <ClInclude Include="include\imgui\imgui_internal.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_dx9.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="src\main.h" />
-    <ClInclude Include="include\markdown\imgui_markdown.h" />
+    <ClInclude Include="include\imgui_markdown.h" />
     <ClInclude Include="src\UI.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\memory-editing.h" />

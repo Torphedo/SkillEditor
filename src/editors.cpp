@@ -5,8 +5,8 @@
 #include "editors.h"
 #include "winAPI.h"
 #include "memory-editing.h"
-#include <hex_editor/imgui_hex_editor.h>
-#include <markdown/imgui_markdown.h>
+#include <imgui_hex_editor.h>
+#include <imgui_markdown.h>
 
 #include "Shellapi.h"
 

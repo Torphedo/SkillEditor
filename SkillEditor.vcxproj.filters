@@ -84,10 +84,10 @@
     <ClInclude Include="src\editors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\hex_editor\imgui_hex_editor.h">
+    <ClInclude Include="include\imgui_hex_editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\markdown\imgui_markdown.h">
+    <ClInclude Include="include\imgui_markdown.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\winAPI.h" />
