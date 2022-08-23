@@ -7,10 +7,10 @@ void DocumentationWindow();
 void HexEditorWindow(short Idx);
 void SkillPackWindow();
 
-static const char* DocumentationText[51] = {
+static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"
 };
 
-static const char* DocumentationLabels[51] = {
+static const char* DocumentationAtkLabels[50] = {
 #include "../res/AttackSkillLabels.txt"
 };

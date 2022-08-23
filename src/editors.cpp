@@ -33,7 +33,7 @@ void SafeNewPack()
 
 void DocumentationWindow()
 {
-    ImGui::SetNextWindowSize(ImVec2(650, 300), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("Documentation", &UI.Documentation))
     {
         ImGui::End();
@@ -45,10 +45,10 @@ void DocumentationWindow()
         if (ImGui::BeginTabItem("Attack Skills"))
         {
             ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-            for (int i = 0; i < IM_ARRAYSIZE(DocumentationLabels); i++)
+            for (int i = 0; i < IM_ARRAYSIZE(DocumentationAtkLabels); i++)
             {
-                // Selectable object for every string in the list
-                if (ImGui::Selectable(DocumentationLabels[i]))
+                // Selectable object for every string in the array
+                if (ImGui::Selectable(DocumentationAtkLabels[i]))
                 {
                     SelectIdx = i;
                 }
@@ -60,8 +60,8 @@ void DocumentationWindow()
             ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
             // Renders the item name as an H1, then the description on a new line.
             std::string md = "# ";
-            md += DocumentationLabels[SelectIdx];
-            md += DocumentationText[SelectIdx];
+            md += DocumentationAtkLabels[SelectIdx];
+            md += DocumentationAtkBody[SelectIdx];
             Markdown(md);
 
             ImGui::EndChild();
@@ -75,7 +75,7 @@ void DocumentationWindow()
 void AtkSkillWindow()
 {
     std::string WindowTitle = "Attack Skill Editor";
-    ImGui::SetNextWindowSize(ImVec2(600, 500), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(880, 750), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("Attack Skill Editor", &UI.AttackSkillEditor))
     {
         ImGui::End();
@@ -188,7 +188,7 @@ void AtkSkillWindow()
         ImGui::TableNextColumn();
         InputShort("Combo End", &AtkSkill.HomingRangeThirdHit);
         ImGui::TableNextColumn();
-        InputShort("Projectile Behaviour ID", &AtkSkill.ProjectileBehaviour);
+        InputShort("Projectile Behaviour", &AtkSkill.ProjectileBehaviour);
         ImGui::TableNextColumn();
         if (AtkSkill.ProjectileBehaviour > 20)
         {

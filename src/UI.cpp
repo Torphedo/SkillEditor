@@ -278,7 +278,7 @@ int CreateUI() {
 
         if (UI.HexEditor)
         {
-            HexEditorWindow(4);
+            HexEditorWindow(ID);
         }
 
         if (UI.AttackSkillEditor)
