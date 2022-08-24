@@ -163,7 +163,7 @@
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="src\imgui\editors.cpp" />
     <ClCompile Include="src\memory-editing.cpp" />
-    <ClCompile Include="src\imgui\UI.cpp" />
+    <ClCompile Include="src\imgui\imgui_backend.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\winAPI.cpp" />
   </ItemGroup>
@@ -178,7 +178,7 @@
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="include\imgui_markdown.h" />
-    <ClInclude Include="src\imgui\UI.h" />
+    <ClInclude Include="src\imgui\imgui_backend.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\memory-editing.h" />
     <ClInclude Include="src\winAPI.h" />

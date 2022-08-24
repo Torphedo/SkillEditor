@@ -34,7 +34,7 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui\UI.cpp">
+    <ClCompile Include="src\imgui\imgui_backend.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\imgui\editors.cpp">
@@ -69,7 +69,7 @@
     <ClInclude Include="src\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\imgui\UI.h">
+    <ClInclude Include="src\imgui\imgui_backend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\structs.h">
