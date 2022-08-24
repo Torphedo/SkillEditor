@@ -8,10 +8,13 @@
 #include <d3d9.h>
 
 #include "imgui_backend.h"
-#include "../main.h"
-#include "editors.h"
-#include "../winAPI.h"
-#include "../memory-editing.h"
+#include "program-ui.h"
+
+ImGuiViewportP* viewport;
+ImGuiWindowFlags window_flags;
+float height;
+
+bool ExitProgram;
 
 // DirectX 9 functions
 LPDIRECT3D9              g_pD3D = NULL;
@@ -101,18 +104,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 // End DirectX 9 functions
 
-
-using std::cout;
-
-short timer;
-bool GamePaused = false;
-bool OpenedAttackSkill = false;
-short ID = 0;
-
 int CreateUI() {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("Skill Editor"), NULL };
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("Phantom Dust Skill Editor"), NULL };
     ::RegisterClassEx(&wc);
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Phantom Dust Skill Editor"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
@@ -155,15 +150,14 @@ int CreateUI() {
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
-    // Loads font data from font.h
+    // Loads font data
     io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 19.0f);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    // Main loop
-    bool done = false;
-    while (!done)
+    ExitProgram = false;
+    while (!ExitProgram)
     {
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
@@ -173,9 +167,9 @@ int CreateUI() {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
-                done = true;
+                ExitProgram = true;
         }
-        if (done)
+        if (ExitProgram)
             break;
 
         // Start the Dear ImGui frame
@@ -183,216 +177,11 @@ int CreateUI() {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-        float height = ImGui::GetFrameHeight();
+        viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
+        window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
+        height = ImGui::GetFrameHeight();
 
-        if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
-            if (ImGui::BeginMenuBar()) {
-                if (ImGui::BeginMenu("File"))
-                {
-                    if (ImGui::MenuItem("New Skill Pack", "Ctrl + N"))
-                    {
-                        SafeNewPack();
-                    }
-                    if (ImGui::BeginMenu("Open"))
-                    {
-                        if (ImGui::MenuItem("Skill (From Memory)"))
-                        {
-                            if (GetProcess())
-                            {
-                                UI.IDSelection = true;
-                            }
-                        }
-                        if (ImGui::MenuItem("Skill File"))
-                        {
-                            if (FileSelectDialog(skillfile) != -1) // Open a file open dialog
-                            {
-                                LoadAttackSkill();        // Loads the current file into the atkskill struct
-                                cout << "Imported attack skill " << filepath << "\n";
-                                OpenedAttackSkill = true;
-                                UI.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
-                            }
-                            else
-                            {
-                                cout << "File selection canceled.\n";
-                                UI.ErrorCode = 1;
-                            }
-                        }
-                        if (ImGui::MenuItem("Install Skill Pack"))
-                        {
-                            GetProcess();
-                            if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
-                            {
-                                InstallSkillPackToRAM();
-                                for (int i = 0; i < MultiSelectCount; i++)
-                                {
-                                    cout << "Installed skill pack " << multiselectpath[i] << ".\n";
-                                }
-                            }
-                            else
-                            {
-                                cout << "File selection canceled.\n";
-                                UI.ErrorCode = 1;
-                            }
-                        }
-                        if (DebugMode)
-                        {
-                            if (ImGui::MenuItem("Install Skill Pack to Disk"))
-                            {
-                                if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
-                                {
-                                    // InstallSkillPack();
-                                    for (int i = 0; i < MultiSelectCount; i++)
-                                    {
-                                        cout << "Installed skill pack " << multiselectpath[i] << ".\n";
-                                    }
-                                }
-                                else
-                                {
-                                    cout << "File selection canceled.\n";
-                                    UI.ErrorCode = 1;
-                                }
-                            }
-                        }
-                        ImGui::EndMenu();
-                    }
-                    if (ImGui::MenuItem("Save", "Ctrl + S"))
-                    {
-                        SaveAtkSkill();
-                    }
-                    if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
-                    {
-                        if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
-                        {
-                            SaveAtkSkill(); // Write data.
-                        }
-                        else
-                        {
-                            cout << "File selection canceled.\n";
-                        }
-                    }
-
-                    if (ImGui::MenuItem("Exit", "Alt + F4"))
-                    {
-                        return 0;
-                    }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Window"))
-                {
-                    if (ImGui::MenuItem("Attack Skill Editor"))
-                    {
-                        UI.AttackSkillEditor = !UI.AttackSkillEditor; // Toggle Attack Skill Editor window
-                    }
-                    if (ImGui::MenuItem("Skill Hex Editor"))
-                    {
-                        GetProcess();
-                        if (LoadGSDataFromRAM() == 0)
-                        {
-                            UI.HexEditor = !UI.HexEditor;
-                        }
-                    }
-                    if (ImGui::MenuItem("Documentation"))
-                    {
-                        UI.Documentation = !UI.Documentation;
-                    }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Game"))
-                {
-                    if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
-                    {
-                        if (GamePaused) {
-                            UnpauseGame();
-                            GamePaused = true;
-                        }
-                        else {
-                            PauseGame();
-                        }
-                        GamePaused = !GamePaused;
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMenuBar();
-            }
-            ImGui::End();
-        }
-
-        if (timer == 0)
-        {
-            // Save: Ctrl + S
-            if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000)
-            {
-                timer = 20;
-
-                // Save As: Ctrl + Shift + S
-                if (GetKeyState(VK_SHIFT))
-                {
-                    if (FileSaveDialog(skillfile, L".skill") != -1)
-                    {
-                        SaveAtkSkill(); // Write data.
-                    }
-                    else
-                    {
-                        cout << "File selection cancelled.\n";
-                    }
-                }
-                else
-                {
-                    SaveAtkSkill(); // Write data.
-                }
-            }
-
-            // New: Ctrl + N
-            if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !UI.NewSkillPack)
-            {
-                SafeNewPack();
-                timer = 20;
-            }
-        }
-        else
-        {
-            timer--; // Decrement cooldown timer until it hits 0
-        }
-
-        if (UI.IDSelection)
-        {
-            ImGui::Begin("Input a skill ID: ");
-            InputShort("ID", &ID);
-
-            if (ImGui::Button("Open"))
-            {
-                memcpy(&AtkSkill, &skillarray[ID], 144);
-                cout << "Loaded skill with ID " << ID << ".\n";
-                OpenedAttackSkill = true;
-                UI.IDSelection = false;      // Close this window
-                UI.AttackSkillEditor = true; // Opens the Attack Skill Editor window
-            }
-
-            ImGui::End();
-        }
-
-        if (UI.HexEditor)
-        {
-            HexEditorWindow(ID);
-        }
-
-        if (UI.AttackSkillEditor)
-        {
-            AtkSkillWindow();
-        }
-
-        if (UI.Documentation)
-        {
-            DocumentationWindow();
-        }
-
-
-        if (UI.NewSkillPack)
-        {
-            SkillPackWindow();
-        }
+        ProgramUI();
 
         // Rendering
         ImGui::EndFrame();

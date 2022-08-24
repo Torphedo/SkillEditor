@@ -161,7 +161,7 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_dx9.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\imgui\editors.cpp" />
+    <ClCompile Include="src\imgui\program-ui.cpp" />
     <ClCompile Include="src\memory-editing.cpp" />
     <ClCompile Include="src\imgui\imgui_backend.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -169,13 +169,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\crc32\crc_32.h" />
-    <ClInclude Include="src\imgui\editors.h" />
     <ClInclude Include="include\imgui_hex_editor.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />
     <ClInclude Include="include\imgui\imgui_internal.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_dx9.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="src\imgui\program-ui.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="include\imgui_markdown.h" />
     <ClInclude Include="src\imgui\imgui_backend.h" />

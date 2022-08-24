@@ -1,75 +1,305 @@
-// Editor windows, custom functions to be triggered by the UI, and other miscellaneous
-// code that doesn't need to be in the main UI window file (UI.cpp)
+#include <iostream>
 
-#include "../main.h"
-#include "editors.h"
-#include "../winAPI.h"
-#include "../memory-editing.h"
+#include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
-#include "Shellapi.h"
-
-using std::cout;
+#include "imgui_backend.h"
+#include "../main.h"
+#include "../winAPI.h"
+#include "../memory-editing.h"
 
 windowvars UI;
 
-int SelectIdx = 0;
+short timer;
+bool GamePaused = false;
+bool OpenedAttackSkill = false;
+short ID = 0;
+short SelectIdx = 0;
 
+static const char* DocumentationAtkBody[50] = {
+#include "../res/AttackSkillBody.txt"
+};
+
+static const char* DocumentationAtkLabels[50] = {
+#include "../res/AttackSkillLabels.txt"
+};
+
+void AtkSkillWindow();
+static void Markdown(const std::string& markdown_); // Markdown function prototype
 static MemoryEditor hex_edit;
 
-void Markdown(const std::string& markdown_); // Markdown function prototype
-
-void SafeNewPack()
+void ProgramUI()
 {
-    if (SUCCEEDED(MultiSelectWindow()))
-    {
-        UI.NewSkillPack = true;
-    }
-    else {
-        cout << "Skill selection canceled.\n";
-    }
-}
-
-void DocumentationWindow()
-{
-    ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Documentation", &UI.Documentation))
-    {
-        ImGui::End();
-        return;
-    }
-
-    if (ImGui::BeginTabBar("DocTabs"))
-    {
-        if (ImGui::BeginTabItem("Attack Skills"))
-        {
-            ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-            for (int i = 0; i < IM_ARRAYSIZE(DocumentationAtkLabels); i++)
+    if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("File"))
             {
-                // Selectable object for every string in the array
-                if (ImGui::Selectable(DocumentationAtkLabels[i]))
+                if (ImGui::MenuItem("New Skill Pack", "Ctrl + N"))
                 {
-                    SelectIdx = i;
+                    if (SUCCEEDED(MultiSelectWindow()))
+                    {
+                        UI.NewSkillPack = true;
+                    }
+                    else {
+                        std::cout << "Skill selection canceled.\n";
+                    }
+                }
+                if (ImGui::BeginMenu("Open"))
+                {
+                    if (ImGui::MenuItem("Skill (From Memory)"))
+                    {
+                        if (GetProcess())
+                        {
+                            UI.IDSelection = true;
+                        }
+                    }
+                    if (ImGui::MenuItem("Skill File"))
+                    {
+                        if (FileSelectDialog(skillfile) != -1) // Open a file open dialog
+                        {
+                            LoadAttackSkill();        // Loads the current file into the atkskill struct
+                            std::cout << "Imported attack skill " << filepath << "\n";
+                            OpenedAttackSkill = true;
+                            UI.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
+                        }
+                        else
+                        {
+                            std::cout << "File selection canceled.\n";
+                            UI.ErrorCode = 1;
+                        }
+                    }
+                    if (ImGui::MenuItem("Install Skill Pack"))
+                    {
+                        GetProcess();
+                        if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                        {
+                            InstallSkillPackToRAM();
+                            for (int i = 0; i < MultiSelectCount; i++)
+                            {
+                                std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cout << "File selection canceled.\n";
+                            UI.ErrorCode = 1;
+                        }
+                    }
+                    if (DebugMode)
+                    {
+                        if (ImGui::MenuItem("Install Skill Pack to Disk"))
+                        {
+                            if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                            {
+                                // InstallSkillPack();
+                                for (int i = 0; i < MultiSelectCount; i++)
+                                {
+                                    std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                }
+                            }
+                            else
+                            {
+                                std::cout << "File selection canceled.\n";
+                                UI.ErrorCode = 1;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::MenuItem("Save", "Ctrl + S"))
+                {
+                    SaveAtkSkill();
+                }
+                if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
+                {
+                    if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
+                    {
+                        SaveAtkSkill(); // Write data.
+                    }
+                    else
+                    {
+                        std::cout << "File selection canceled.\n";
+                    }
+                }
+
+                if (ImGui::MenuItem("Exit", "Alt + F4"))
+                {
+                    ExitProgram = true;
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Window"))
+            {
+                if (ImGui::MenuItem("Attack Skill Editor"))
+                {
+                    UI.AttackSkillEditor = !UI.AttackSkillEditor; // Toggle Attack Skill Editor window
+                }
+                if (ImGui::MenuItem("Skill Hex Editor"))
+                {
+                    GetProcess();
+                    if (LoadGSDataFromRAM() == 0)
+                    {
+                        UI.HexEditor = !UI.HexEditor;
+                    }
+                }
+                if (ImGui::MenuItem("Documentation"))
+                {
+                    UI.Documentation = !UI.Documentation;
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Game"))
+            {
+                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
+                {
+                    if (GamePaused) {
+                        UnpauseGame();
+                        GamePaused = true;
+                    }
+                    else {
+                        PauseGame();
+                    }
+                    GamePaused = !GamePaused;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        ImGui::End();
+    }
+
+    if (timer == 0)
+    {
+        // Save: Ctrl + S
+        if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000)
+        {
+            timer = 20;
+
+            // Save As: Ctrl + Shift + S
+            if (GetKeyState(VK_SHIFT))
+            {
+                if (FileSaveDialog(skillfile, L".skill") != -1)
+                {
+                    SaveAtkSkill(); // Write data.
+                }
+                else
+                {
+                    std::cout << "File selection cancelled.\n";
                 }
             }
-            ImGui::EndChild();
-
-            ImGui::SameLine();
-
-            ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
-            // Renders the item name as an H1, then the description on a new line.
-            std::string md = "# ";
-            md += DocumentationAtkLabels[SelectIdx];
-            md += DocumentationAtkBody[SelectIdx];
-            Markdown(md);
-
-            ImGui::EndChild();
-            ImGui::EndTabItem();
+            else
+            {
+                SaveAtkSkill(); // Write data.
+            }
         }
-        ImGui::EndTabBar();
+
+        // New: Ctrl + N
+        if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !UI.NewSkillPack)
+        {
+            if (SUCCEEDED(MultiSelectWindow()))
+            {
+                UI.NewSkillPack = true;
+            }
+            else {
+                std::cout << "Skill selection canceled.\n";
+            }
+            timer = 20;
+        }
     }
-    ImGui::End();
+    else
+    {
+        timer--; // Decrement cooldown timer until it hits 0
+    }
+
+    if (UI.IDSelection)
+    {
+        ImGui::Begin("Input a skill ID: ");
+        InputShort("ID", &ID);
+
+        if (ImGui::Button("Open"))
+        {
+            memcpy(&AtkSkill, &skillarray[ID], 144);
+            std::cout << "Loaded skill with ID " << ID << ".\n";
+            OpenedAttackSkill = true;
+            UI.IDSelection = false;      // Close this window
+            UI.AttackSkillEditor = true; // Opens the Attack Skill Editor window
+        }
+
+        ImGui::End();
+    }
+
+    if (UI.HexEditor)
+    {
+        hex_edit.ReadOnly = false;
+        hex_edit.DrawWindow("Hex Editor", &skillarray[ID], 144);
+    }
+
+    if (UI.AttackSkillEditor)
+    {
+        // This is the only window that's not inlined, because it would actually make the flow of logic harder to follow.
+        AtkSkillWindow();
+    }
+
+    if (UI.Documentation)
+    {
+        ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
+        if (!ImGui::Begin("Documentation", &UI.Documentation))
+        {
+            ImGui::End();
+            return;
+        }
+
+        if (ImGui::BeginTabBar("DocTabs"))
+        {
+            if (ImGui::BeginTabItem("Attack Skills"))
+            {
+                ImGui::BeginChild("left pane", ImVec2(200, 0), true);
+                for (short i = 0; i < IM_ARRAYSIZE(DocumentationAtkLabels); i++)
+                {
+                    // Selectable object for every string in the array
+                    if (ImGui::Selectable(DocumentationAtkLabels[i]))
+                    {
+                        SelectIdx = i;
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
+                // Renders the item name as an H1, then the description on a new line.
+                std::string md = "# ";
+                md += DocumentationAtkLabels[SelectIdx];
+                md += DocumentationAtkBody[SelectIdx];
+                Markdown(md);
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+        ImGui::End();
+    }
+
+
+    if (UI.NewSkillPack)
+    {
+        ImGui::Begin("Enter a name for your skill pack: ");
+        ImGui::InputText("Skill Pack Name", packname, 32);
+
+        if (ImGui::Button("Save"))
+        {
+            if (SUCCEEDED(FileSaveDialog(skillpack, L".bin")))
+            {
+                SaveSkillPack();
+                UI.NewSkillPack = false;
+            }
+        }
+
+        ImGui::End();
+    }
 }
 
 void AtkSkillWindow()
@@ -94,11 +324,11 @@ void AtkSkillWindow()
         Tooltip("The \"register\" / \"library\" of skills this skill\nwill belong to.");
         InputShort("Skill ID", &AtkSkill.SkillID);
         Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
-        
+
         ImGui::SetNextItemWidth(200);
         // Int pointer with value (rarity + 1). This means that the slider function will
         // automatically update the actual rarity value despite it being a short.
-        int* rarity = (int*) (&AtkSkill.RarityStars + 1);
+        int* rarity = (int*)(&AtkSkill.RarityStars + 1);
         ImGui::SliderInt("Rarity", rarity, 1, 5);
         Tooltip("The skill's in-game rarity, displayed as stars.");
 
@@ -107,7 +337,7 @@ void AtkSkillWindow()
 
         ImGui::SetNextItemWidth(200);
         const char* elems_names[7] = { "Aura", "Attack", "Defense", "Erase", "Environmental", "Status", "Special" };
-        ImGui::SliderInt("Capsule Type", (int*) &AtkSkill.CapsuleType, 0, 7 - 1, elems_names[AtkSkill.CapsuleType]);
+        ImGui::SliderInt("Capsule Type", (int*)&AtkSkill.CapsuleType, 0, 7 - 1, elems_names[AtkSkill.CapsuleType]);
         ImGui::TableNextColumn();
 
         InputShort("School ID", &AtkSkill.SchoolID);
@@ -151,7 +381,7 @@ void AtkSkillWindow()
 
         ImGui::SetNextItemWidth(200);
         char* items[] = { "Ground","Air","Both" };
-        ImGui::SliderInt("Skill Use Restrictions", (int*) &AtkSkill.GroundAirBoth, 0, 2, items[AtkSkill.GroundAirBoth]);
+        ImGui::SliderInt("Skill Use Restrictions", (int*)&AtkSkill.GroundAirBoth, 0, 2, items[AtkSkill.GroundAirBoth]);
         Tooltip("Where the skill may be used.");
 
         InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect);
@@ -213,29 +443,6 @@ void AtkSkillWindow()
     }
 
     ImGui::PopStyleVar();
-    ImGui::End();
-}
-
-void HexEditorWindow(short Idx)
-{
-    hex_edit.ReadOnly = false;
-    hex_edit.DrawWindow("Hex Editor", &skillarray[Idx], 144);
-}
-
-void SkillPackWindow()
-{
-    ImGui::Begin("Enter a name for your skill pack: ");
-    ImGui::InputText("Skill Pack Name", packname, 32);
-
-    if (ImGui::Button("Save")) 
-    {
-        if (SUCCEEDED(FileSaveDialog(skillpack, L".bin")))
-        {
-            SaveSkillPack();
-            UI.NewSkillPack = false;
-        }
-    }
-
     ImGui::End();
 }
 
