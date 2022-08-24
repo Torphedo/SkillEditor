@@ -1,14 +1,6 @@
 ﻿#pragma once
 
-#include <Windows.h>
 #include <shobjidl.h> 
-#include <stdint.h>
-#include <fstream>
-#include <iostream>
-#include <filesystem>
-
-#include <imgui_internal.h>
-#include "structs.h"
 
 extern bool DebugMode;
 
