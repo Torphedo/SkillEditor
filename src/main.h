@@ -33,9 +33,3 @@ void SaveSkillPack();
 // void InstallSkillPack();
 // int LoadGSDATA();
 // int SaveGSDATA();
-
-// ===== Custom ImGui Functions / Wrappers =====
-
-void Tooltip(const char* text);
-void InputShort(const char* label, void* p_data);
-void InputUInt8(const char* label, void* p_data);

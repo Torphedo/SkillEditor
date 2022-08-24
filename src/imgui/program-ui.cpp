@@ -30,6 +30,30 @@ void AtkSkillWindow();
 static void Markdown(const std::string& markdown_); // Markdown function prototype
 static MemoryEditor hex_edit;
 
+void Tooltip(const char* text)
+{
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("%s", text);
+    }
+    ImGui::TableNextColumn();
+}
+
+// ImGui didn't have pre-made functions for short
+// or uint8 input boxes, so I made my own.
+
+void InputShort(const char* label, void* p_data)
+{
+    ImGui::SetNextItemWidth(200);
+    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, (const void*)1);
+}
+
+void InputUInt8(const char* label, void* p_data)
+{
+    ImGui::SetNextItemWidth(200);
+    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, (const void*) 1);
+}
+
 void ProgramUI()
 {
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
@@ -328,8 +352,9 @@ void AtkSkillWindow()
         ImGui::SetNextItemWidth(200);
         // Int pointer with value (rarity + 1). This means that the slider function will
         // automatically update the actual rarity value despite it being a short.
-        int* rarity = (int*)(&AtkSkill.RarityStars + 1);
-        ImGui::SliderInt("Rarity", rarity, 1, 5);
+        int rarity = (int) (AtkSkill.RarityStars + 1);
+        ImGui::SliderInt("Rarity", &rarity, 1, 5);
+        AtkSkill.RarityStars = (short) rarity - 1;
         Tooltip("The skill's in-game rarity, displayed as stars.");
 
         InputShort("Sound File ID", &AtkSkill.SoundFileID);
