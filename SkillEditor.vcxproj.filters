@@ -22,9 +22,6 @@
     <ClCompile Include="include\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\backends\imgui_impl_dx9.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -49,15 +46,18 @@
     <ClCompile Include="src\imgui\program-ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="include\imGUI\backends\imgui_impl_vulkan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\imGUI\backends\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="include\imgui\imgui.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="include\imgui\backends\imgui_impl_dx9.h">
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h">
@@ -85,6 +85,8 @@
     <ClInclude Include="src\memory-editing.h" />
     <ClInclude Include="include\crc32\crc_32.h" />
     <ClInclude Include="src\imgui\program-ui.h" />
+    <ClInclude Include="include\imGUI\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="include\imGUI\backends\imgui_impl_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\imgui\misc\debuggers\imgui.natvis">

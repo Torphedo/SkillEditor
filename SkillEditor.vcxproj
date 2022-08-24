@@ -102,14 +102,13 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>include\imgui;include\imgui\backends;%(AdditionalIncludeDirectories);$(DXSDK_DIR)Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;include\imgui;include\imgui\backends;%(AdditionalIncludeDirectories);$(DXSDK_DIR)Include;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)include;%VULKAN_SDK%\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -139,7 +138,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>include\imgui;include\imgui\backends;%(AdditionalIncludeDirectories);$(DXSDK_DIR)Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;include\imgui;include\imgui\backends;%(AdditionalIncludeDirectories);$(DXSDK_DIR)Include;</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -147,19 +146,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)include;%VULKAN_SDK%\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\crc32\crc_32.c" />
+    <ClCompile Include="include\imGUI\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="include\imGUI\backends\imgui_impl_vulkan.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />
     <ClCompile Include="include\imgui\imgui_draw.cpp" />
     <ClCompile Include="include\imgui\imgui_tables.cpp" />
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="include\imgui\backends\imgui_impl_dx9.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="src\imgui\program-ui.cpp" />
     <ClCompile Include="src\memory-editing.cpp" />
@@ -169,11 +168,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\crc32\crc_32.h" />
+    <ClInclude Include="include\imGUI\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="include\imGUI\backends\imgui_impl_vulkan.h" />
     <ClInclude Include="include\imgui_hex_editor.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />
     <ClInclude Include="include\imgui\imgui_internal.h" />
-    <ClInclude Include="include\imgui\backends\imgui_impl_dx9.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="src\imgui\program-ui.h" />
     <ClInclude Include="src\main.h" />

@@ -1,10 +1,7 @@
 #pragma once
 #include <imgui_internal.h>
+#include <GLFW/glfw3.h>
 
-extern ImGuiViewportP* viewport;
-extern ImGuiWindowFlags window_flags;
-extern float height;
-
-extern bool ExitProgram;
+extern GLFWwindow* window;
 
 int CreateUI();

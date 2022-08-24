@@ -56,7 +56,13 @@ void InputUInt8(const char* label, void* p_data)
 
 void ProgramUI()
 {
-    if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, window_flags)) {
+    ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
+    int height = ImGui::GetFrameHeight();
+
+    ImGui::DockSpaceOverViewport();
+
+
+    if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File"))
             {
@@ -150,7 +156,7 @@ void ProgramUI()
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
                 {
-                    ExitProgram = true;
+                    glfwWindowShouldClose(window);
                 }
                 ImGui::EndMenu();
             }
