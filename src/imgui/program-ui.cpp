@@ -6,6 +6,7 @@
 #include <imgui_markdown.h>
 
 #include "imgui_backend.h"
+#include "program-ui.h"
 #include "../main.h"
 #include "../winAPI.h"
 #include "../memory-editing.h"
@@ -54,7 +55,7 @@ void InputUInt8(const char* label, void* p_data)
     ImGui::InputScalar(label, ImGuiDataType_S8, p_data, (const void*) 1);
 }
 
-void ProgramUI()
+int ProgramUI()
 {
     ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
     int height = ImGui::GetFrameHeight();
@@ -156,6 +157,7 @@ void ProgramUI()
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
                 {
                     glfwDestroyWindow(window);
+                    return 1;
                 }
                 ImGui::EndMenu();
             }
@@ -277,7 +279,6 @@ void ProgramUI()
         if (!ImGui::Begin("Documentation", &UI.Documentation))
         {
             ImGui::End();
-            return;
         }
 
         if (ImGui::BeginTabBar("DocTabs"))
@@ -329,6 +330,7 @@ void ProgramUI()
 
         ImGui::End();
     }
+    return 0;
 }
 
 void AtkSkillWindow()

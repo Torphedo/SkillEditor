@@ -508,7 +508,10 @@ int CreateUI()
         ImGui::NewFrame();
 
         // Skill Editor UI call
-        ProgramUI();
+        if (ProgramUI() == 1)
+        {
+            break;
+        }
 
         // Rendering
         ImGui::Render();
