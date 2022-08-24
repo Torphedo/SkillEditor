@@ -155,7 +155,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\crc32\crc_32.c" />
-    <ClCompile Include="src\imgui\d3d-api.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />
     <ClCompile Include="include\imgui\imgui_draw.cpp" />
     <ClCompile Include="include\imgui\imgui_tables.cpp" />
@@ -170,7 +169,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\crc32\crc_32.h" />
-    <ClInclude Include="src\imgui\d3d-api.h" />
     <ClInclude Include="src\imgui\editors.h" />
     <ClInclude Include="include\imgui_hex_editor.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
