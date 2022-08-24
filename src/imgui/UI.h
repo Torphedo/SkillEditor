@@ -6,6 +6,4 @@
 #include "imgui_impl_win32.h"
 #include <d3d9.h>
 
-#include "dx-init.h"
-
 int CreateUI();

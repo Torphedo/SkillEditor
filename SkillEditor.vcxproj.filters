@@ -34,13 +34,13 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\dx-init.cpp">
+    <ClCompile Include="src\imgui\d3d-api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\UI.cpp">
+    <ClCompile Include="src\imgui\UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editors.cpp">
+    <ClCompile Include="src\imgui\editors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\winAPI.cpp">
@@ -72,16 +72,16 @@
     <ClInclude Include="src\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\dx-init.h">
+    <ClInclude Include="src\imgui\d3d-api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\UI.h">
+    <ClInclude Include="src\imgui\UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\editors.h">
+    <ClInclude Include="src\imgui\editors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\imgui_hex_editor.h">

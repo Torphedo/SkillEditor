@@ -1,9 +1,10 @@
 #pragma once
-#include "main.h"
+#include "../main.h"
 #include "UI.h"
 #include "editors.h"
-#include "winAPI.h"
-#include "memory-editing.h"
+#include "../winAPI.h"
+#include "../memory-editing.h"
+#include "d3d-api.h"
 
 using std::cout;
 
