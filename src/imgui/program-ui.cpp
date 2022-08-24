@@ -61,7 +61,6 @@ void ProgramUI()
 
     ImGui::DockSpaceOverViewport();
 
-
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File"))
@@ -156,7 +155,7 @@ void ProgramUI()
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
                 {
-                    glfwWindowShouldClose(window);
+                    glfwDestroyWindow(window);
                 }
                 ImGui::EndMenu();
             }
@@ -335,7 +334,6 @@ void ProgramUI()
 void AtkSkillWindow()
 {
     std::string WindowTitle = "Attack Skill Editor";
-    ImGui::SetNextWindowSize(ImVec2(880, 750), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("Attack Skill Editor", &UI.AttackSkillEditor))
     {
         ImGui::End();
