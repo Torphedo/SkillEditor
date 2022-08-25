@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
@@ -58,9 +57,9 @@ void InputUInt8(const char* label, void* p_data)
 int ProgramUI()
 {
     ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
-    int height = ImGui::GetFrameHeight();
+    float height = ImGui::GetFrameHeight();
 
-    ImGui::DockSpaceOverViewport();
+    ImGui::DockSpaceOverViewport(); // Enable docking
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
