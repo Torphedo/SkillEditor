@@ -22,3 +22,9 @@ imgui.ini
 
 include/imGUI/examples/example_android_opengl3/out
 include/imGUI/examples/example_glfw_vulkan/out
+
+vendor/GLFW/src/glfw.dir/Release
+vendor/GLFW/src/CMakeFiles
+vendor/GLFW/examples/CMakeFiles
+vendor/GLFW/CMakeFiles
+vendor/GLFW/x64
