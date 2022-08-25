@@ -16,19 +16,19 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\imgui.cpp">
+    <ClCompile Include="src\vendor\imGUI\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\imgui_draw.cpp">
+    <ClCompile Include="src\vendor\imGUI\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp">
+    <ClCompile Include="src\vendor\imGUI\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\imgui_tables.cpp">
+    <ClCompile Include="src\vendor\imGUI\imgui_tables.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="include\imgui\imgui_widgets.cpp">
+    <ClCompile Include="src\vendor\imGUI\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\imgui\imgui_backend.cpp">
@@ -40,30 +40,30 @@
     <ClCompile Include="src\memory-editing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\crc32\crc_32.c">
+    <ClCompile Include="src\vendor\crc32\crc_32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\imgui\program-ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\imGUI\backends\imgui_impl_vulkan.cpp">
+    <ClCompile Include="src\vendor\imGUI\backends\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\imGUI\backends\imgui_impl_glfw.cpp">
+    <ClCompile Include="src\vendor\imGUI\backends\imgui_impl_glfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\imgui\imconfig.h">
+    <ClInclude Include="src\vendor\imGUI\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui\imgui.h">
+    <ClInclude Include="src\vendor\imGUI\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui\backends\imgui_impl_win32.h">
+    <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui\imgui_internal.h">
+    <ClInclude Include="src\vendor\imGUI\imgui_internal.h">
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="src\main.h">
@@ -75,21 +75,21 @@
     <ClInclude Include="src\structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui_hex_editor.h">
+    <ClInclude Include="src\vendor\imgui_hex_editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui_markdown.h">
+    <ClInclude Include="src\vendor\imgui_markdown.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\winAPI.h" />
     <ClInclude Include="src\memory-editing.h" />
-    <ClInclude Include="include\crc32\crc_32.h" />
+    <ClInclude Include="src\vendor\crc32\crc_32.h" />
     <ClInclude Include="src\imgui\program-ui.h" />
-    <ClInclude Include="include\imGUI\backends\imgui_impl_glfw.h" />
-    <ClInclude Include="include\imGUI\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\imgui\misc\debuggers\imgui.natvis">
+    <None Include="src\vendor\imGUI\misc\debuggers\imgui.natvis">
       <Filter>imgui</Filter>
     </None>
   </ItemGroup>
