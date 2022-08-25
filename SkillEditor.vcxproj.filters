@@ -40,7 +40,7 @@
     <ClCompile Include="src\memory-editing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vendor\crc32\crc_32.c">
+    <ClCompile Include="vendor\crc_32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\imgui\program-ui.cpp">
@@ -75,15 +75,15 @@
     <ClInclude Include="src\structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\vendor\imgui_hex_editor.h">
+    <ClInclude Include="vendor\imgui_hex_editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\vendor\imgui_markdown.h">
+    <ClInclude Include="vendor\imgui_markdown.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\winAPI.h" />
     <ClInclude Include="src\memory-editing.h" />
-    <ClInclude Include="src\vendor\crc32\crc_32.h" />
+    <ClInclude Include="vendor\crc_32.h" />
     <ClInclude Include="src\imgui\program-ui.h" />
     <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_glfw.h" />
     <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_vulkan.h" />

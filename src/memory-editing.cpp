@@ -13,7 +13,7 @@
 #include "winAPI.h"
 
 extern "C" {
-#include <crc32/crc_32.h>
+#include <crc_32.h>
 }
 
 DWORD pid = 0;

@@ -10,7 +10,7 @@
 #include "memory-editing.h"
 
 extern "C" {
-#include <crc32/crc_32.h>
+#include <crc_32.h>
 }
 
 bool DebugMode = false;
