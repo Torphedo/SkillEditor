@@ -1,8 +1,6 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <vector>
-#include <algorithm>
 #include <Windows.h>
 #include <shobjidl.h> 
 #include <stdint.h>
