@@ -11,6 +11,7 @@ static const char* ImGuiConfig = {
 
 int main()
 {
+    // Write imgui config if it doesn't already exist
     if (!std::filesystem::exists("imgui.ini"))
     {
         std::ofstream config;
@@ -18,6 +19,8 @@ int main()
         config << ImGuiConfig;
         config.close();
     }
+
+    // Initialize something for WinAPI file explorer calls
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     CreateUI(); // Main UI loop
     CoUninitialize();
