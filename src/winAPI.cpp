@@ -6,12 +6,9 @@ char* filepath;
 std::string* multiselectpath;
 int MultiSelectCount = 0;
 
-const COMDLG_FILTERSPEC skillfile[] = { L"Skill File", L"*.skill;" };
-const COMDLG_FILTERSPEC skillpack[] = { L"Skill Pack", L"*.bin;" };
-
 HRESULT hr;
 
-int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC* fileTypes)
+int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC fileTypes)
 {
     IFileOpenDialog* pFileOpen;
 
@@ -21,7 +18,7 @@ int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC* fileTypes)
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
-        hr = pFileOpen->SetFileTypes(2, fileTypes);
+        hr = pFileOpen->SetFileTypes(1, &fileTypes);
         hr = pFileOpen->Show(NULL);
 
         // Get the file name from the dialog box.
@@ -132,7 +129,7 @@ HRESULT MultiSelectWindow()
     return hr;
 }
 
-int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC* fileTypes, LPCWSTR DefaultExtension)
+int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
 
@@ -142,7 +139,7 @@ int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC* fileTypes, LPCWSTR DefaultExt
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
-        hr = pFileOpen->SetFileTypes(IM_ARRAYSIZE(skillpack), fileTypes);
+        hr = pFileOpen->SetFileTypes(1, &fileTypes);
         hr = pFileOpen->SetDefaultExtension(DefaultExtension);
         hr = pFileOpen->Show(NULL);
 

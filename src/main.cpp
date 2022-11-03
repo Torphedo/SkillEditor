@@ -13,16 +13,9 @@ extern "C" {
 #include <crc_32.h>
 }
 
-bool DebugMode = false;
-
 static const char* ImGuiConfig = {
 #include "../res/imgui-config.txt"
 };
-
-// ===== User Input Variables =====
-
-char packname[32];
-
 
 int main()
 {
@@ -34,7 +27,7 @@ int main()
         config.close();
     }
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    CreateUI(); // Main UI loop, see UI.h.
+    CreateUI(); // Main UI loop
     CoUninitialize();
     return 0;
 }
@@ -54,15 +47,13 @@ void LoadAttackSkill()
 // Writes the currently open file to disk.
 void SaveAtkSkill()
 {
-    if (OpenedAttackSkill)
+    if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
     {
         if (filepath != nullptr)
         {
-            std::ofstream AtkSkillOut(filepath, std::ios::binary); // Creates a new ofstream variable, using
-                                                                 // the name of the file that was opened.
+            std::ofstream AtkSkillOut(filepath, std::ios::binary);
 
-            AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the file that was opened with
-                                                            // the new data.
+            AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the specified file with new data
             AtkSkillOut.close();
             std::cout << "Saved attack skill to " << filepath << "\n";
         }
@@ -82,11 +73,11 @@ void SaveAtkSkill()
     }
     else
     {
-        std::cout << "Tried to save without opening a file, aborting...\n";
+        std::cout << "Tried to save without opening a file.\n";
     }
 }
 
-void SaveSkillPack()
+void SaveSkillPack(const char* packname)
 {
     std::ofstream SkillPackOut(filepath, std::ios::binary);
     std::fstream SkillStream; // fstream for the skill files selected by the user
@@ -95,7 +86,7 @@ void SaveSkillPack()
     short SkillCount = (short) MultiSelectCount; // Skill count == # of files selected
     int pad[3] = { 0,0,0 };
 
-    SkillPackOut.write((char*)&packname, 32); // 32 characters for the name
+    SkillPackOut.write(packname, 32); // 32 characters for the name
     SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
     SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
     SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read

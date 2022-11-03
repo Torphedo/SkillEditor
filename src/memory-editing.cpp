@@ -3,7 +3,6 @@
 #include <fstream>
 #include <Windows.h>
 #include <shobjidl.h> 
-#include <stdint.h>
 #include <tlhelp32.h>
 
 #include "memory-editing.h"
@@ -21,7 +20,6 @@ constexpr static uint8_t gsdata[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,
 
 std::fstream AtkSkillFile; // fstream for Attack Skill files
 
-std::fstream GSDataStream; // fstream for gsdata
 GSDataHeader gsdataheader; // First 160 bytes of gsdata
 atkskill skillarray[751];  // Array of 751 skill data blocks
 AttackSkill AtkSkill;
@@ -146,32 +144,44 @@ void InstallSkillPackToRAM()
         int BlobSize = 0;
         for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
-            std::fstream SkillPackIn;
             SkillPackHeaderV1 header;
-            SkillPackIn.open(multiselectpath[n], std::ios::in | std::ios::binary);
-            SkillPackIn.read((char*)&header, sizeof(header));
+            FILE* SkillPack;
+            fopen_s(&SkillPack, multiselectpath[n].c_str(), "rb");
+            if (SkillPack == 0)
+            {
+                std::cout << "Failed to load file!";
+                return;
+            }
+            fread_s(&header, sizeof(header), sizeof(header), 1, SkillPack);
             BlobSize += (int)std::filesystem::file_size(multiselectpath[n]);
 
             for (int i = 0; i < header.SkillCount; i++)
             {
                 atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
-                SkillPackIn.read((char*)&skill, sizeof(skill)); // Read a skill into struct
+                fread_s(&skill, sizeof(skill), sizeof(skill), 1, SkillPack);
                 skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
             }
+            fclose(SkillPack);
         }
-        char* SkillPackBlobData;
-        SkillPackBlobData = new char[BlobSize];
-        std::fstream SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
-                                    // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
+        char* SkillPackBlobData = new char[BlobSize];
+        FILE* SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
+                             // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
+
         for (int n = 0; n < MultiSelectCount; n++)
         {
-            SkillPackBlob.open(multiselectpath[n], std::ios::in | std::ios::binary);
-            SkillPackBlob.read(SkillPackBlobData, BlobSize);
+            fopen_s(&SkillPackBlob, multiselectpath[n].c_str(), "rb");
+            if (SkillPackBlob == 0)
+            {
+                std::cout << "Failed to load file!";
+                fclose(SkillPackBlob);
+                return;
+            }
+            fread_s(SkillPackBlobData, sizeof(SkillPackBlobData), sizeof(SkillPackBlobData), 1, SkillPackBlob);
         }
-        SkillPackBlob.close();
+        fclose(SkillPackBlob);
 
         uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
-        gsdataheader.VersionNum = (int)hash;
+        gsdataheader.VersionNum = (unsigned int)hash;
         std::cout << "New version number: " << hash << "\n";
 
         delete[] SkillPackBlobData;

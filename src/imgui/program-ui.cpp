@@ -4,17 +4,24 @@
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
+#include "../winAPI.h"
 #include "imgui_backend.h"
 #include "program-ui.h"
 #include "../main.h"
-#include "../winAPI.h"
 #include "../memory-editing.h"
 
-windowvars UI;
+struct
+{
+    bool NewSkillPack;
+    bool HexEditor;
+    bool AttackSkillEditor;
+    bool Documentation;
+    bool IDSelection;
+}ui_state;
 
+char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
 short timer;
 bool GamePaused = false;
-bool OpenedAttackSkill = false;
 short ID = 0;
 short SelectIdx = 0;
 
@@ -69,7 +76,7 @@ int ProgramUI()
                 {
                     if (SUCCEEDED(MultiSelectWindow()))
                     {
-                        UI.NewSkillPack = true;
+                        ui_state.NewSkillPack = true;
                     }
                     else {
                         std::cout << "Skill selection canceled.\n";
@@ -81,22 +88,20 @@ int ProgramUI()
                     {
                         if (GetProcess())
                         {
-                            UI.IDSelection = true;
+                            ui_state.IDSelection = true;
                         }
                     }
                     if (ImGui::MenuItem("Skill File"))
                     {
-                        if (FileSelectDialog(skillfile) != -1) // Open a file open dialog
+                        if (FileSelectDialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }) != -1) // Open a file open dialog
                         {
                             LoadAttackSkill();        // Loads the current file into the atkskill struct
                             std::cout << "Imported attack skill " << filepath << "\n";
-                            OpenedAttackSkill = true;
-                            UI.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
+                            ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
                         }
                         else
                         {
                             std::cout << "File selection canceled.\n";
-                            UI.ErrorCode = 1;
                         }
                     }
                     if (ImGui::MenuItem("Install Skill Pack"))
@@ -113,26 +118,6 @@ int ProgramUI()
                         else
                         {
                             std::cout << "File selection canceled.\n";
-                            UI.ErrorCode = 1;
-                        }
-                    }
-                    if (DebugMode)
-                    {
-                        if (ImGui::MenuItem("Install Skill Pack to Disk"))
-                        {
-                            if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
-                            {
-                                // InstallSkillPack();
-                                for (int i = 0; i < MultiSelectCount; i++)
-                                {
-                                    std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
-                                }
-                            }
-                            else
-                            {
-                                std::cout << "File selection canceled.\n";
-                                UI.ErrorCode = 1;
-                            }
                         }
                     }
                     ImGui::EndMenu();
@@ -143,7 +128,7 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
-                    if (FileSaveDialog(skillfile, L".skill") != -1) // Open a file save dialog and save to a new file
+                    if (FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1) // Open a file save dialog and save to a new file
                     {
                         SaveAtkSkill(); // Write data.
                     }
@@ -164,19 +149,19 @@ int ProgramUI()
             {
                 if (ImGui::MenuItem("Attack Skill Editor"))
                 {
-                    UI.AttackSkillEditor = !UI.AttackSkillEditor; // Toggle Attack Skill Editor window
+                    ui_state.AttackSkillEditor = !ui_state.AttackSkillEditor; // Toggle Attack Skill Editor window
                 }
                 if (ImGui::MenuItem("Skill Hex Editor"))
                 {
                     GetProcess();
                     if (LoadGSDataFromRAM() == 0)
                     {
-                        UI.HexEditor = !UI.HexEditor;
+                        ui_state.HexEditor = !ui_state.HexEditor;
                     }
                 }
                 if (ImGui::MenuItem("Documentation"))
                 {
-                    UI.Documentation = !UI.Documentation;
+                    ui_state.Documentation = !ui_state.Documentation;
                 }
                 ImGui::EndMenu();
             }
@@ -210,7 +195,7 @@ int ProgramUI()
             // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_SHIFT))
             {
-                if (FileSaveDialog(skillfile, L".skill") != -1)
+                if (FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1)
                 {
                     SaveAtkSkill(); // Write data.
                 }
@@ -226,11 +211,11 @@ int ProgramUI()
         }
 
         // New: Ctrl + N
-        if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !UI.NewSkillPack)
+        if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !ui_state.NewSkillPack)
         {
             if (SUCCEEDED(MultiSelectWindow()))
             {
-                UI.NewSkillPack = true;
+                ui_state.NewSkillPack = true;
             }
             else {
                 std::cout << "Skill selection canceled.\n";
@@ -243,7 +228,7 @@ int ProgramUI()
         timer--; // Decrement cooldown timer until it hits 0
     }
 
-    if (UI.IDSelection)
+    if (ui_state.IDSelection)
     {
         ImGui::Begin("Input a skill ID: ");
         InputShort("ID", &ID);
@@ -252,30 +237,29 @@ int ProgramUI()
         {
             memcpy(&AtkSkill, &skillarray[ID], 144);
             std::cout << "Loaded skill with ID " << ID << ".\n";
-            OpenedAttackSkill = true;
-            UI.IDSelection = false;      // Close this window
-            UI.AttackSkillEditor = true; // Opens the Attack Skill Editor window
+            ui_state.IDSelection = false;      // Close this window
+            ui_state.AttackSkillEditor = true; // Opens the Attack Skill Editor window
         }
 
         ImGui::End();
     }
 
-    if (UI.HexEditor)
+    if (ui_state.HexEditor)
     {
         hex_edit.ReadOnly = false;
         hex_edit.DrawWindow("Hex Editor", &skillarray[ID], 144);
     }
 
-    if (UI.AttackSkillEditor)
+    if (ui_state.AttackSkillEditor)
     {
         // This is the only window that's not inlined, because it would actually make the flow of logic harder to follow.
         AtkSkillWindow();
     }
 
-    if (UI.Documentation)
+    if (ui_state.Documentation)
     {
         ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
-        if (!ImGui::Begin("Documentation", &UI.Documentation))
+        if (!ImGui::Begin("Documentation", &ui_state.Documentation))
         {
             ImGui::End();
         }
@@ -313,17 +297,17 @@ int ProgramUI()
     }
 
 
-    if (UI.NewSkillPack)
+    if (ui_state.NewSkillPack)
     {
         ImGui::Begin("Enter a name for your skill pack: ");
-        ImGui::InputText("Skill Pack Name", packname, 32);
+        ImGui::InputText("Skill Pack Name", packname_internal, 32);
 
         if (ImGui::Button("Save"))
         {
-            if (SUCCEEDED(FileSaveDialog(skillpack, L".bin")))
+            if (SUCCEEDED(FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".bin")))
             {
-                SaveSkillPack();
-                UI.NewSkillPack = false;
+                SaveSkillPack(packname_internal);
+                ui_state.NewSkillPack = false;
             }
         }
 
@@ -335,7 +319,7 @@ int ProgramUI()
 void AtkSkillWindow()
 {
     std::string WindowTitle = "Attack Skill Editor";
-    if (!ImGui::Begin("Attack Skill Editor", &UI.AttackSkillEditor))
+    if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor))
     {
         ImGui::End();
         return;
