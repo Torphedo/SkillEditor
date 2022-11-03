@@ -140,7 +140,6 @@ int ProgramUI()
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
                 {
-                    glfwDestroyWindow(window);
                     return 1;
                 }
                 ImGui::EndMenu();
