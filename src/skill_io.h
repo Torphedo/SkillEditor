@@ -1,8 +1,4 @@
-﻿#pragma once
-
-#include <shobjidl.h>
-
-// ===== File I/O =====
+#pragma once
 
 void LoadAttackSkill();
 void SaveAtkSkill();

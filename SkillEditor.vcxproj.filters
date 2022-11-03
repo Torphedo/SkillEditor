@@ -52,6 +52,9 @@
     <ClCompile Include="src\vendor\imGUI\backends\imgui_impl_glfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\skill_io.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\imGUI\imconfig.h">
@@ -65,9 +68,6 @@
     </ClInclude>
     <ClInclude Include="src\vendor\imGUI\imgui_internal.h">
       <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\main.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\imgui\imgui_backend.h">
       <Filter>Header Files</Filter>
@@ -87,6 +87,7 @@
     <ClInclude Include="src\imgui\program-ui.h" />
     <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_glfw.h" />
     <ClInclude Include="src\vendor\imGUI\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="src\skill_io.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vendor\imGUI\misc\debuggers\imgui.natvis">

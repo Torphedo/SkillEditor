@@ -7,7 +7,7 @@
 #include "../winAPI.h"
 #include "imgui_backend.h"
 #include "program-ui.h"
-#include "../main.h"
+#include "../skill_io.h"
 #include "../memory-editing.h"
 
 struct
