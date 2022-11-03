@@ -1,7 +1,6 @@
 #include "winAPI.h"
-#include <imgui.h>
 
-char* filepath;
+char* selected_filepath;
 std::string* multiselectpath;
 int MultiSelectCount = 0;
 
@@ -38,8 +37,8 @@ int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC fileTypes)
                 if (SUCCEEDED(hr))
                 {
                     // Converts the PWSTR filepath data to a char array
-                    filepath = new char[wcslen(pszFilePath)];
-                    wcstombs(filepath, pszFilePath, wcslen(pszFilePath) + 1);
+                    selected_filepath = new char[wcslen(pszFilePath)];
+                    wcstombs(selected_filepath, pszFilePath, wcslen(pszFilePath) + 1);
                     // Can't figure out how to use wcstombs_s()...
 
                     CoTaskMemFree(pszFilePath);
@@ -160,8 +159,8 @@ int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExte
                 if (SUCCEEDED(hr))
                 {
                     // Converts the PWSTR filepath data to a char array
-                    filepath = new char[wcslen(pszFilePath)];
-                    wcstombs(filepath, pszFilePath, wcslen(pszFilePath) + 1);
+                    selected_filepath = new char[wcslen(pszFilePath)];
+                    wcstombs(selected_filepath, pszFilePath, wcslen(pszFilePath) + 1);
                     // Can't figure out how to use wcstombs_s()...
 
                     CoTaskMemFree(pszFilePath);

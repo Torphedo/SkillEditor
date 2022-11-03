@@ -95,8 +95,8 @@ int ProgramUI()
                     {
                         if (FileSelectDialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }) != -1) // Open a file open dialog
                         {
-                            LoadAttackSkill();        // Loads the current file into the atkskill struct
-                            std::cout << "Imported attack skill " << filepath << "\n";
+                            AtkSkill = LoadAttackSkill(selected_filepath);   // Loads the current file into the atkskill struct
+                            std::cout << "Imported attack skill " << selected_filepath << "\n";
                             ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
                         }
                         else

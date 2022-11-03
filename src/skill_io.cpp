@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <stdio.h>
 
 #include "winAPI.h"
 #include "memory-editing.h"
@@ -10,14 +11,14 @@ extern "C" {
 }
 
 
-// Loads the current file into the AtkSkill struct
-void LoadAttackSkill()
+// Loads a file into the AtkSkill struct
+AttackSkill LoadAttackSkill(char* filepath)
 {
-    AtkSkillFile.open(filepath, std::ios::in | std::ios::binary);   // Open file
-    AtkSkillFile.read((char*)&AtkSkill, (sizeof(AtkSkill))); // Read bytes into AttackSkill struct
-
-    AtkSkillFile.close();
-    return;
+    AttackSkill skill_buffer = { 0 };
+    FILE* skill_file = fopen(filepath, "rb");
+    fread(&skill_buffer, sizeof(AttackSkill), 1, skill_file);
+    fclose(skill_file);
+    return skill_buffer;
 }
 
 // Writes the currently open file to disk.
@@ -25,13 +26,13 @@ void SaveAtkSkill()
 {
     if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
     {
-        if (filepath != nullptr)
+        if (selected_filepath != nullptr)
         {
-            std::ofstream AtkSkillOut(filepath, std::ios::binary);
+            std::ofstream AtkSkillOut(selected_filepath, std::ios::binary);
 
             AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the specified file with new data
             AtkSkillOut.close();
-            std::cout << "Saved attack skill to " << filepath << "\n";
+            std::cout << "Saved attack skill to " << selected_filepath << "\n";
         }
 
         skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
@@ -55,7 +56,7 @@ void SaveAtkSkill()
 
 void SaveSkillPack(const char* packname)
 {
-    std::ofstream SkillPackOut(filepath, std::ios::binary);
+    std::ofstream SkillPackOut(selected_filepath, std::ios::binary);
     std::fstream SkillStream; // fstream for the skill files selected by the user
     char skilldata[144]; // 144 byte buffer to read / write skill data from
     short FormatVersion = 1;
@@ -85,5 +86,5 @@ void SaveSkillPack(const char* packname)
     SkillStream.close();
 
     SkillPackOut.close();
-    std::cout << "Saved skill pack to " << filepath << "\n";
+    std::cout << "Saved skill pack to " << selected_filepath << "\n";
 }

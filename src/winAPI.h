@@ -4,7 +4,7 @@
 #include <shobjidl.h>
 #include <string>
 
-extern char* filepath;
+extern char* selected_filepath;
 extern std::string* multiselectpath;
 extern int MultiSelectCount;
 

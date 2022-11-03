@@ -1,5 +1,6 @@
 #pragma once
+#include "structs.h"
 
-void LoadAttackSkill();
+AttackSkill LoadAttackSkill(char* filepath);
 void SaveAtkSkill();
 void SaveSkillPack(const char* packname);
