@@ -74,7 +74,7 @@ int ProgramUI()
             {
                 if (ImGui::MenuItem("New Skill Pack", "Ctrl + N"))
                 {
-                    if (SUCCEEDED(MultiSelectWindow()))
+                    if (SUCCEEDED(file_multiple_select_dialog()))
                     {
                         ui_state.NewSkillPack = true;
                     }
@@ -86,16 +86,16 @@ int ProgramUI()
                 {
                     if (ImGui::MenuItem("Skill (From Memory)"))
                     {
-                        if (GetProcess())
+                        if (get_process())
                         {
                             ui_state.IDSelection = true;
                         }
                     }
                     if (ImGui::MenuItem("Skill File"))
                     {
-                        if (FileSelectDialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }) != -1) // Open a file open dialog
+                        if (file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }) != -1) // Open a file open dialog
                         {
-                            AtkSkill = LoadAttackSkill(selected_filepath);   // Loads the current file into the atkskill struct
+                            AtkSkill = load_attack_skill(selected_filepath);   // Loads the current file into the atkskill struct
                             std::cout << "Imported attack skill " << selected_filepath << "\n";
                             ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
                         }
@@ -106,10 +106,10 @@ int ProgramUI()
                     }
                     if (ImGui::MenuItem("Install Skill Pack"))
                     {
-                        GetProcess();
-                        if (SUCCEEDED(MultiSelectWindow())) // Open a multiple file open dialog
+                        get_process();
+                        if (SUCCEEDED(file_multiple_select_dialog())) // Open a multiple file open dialog
                         {
-                            InstallSkillPackToRAM();
+                            install_mod();
                             for (int i = 0; i < MultiSelectCount; i++)
                             {
                                 std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
@@ -124,13 +124,13 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save", "Ctrl + S"))
                 {
-                    SaveAtkSkill();
+                    save_attack_skill();
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
-                    if (FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1) // Open a file save dialog and save to a new file
+                    if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1) // Open a file save dialog and save to a new file
                     {
-                        SaveAtkSkill(); // Write data.
+                        save_attack_skill(); // Write data.
                     }
                     else
                     {
@@ -152,8 +152,8 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Skill Hex Editor"))
                 {
-                    GetProcess();
-                    if (LoadGSDataFromRAM() == 0)
+                    get_process();
+                    if (load_gsdata_from_memory() == 0)
                     {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }
@@ -169,11 +169,11 @@ int ProgramUI()
                 if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
                 {
                     if (GamePaused) {
-                        UnpauseGame();
+                        resume_game();
                         GamePaused = true;
                     }
                     else {
-                        PauseGame();
+                        pause_game();
                     }
                     GamePaused = !GamePaused;
                 }
@@ -194,9 +194,9 @@ int ProgramUI()
             // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_SHIFT))
             {
-                if (FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1)
+                if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1)
                 {
-                    SaveAtkSkill(); // Write data.
+                    save_attack_skill(); // Write data.
                 }
                 else
                 {
@@ -205,14 +205,14 @@ int ProgramUI()
             }
             else
             {
-                SaveAtkSkill(); // Write data.
+                save_attack_skill(); // Write data.
             }
         }
 
         // New: Ctrl + N
         if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !ui_state.NewSkillPack)
         {
-            if (SUCCEEDED(MultiSelectWindow()))
+            if (SUCCEEDED(file_multiple_select_dialog()))
             {
                 ui_state.NewSkillPack = true;
             }
@@ -303,9 +303,9 @@ int ProgramUI()
 
         if (ImGui::Button("Save"))
         {
-            if (SUCCEEDED(FileSaveDialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".bin")))
+            if (SUCCEEDED(file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".bin")))
             {
-                SaveSkillPack(packname_internal);
+                save_skill_pack(packname_internal);
                 ui_state.NewSkillPack = false;
             }
         }

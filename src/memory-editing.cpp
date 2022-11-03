@@ -25,7 +25,7 @@ atkskill skillarray[751];  // Array of 751 skill data blocks
 AttackSkill AtkSkill;
 int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
 
-DWORD GetProcessIDByName(LPCTSTR ProcessName)
+DWORD get_pid_by_name(LPCTSTR ProcessName)
 {
     PROCESSENTRY32 pt;
     HANDLE hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -42,10 +42,10 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
     return 0;
 }
 
-bool GetProcess()
+bool get_process()
 {
     DWORD cache = pid;
-    pid = GetProcessIDByName("PDUWP.exe");
+    pid = get_pid_by_name("PDUWP.exe");
     EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!EsperHandle)
     {
@@ -79,7 +79,7 @@ bool GetProcess()
                                 if (memcmp(gsdata, &chunk[i], 16) == 0)
                                 {
                                     baseAddress = (uintptr_t)p + i;
-                                    LoadGSDataFromRAM();
+                                    load_gsdata_from_memory();
                                     return true;
                                 }
                             }
@@ -94,7 +94,7 @@ bool GetProcess()
     return true;
 }
 
-int LoadGSDataFromRAM()
+int load_gsdata_from_memory()
 {
     if (EsperHandle != 0)
     {
@@ -114,7 +114,7 @@ int LoadGSDataFromRAM()
     return 0;
 }
 
-int SaveGSDataToRAM()
+int write_gsdata_to_memory()
 {
     if (EsperHandle != 0)
     {
@@ -134,9 +134,9 @@ int SaveGSDataToRAM()
     return 0;
 }
 
-void InstallSkillPackToRAM()
+void install_mod()
 {
-    if (LoadGSDataFromRAM() == 0)
+    if (load_gsdata_from_memory() == 0)
     {
         std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
@@ -186,18 +186,18 @@ void InstallSkillPackToRAM()
 
         delete[] SkillPackBlobData;
 
-        SaveGSDataToRAM();
+        write_gsdata_to_memory();
     }
 }
 
-void PauseGame()
+void pause_game()
 {
-    pid = GetProcessIDByName("PDUWP.exe");
+    pid = get_pid_by_name("PDUWP.exe");
     DebugActiveProcess(pid);
 }
 
-void UnpauseGame()
+void resume_game()
 {
-    pid = GetProcessIDByName("PDUWP.exe");
+    pid = get_pid_by_name("PDUWP.exe");
     DebugActiveProcessStop(pid);
 }

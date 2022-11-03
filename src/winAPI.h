@@ -10,6 +10,6 @@ extern int MultiSelectCount;
 
 extern HRESULT hr;
 
-HRESULT MultiSelectWindow();
-int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC fileTypes);
-int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension);
+HRESULT file_multiple_select_dialog();
+int WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes);
+int WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension);

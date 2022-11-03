@@ -12,7 +12,7 @@ extern "C" {
 
 
 // Loads a file into the AtkSkill struct
-AttackSkill LoadAttackSkill(char* filepath)
+AttackSkill load_attack_skill(char* filepath)
 {
     AttackSkill skill_buffer = { 0 };
     FILE* skill_file = fopen(filepath, "rb");
@@ -22,7 +22,7 @@ AttackSkill LoadAttackSkill(char* filepath)
 }
 
 // Writes the currently open file to disk.
-void SaveAtkSkill()
+void save_attack_skill()
 {
     if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
     {
@@ -37,12 +37,12 @@ void SaveAtkSkill()
 
         skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 
-        if (GetProcess())
+        if (get_process())
         {
             // Only perform hash if the game is running
             gsdataheader.VersionNum = crc32buf((char*)&AtkSkill, 144);
 
-            SaveGSDataToRAM();
+            write_gsdata_to_memory();
             std::cout << "Wrote skill data to memory.\n";
             // To make it slightly harder for new users to figure out how the hashing works, it won't be printed out every time.
             // std::cout << "New version number: " << gsdataheader.VersionNum << "\n";
@@ -54,7 +54,7 @@ void SaveAtkSkill()
     }
 }
 
-void SaveSkillPack(const char* packname)
+void save_skill_pack(const char* packname)
 {
     std::ofstream SkillPackOut(selected_filepath, std::ios::binary);
     std::fstream SkillStream; // fstream for the skill files selected by the user

@@ -6,7 +6,7 @@ int MultiSelectCount = 0;
 
 HRESULT hr;
 
-int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC fileTypes)
+int WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
 {
     IFileOpenDialog* pFileOpen;
 
@@ -51,7 +51,7 @@ int WINAPI FileSelectDialog(const COMDLG_FILTERSPEC fileTypes)
     return 0;
 }
 
-HRESULT MultiSelectWindow()
+HRESULT file_multiple_select_dialog()
 {
     IFileOpenDialog* pfd;
 
@@ -127,7 +127,7 @@ HRESULT MultiSelectWindow()
     return hr;
 }
 
-int WINAPI FileSaveDialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
+int WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
 
