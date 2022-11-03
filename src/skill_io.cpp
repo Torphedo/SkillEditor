@@ -22,17 +22,17 @@ AttackSkill load_attack_skill(char* filepath)
 }
 
 // Writes the currently open file to disk.
-void save_attack_skill()
+void save_attack_skill(char* filepath)
 {
     if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
     {
-        if (selected_filepath != nullptr)
+        if (filepath != nullptr)
         {
-            std::ofstream AtkSkillOut(selected_filepath, std::ios::binary);
+            std::ofstream AtkSkillOut(filepath, std::ios::binary);
 
             AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the specified file with new data
             AtkSkillOut.close();
-            std::cout << "Saved attack skill to " << selected_filepath << "\n";
+            std::cout << "Saved attack skill to " << filepath << "\n";
         }
 
         skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())

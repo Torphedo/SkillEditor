@@ -1,5 +1,6 @@
 # Visual Studio
 .vs/
+CMakeSettings.json
 
 # User-specific files
 *.rsuser

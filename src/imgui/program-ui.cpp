@@ -124,13 +124,14 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save", "Ctrl + S"))
                 {
-                    save_attack_skill();
+                    save_attack_skill(selected_filepath);
+
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
                     if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1) // Open a file save dialog and save to a new file
                     {
-                        save_attack_skill(); // Write data.
+                        save_attack_skill(selected_filepath); // Write data.
                     }
                     else
                     {
@@ -196,7 +197,7 @@ int ProgramUI()
             {
                 if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1)
                 {
-                    save_attack_skill(); // Write data.
+                    save_attack_skill(selected_filepath); // Write data.
                 }
                 else
                 {
@@ -205,7 +206,7 @@ int ProgramUI()
             }
             else
             {
-                save_attack_skill(); // Write data.
+                save_attack_skill(selected_filepath); // Write data.
             }
         }
 

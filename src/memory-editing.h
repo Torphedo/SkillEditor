@@ -23,5 +23,6 @@ void install_mod();
 
 // Freezes the game's execution.
 void pause_game();
+
 // Unfreezes the game.
 void resume_game();
