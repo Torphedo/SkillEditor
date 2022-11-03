@@ -45,7 +45,7 @@ DWORD GetProcessIDByName(LPCTSTR ProcessName)
 bool GetProcess()
 {
     DWORD cache = pid;
-    pid = GetProcessIDByName(L"PDUWP.exe");
+    pid = GetProcessIDByName("PDUWP.exe");
     EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!EsperHandle)
     {
@@ -192,12 +192,12 @@ void InstallSkillPackToRAM()
 
 void PauseGame()
 {
-    pid = GetProcessIDByName(L"PDUWP.exe");
+    pid = GetProcessIDByName("PDUWP.exe");
     DebugActiveProcess(pid);
 }
 
 void UnpauseGame()
 {
-    pid = GetProcessIDByName(L"PDUWP.exe");
+    pid = GetProcessIDByName("PDUWP.exe");
     DebugActiveProcessStop(pid);
 }

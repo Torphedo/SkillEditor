@@ -394,7 +394,7 @@ void AtkSkillWindow()
         Tooltip("The required amount of the type specified in\nthe previous box");
 
         ImGui::SetNextItemWidth(200);
-        char* items[] = { "Ground","Air","Both" };
+        const char* items[] = { "Ground","Air","Both" };
         ImGui::SliderInt("Skill Use Restrictions", (int*)&AtkSkill.GroundAirBoth, 0, 2, items[AtkSkill.GroundAirBoth]);
         Tooltip("Where the skill may be used.");
 
