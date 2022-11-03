@@ -2,13 +2,6 @@
 .vs/
 CMakeSettings.json
 
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
 # Build results
 out/
 [Dd]ebug/
@@ -17,18 +10,8 @@ out/
 [Rr]eleases/
 x64/
 x86/
-[Bb]in/
 *.exe
 *.lib
 *.pdb
 
 imgui.ini
-
-include/imGUI/examples/example_android_opengl3/out
-include/imGUI/examples/example_glfw_vulkan/out
-
-vendor/GLFW/src/glfw.dir/
-vendor/GLFW/src/CMakeFiles
-vendor/GLFW/examples/CMakeFiles
-vendor/GLFW/CMakeFiles
-vendor/GLFW/x64
