@@ -17,7 +17,7 @@ add_subdirectory("vendor/GLFW")
 include_directories(
 	"vendor"
 	"vendor/GLFW/include"
-	"src/vendor/imGUI"
+	"vendor/imGUI"
 	"${Vulkan_INCLUDE_DIRS}"
 )
 add_subdirectory(src)
