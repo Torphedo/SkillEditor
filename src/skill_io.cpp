@@ -60,52 +60,47 @@ void save_attack_skill()
 
 void save_attack_skill_with_file_select()
 {
-    char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
-    if (out_filepath != nullptr)
-    {
-        most_recent_filename = out_filepath;
-        free(out_filepath);
-        save_attack_skill();
-    }
+    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
+    save_attack_skill();
 }
 
 void save_skill_pack(const char* packname)
 {
+    // I believe we leak memory here, but it crashes if I free it for some reason...
     char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".bin");
     if (out_filepath != nullptr)
     {
-        std::ofstream SkillPackOut(out_filepath, std::ios::binary);
-        std::fstream SkillStream; // fstream for the skill files selected by the user
-        char skilldata[144]; // 144 byte buffer to read / write skill data from
-        short FormatVersion = 1;
-        short SkillCount = (short)MultiSelectCount; // Skill count == # of files selected
-        int pad[3] = { 0,0,0 };
+        FILE* skill_pack_out = fopen(out_filepath, "wb");
+        if (skill_pack_out != nullptr) {
+            char skilldata[144] = { 0 }; // 144 byte buffer to read / write skill data from
 
-        SkillPackOut.write(packname, 32); // 32 characters for the name
-        SkillPackOut.write((char*)&FormatVersion, sizeof(FormatVersion)); // This version is v1
-        SkillPackOut.write((char*)&SkillCount, sizeof(SkillCount)); // So we know when to stop
-        SkillPackOut.write((char*)&pad, 12); // Better alignment makes the file easier to read
+            packheader1 header = { 0 };
+            header.SkillCount = (short)MultiSelectCount;
 
-        for (int i = 0; i < MultiSelectCount; i++)
-        {
-            // Only allow skill data to be written if the skill file is the correct size
-            if (std::filesystem::file_size(multiselectpath[i]) == 144)
+            fwrite(&header, sizeof(packheader1), 1, skill_pack_out);
+
+            for (int i = 0; i < MultiSelectCount; i++)
             {
-                SkillStream.open(multiselectpath[i], std::ios::in | std::ios::binary);
-                SkillStream.read((char*)&skilldata, 144); // Read skill data from the file to our skilldata buffer
-                SkillStream.seekg(0);
-                std::cout << "Writing from " << multiselectpath[i] << "...\n";
-                SkillPackOut.write((char*)&skilldata, 144); // Writing to skill pack
+                // Only allow skill data to be written if the skill file is the correct size
+                if (std::filesystem::file_size(multiselectpath[i]) == 144)
+                {
+                    FILE* skill_in = fopen(multiselectpath[i].c_str(), "rb");
+                    if (skill_in != nullptr) {
+                        fread(&skilldata, sizeof(skilldata), 1, skill_in);
+                        fclose(skill_in);
+                    }
+
+                    printf("Writing from %s...\n", multiselectpath[i].c_str());
+                    fwrite(&skilldata, sizeof(skilldata), 1, skill_pack_out);
+                }
+                else
+                {
+                    printf("Invalid skill filesize. Write skipped.\n");
+                }
             }
-            else
-            {
-                std::cout << "Invalid skill filesize. Write skipped.\n";
-            }
+
+            fclose(skill_pack_out);
         }
-        SkillStream.close();
-
-        SkillPackOut.close();
-        std::cout << "Saved skill pack to " << out_filepath << "\n";
-        free(out_filepath);
+        printf("Saved skill pack to %s\n", out_filepath);
     }
 }

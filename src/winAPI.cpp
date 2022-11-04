@@ -130,7 +130,7 @@ HRESULT file_multiple_select_dialog()
 char* WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
-    char* selected_filepath;
+    char* selected_filepath = { 0 };
 
     // Create the FileOpenDialog object.
     hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
@@ -171,5 +171,5 @@ char* WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR Default
         }
         pFileOpen->Release();
     }
-    return selected_filepath;;
+    return selected_filepath;
 }
