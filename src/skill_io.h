@@ -1,6 +1,5 @@
 #pragma once
 #include "structs.h"
-#include <fstream>
 
 atkskill load_attack_skill();
 void save_attack_skill();

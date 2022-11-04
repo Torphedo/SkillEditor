@@ -1,6 +1,7 @@
 #include <iostream>
+#include <algorithm>
+#include <vector>
 #include <filesystem>
-#include <fstream>
 #include <Windows.h>
 #include <shobjidl.h> 
 #include <tlhelp32.h>
