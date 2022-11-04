@@ -20,6 +20,7 @@ struct
 }ui_state;
 
 char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
+char* filepath;
 short timer;
 bool GamePaused = false;
 short ID = 0;
@@ -93,16 +94,8 @@ int ProgramUI()
                     }
                     if (ImGui::MenuItem("Skill File"))
                     {
-                        if (file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }) != -1) // Open a file open dialog
-                        {
-                            AtkSkill = load_attack_skill(selected_filepath);   // Loads the current file into the atkskill struct
-                            std::cout << "Imported attack skill " << selected_filepath << "\n";
-                            ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
-                        }
-                        else
-                        {
-                            std::cout << "File selection canceled.\n";
-                        }
+                        AtkSkill = load_attack_skill();   // Loads the current file into the atkskill struct
+                        ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack"))
                     {
@@ -124,19 +117,12 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save", "Ctrl + S"))
                 {
-                    save_attack_skill(selected_filepath);
+                    save_attack_skill();
 
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
-                    if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1) // Open a file save dialog and save to a new file
-                    {
-                        save_attack_skill(selected_filepath); // Write data.
-                    }
-                    else
-                    {
-                        std::cout << "File selection canceled.\n";
-                    }
+                    save_attack_skill_with_file_select();
                 }
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -195,18 +181,11 @@ int ProgramUI()
             // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_SHIFT))
             {
-                if (file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".skill") != -1)
-                {
-                    save_attack_skill(selected_filepath); // Write data.
-                }
-                else
-                {
-                    std::cout << "File selection cancelled.\n";
-                }
+                save_attack_skill_with_file_select();
             }
             else
             {
-                save_attack_skill(selected_filepath); // Write data.
+                save_attack_skill();
             }
         }
 
@@ -304,11 +283,8 @@ int ProgramUI()
 
         if (ImGui::Button("Save"))
         {
-            if (SUCCEEDED(file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.bin;" }, L".bin")))
-            {
-                save_skill_pack(packname_internal);
-                ui_state.NewSkillPack = false;
-            }
+            save_skill_pack(packname_internal);
+            ui_state.NewSkillPack = false;
         }
 
         ImGui::End();

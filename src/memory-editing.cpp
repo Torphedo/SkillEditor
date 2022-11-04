@@ -25,7 +25,7 @@ static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0
 // Used to store the address where gstorage is located in the game's memory.
 uintptr_t gstorage_address = 0;
 
-AttackSkill AtkSkill;
+AttackSkill AtkSkill = { 0 };
 
 DWORD get_pid_by_name(LPCTSTR ProcessName)
 {

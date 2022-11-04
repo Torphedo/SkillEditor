@@ -1,14 +1,14 @@
 #include "winAPI.h"
 
-char* selected_filepath;
 std::string* multiselectpath;
 int MultiSelectCount = 0;
 
 HRESULT hr;
 
-int WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
+char* WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
 {
     IFileOpenDialog* pFileOpen;
+    char* selected_filepath;
 
     // Create the FileOpenDialog object.
     hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
@@ -22,7 +22,7 @@ int WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
         // Get the file name from the dialog box.
         if (hr == 0x800704c7) // ERROR_CANCELLED
         {
-            return -1;
+            return nullptr;
         }
         if (SUCCEEDED(hr))
         {
@@ -48,7 +48,7 @@ int WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
         }
         pFileOpen->Release();
     }
-    return 0;
+    return selected_filepath;
 }
 
 HRESULT file_multiple_select_dialog()
@@ -127,9 +127,10 @@ HRESULT file_multiple_select_dialog()
     return hr;
 }
 
-int WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
+char* WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
+    char* selected_filepath;
 
     // Create the FileOpenDialog object.
     hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
@@ -144,7 +145,7 @@ int WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultEx
         // Get the file name from the dialog box.
         if (hr == 0x800704c7) // ERROR_CANCELLED
         {
-            return -1;
+            return nullptr;
         }
         if (SUCCEEDED(hr))
         {
@@ -170,5 +171,5 @@ int WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultEx
         }
         pFileOpen->Release();
     }
-    return 0;
+    return selected_filepath;;
 }
