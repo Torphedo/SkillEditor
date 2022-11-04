@@ -2,7 +2,7 @@
 #include "structs.h"
 #include <fstream>
 
-AttackSkill load_attack_skill();
+atkskill load_attack_skill();
 void save_attack_skill();
 void save_skill_pack(const char* packname);
 

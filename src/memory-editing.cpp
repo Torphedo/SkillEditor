@@ -24,8 +24,9 @@ static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0
 
 // Used to store the address where gstorage is located in the game's memory.
 uintptr_t gstorage_address = 0;
+gsdata gstorage = { 0 };
 
-AttackSkill AtkSkill = { 0 };
+atkskill AtkSkill = { 0 };
 
 DWORD get_pid_by_name(LPCTSTR ProcessName)
 {
@@ -54,41 +55,37 @@ bool get_process()
         std::cout << "Failed to attach to process.\n";
         return false;
     }
-    if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
+    else if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
     {
-        if (EsperHandle)
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        MEMORY_BASIC_INFORMATION info;
+        std::vector<char> chunk;
+        char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
+        while (p < si.lpMaximumApplicationAddress)
         {
-            SYSTEM_INFO si;
-            GetSystemInfo(&si);
-
-            MEMORY_BASIC_INFORMATION info;
-            std::vector<char> chunk;
-            char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
-            while (p < si.lpMaximumApplicationAddress)
+            // Loop through memory pages to find one that's actually being used by the game
+            if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
             {
-                // Loop through memory pages to find one that's actually being used by the game
-                if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
+                if (info.State == MEM_COMMIT) // If this is a valid page of memory
                 {
-                    if (info.State == MEM_COMMIT) // If this is a valid page of memory
+                    chunk.resize(info.RegionSize);
+                    SIZE_T bytesRead;
+                    if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
                     {
-                        chunk.resize(info.RegionSize);
-                        SIZE_T bytesRead;
-                        if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
+                        for (size_t i = 0; i < (bytesRead - 16); ++i)
                         {
-                            for (size_t i = 0; i < (bytesRead - 16); ++i)
+                            // Check if the 16 bytes at the current address matches gsdata
+                            if (memcmp(gstorage_search, &chunk[i], 16) == 0)
                             {
-                                // Check if the 16 bytes at the current address matches gsdata
-                                if (memcmp(gstorage_search, &chunk[i], 16) == 0)
-                                {
-                                    gstorage_address = (uintptr_t)p + i;
-                                    load_gsdata_from_memory();
-                                    return true;
-                                }
+                                gstorage_address = (uintptr_t)p + i;
+                                load_gsdata_from_memory();
+                                return true;
                             }
                         }
                     }
-                    p += info.RegionSize;
                 }
+                p += info.RegionSize;
             }
         }
     }

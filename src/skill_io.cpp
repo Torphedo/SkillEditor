@@ -14,18 +14,16 @@ extern "C" {
 char* most_recent_filename;
 
 // Loads a file into the AtkSkill struct
-AttackSkill load_attack_skill()
+atkskill load_attack_skill()
 {
-    AttackSkill skill_buffer = { 0 };
-    char* filepath_in = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
-    if (filepath_in != nullptr)
+    atkskill skill_buffer = { 0 };
+    most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
+    if (most_recent_filename != nullptr)
     {
-        FILE* skill_file = fopen(filepath_in, "rb");
-        fread(&skill_buffer, sizeof(AttackSkill), 1, skill_file);
+        FILE* skill_file = fopen(most_recent_filename, "rb");
+        fread(&skill_buffer, sizeof(atkskill), 1, skill_file);
         fclose(skill_file);
-        std::cout << "Imported attack skill " << filepath_in << "\n";
-        strcpy(most_recent_filename, filepath_in);
-        free(filepath_in);
+        printf("Imported attack skill %s\n", most_recent_filename);
     }
     return skill_buffer;
 }
@@ -35,26 +33,28 @@ void save_attack_skill()
 {
     if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
     {
-        std::ofstream AtkSkillOut(most_recent_filename, std::ios::binary);
-        AtkSkillOut.write((char*)&AtkSkill, 144);       // Overwrites the specified file with new data
-        AtkSkillOut.close();
-        std::cout << "Saved attack skill to " << most_recent_filename << "\n";
+        FILE* skill_out = fopen(most_recent_filename, "wb");
+        fwrite(&AtkSkill, sizeof(atkskill), 1, skill_out);
+        fclose(skill_out);
+        printf("Saved attack skill to %s\n", most_recent_filename);
 
-        gstorage.skill_array[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 
-        // Only perform hash if the game is running
+        // Only perform hash and update gstorage if the game is running
         if (get_process())
         {
+            // Write skill into gsdata
+            gstorage.skill_array[(AtkSkill.SkillID - 1)] = AtkSkill;
+
             // Update version number
             gstorage.VersionNum = crc32buf((char*)&AtkSkill, 144);
 
             write_gsdata_to_memory();
-            std::cout << "Wrote skill data to memory.\n";
+            printf("Wrote skill data to memory.\n");
         }
     }
     else
     {
-        std::cout << "Tried to save without opening a file.\n";
+        printf("Tried to save without opening a file.\n");
     }
 }
 
