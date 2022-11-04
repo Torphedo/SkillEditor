@@ -52,14 +52,16 @@ void Tooltip(const char* text)
 
 void InputShort(const char* label, void* p_data)
 {
+    static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, (const void*)1);
+    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, &step);
 }
 
 void InputUInt8(const char* label, void* p_data)
 {
+    static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, (const void*) 1);
+    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, &step);
 }
 
 int ProgramUI()
@@ -294,7 +296,6 @@ int ProgramUI()
 
 void AtkSkillWindow()
 {
-    std::string WindowTitle = "Attack Skill Editor";
     if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor))
     {
         ImGui::End();
