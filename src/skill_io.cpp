@@ -36,8 +36,8 @@ void save_attack_skill()
         FILE* skill_out = fopen(most_recent_filename, "wb");
         fwrite(&AtkSkill, sizeof(atkskill), 1, skill_out);
         fclose(skill_out);
-        printf("Saved attack skill to %s\n", most_recent_filename);
 
+        printf("Saved attack skill to %s\n", most_recent_filename);
 
         // Only perform hash and update gstorage if the game is running
         if (get_process() && load_gsdata_from_memory())
