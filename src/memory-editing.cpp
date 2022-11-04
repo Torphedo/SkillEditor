@@ -79,7 +79,6 @@ bool get_process()
                             if (memcmp(gstorage_search, &chunk[i], 16) == 0)
                             {
                                 gstorage_address = (uintptr_t)p + i;
-                                load_gsdata_from_memory();
                                 return true;
                             }
                         }
@@ -93,35 +92,45 @@ bool get_process()
     return true;
 }
 
-int load_gsdata_from_memory()
+bool load_gsdata_from_memory()
 {
     if (EsperHandle != 0)
     {
         ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
+        DWORD error = GetLastError();
+        if (error != 1400 && error != 183 && error != 0)
         {
-            std::cout << "Process Read Error Code: " << GetLastError() << "\n";
+            std::cout << "Process Read Error Code: " << error << "\n";
+            return false;
         }
+        return true;
     }
-    return 0;
+    else {
+        return false;
+    }
 }
 
-int write_gsdata_to_memory()
+bool write_gsdata_to_memory()
 {
     if (EsperHandle != 0)
     {
         WriteProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
+        DWORD error = GetLastError();
+        if (error != 1400 && error != 183 && error != 0)
         {
-            std::cout << "Process Write Error Code: " << GetLastError() << "\n";
+            std::cout << "Process Write Error Code: " << error << "\n";
+            return false;
         }
+        return true;
     }
-    return 0;
+    else {
+        return false;
+    }
 }
 
 void install_mod()
 {
-    if (load_gsdata_from_memory() == 0)
+    if (load_gsdata_from_memory())
     {
         std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically

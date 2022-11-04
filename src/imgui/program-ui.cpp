@@ -89,7 +89,7 @@ int ProgramUI()
                 {
                     if (ImGui::MenuItem("Skill (From Memory)"))
                     {
-                        if (get_process())
+                        if (get_process() && load_gsdata_from_memory())
                         {
                             ui_state.IDSelection = true;
                         }
@@ -141,8 +141,7 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Skill Hex Editor"))
                 {
-                    get_process();
-                    if (load_gsdata_from_memory() == 0)
+                    if (get_process() && load_gsdata_from_memory())
                     {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }

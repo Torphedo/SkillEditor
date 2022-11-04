@@ -40,7 +40,7 @@ void save_attack_skill()
 
 
         // Only perform hash and update gstorage if the game is running
-        if (get_process())
+        if (get_process() && load_gsdata_from_memory())
         {
             // Write skill into gsdata
             gstorage.skill_array[(AtkSkill.SkillID - 1)] = AtkSkill;
