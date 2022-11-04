@@ -35,12 +35,12 @@ void save_attack_skill(char* filepath)
             std::cout << "Saved attack skill to " << filepath << "\n";
         }
 
-        skillarray[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+        gstorage.skill_array[(AtkSkill.SkillID - 1)] = AtkSkill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
 
         if (get_process())
         {
             // Only perform hash if the game is running
-            gsdataheader.VersionNum = crc32buf((char*)&AtkSkill, 144);
+            gstorage.VersionNum = crc32buf((char*)&AtkSkill, 144);
 
             write_gsdata_to_memory();
             std::cout << "Wrote skill data to memory.\n";

@@ -13,17 +13,19 @@ extern "C" {
 #include <crc_32.h>
 }
 
+// The game's process ID.
 DWORD pid = 0;
+
+// A handle to the game process with read/write permissions.
 HANDLE EsperHandle;
-uintptr_t baseAddress;
-constexpr static uint8_t gsdata[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00 };
 
-std::fstream AtkSkillFile; // fstream for Attack Skill files
+// 16 bytes of gstorage that can be checked against while searching memory to find where it begins.
+static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00 };
 
-GSDataHeader gsdataheader; // First 160 bytes of gsdata
-atkskill skillarray[751];  // Array of 751 skill data blocks
+// Used to store the address where gstorage is located in the game's memory.
+uintptr_t gstorage_address = 0;
+
 AttackSkill AtkSkill;
-int* gsdatamain; // Text, whitespace, other data shared among gsdata save/load functions
 
 DWORD get_pid_by_name(LPCTSTR ProcessName)
 {
@@ -76,9 +78,9 @@ bool get_process()
                             for (size_t i = 0; i < (bytesRead - 16); ++i)
                             {
                                 // Check if the 16 bytes at the current address matches gsdata
-                                if (memcmp(gsdata, &chunk[i], 16) == 0)
+                                if (memcmp(gstorage_search, &chunk[i], 16) == 0)
                                 {
-                                    baseAddress = (uintptr_t)p + i;
+                                    gstorage_address = (uintptr_t)p + i;
                                     load_gsdata_from_memory();
                                     return true;
                                 }
@@ -98,18 +100,11 @@ int load_gsdata_from_memory()
 {
     if (EsperHandle != 0)
     {
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
+        ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             std::cout << "Process Read Error Code: " << GetLastError() << "\n";
         }
-        baseAddress += 160; // Address where the skills begin.
-        ReadProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, 751 * 144, NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            std::cout << "Process Read Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress -= 160;
     }
     return 0;
 }
@@ -118,18 +113,11 @@ int write_gsdata_to_memory()
 {
     if (EsperHandle != 0)
     {
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &gsdataheader, sizeof(gsdataheader), NULL);
+        WriteProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
         {
             std::cout << "Process Write Error Code: " << GetLastError() << "\n";
         }
-        baseAddress += 160; // Address where the skills begin.
-        WriteProcessMemory(EsperHandle, (LPVOID)baseAddress, &skillarray, sizeof(skillarray), NULL);
-        if (GetLastError() != 1400 && GetLastError() != 183 && GetLastError() != 0)
-        {
-            std::cout << "Process Write Error Code: " << GetLastError() << "\n";
-        }
-        baseAddress -= 160;
     }
     return 0;
 }
@@ -159,7 +147,7 @@ void install_mod()
             {
                 atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
                 fread_s(&skill, sizeof(skill), sizeof(skill), 1, SkillPack);
-                skillarray[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+                gstorage.skill_array[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
             }
             fclose(SkillPack);
         }
@@ -181,7 +169,7 @@ void install_mod()
         fclose(SkillPackBlob);
 
         uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
-        gsdataheader.VersionNum = (unsigned int)hash;
+        gstorage.VersionNum = (unsigned int)hash;
         std::cout << "New version number: " << hash << "\n";
 
         delete[] SkillPackBlobData;

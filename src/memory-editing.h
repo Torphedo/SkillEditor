@@ -1,13 +1,7 @@
 #pragma once
 #include "structs.h"
 
-extern std::fstream AtkSkillFile;
-extern GSDataHeader gsdataheader;
-extern atkskill skillarray[751];
 extern AttackSkill AtkSkill; // Attack skill struct
-
-// Find a process' ID, given its executable name
-DWORD get_pid_by_name(LPCTSTR ProcessName);
 
 // Get the process ID, attach to it with read/write permissions, and locate gsdata in its memory.
 bool get_process();

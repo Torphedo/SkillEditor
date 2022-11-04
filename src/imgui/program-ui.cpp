@@ -235,7 +235,7 @@ int ProgramUI()
 
         if (ImGui::Button("Open"))
         {
-            memcpy(&AtkSkill, &skillarray[ID], 144);
+            memcpy(&AtkSkill, &gstorage.skill_array[ID], 144);
             std::cout << "Loaded skill with ID " << ID << ".\n";
             ui_state.IDSelection = false;      // Close this window
             ui_state.AttackSkillEditor = true; // Opens the Attack Skill Editor window
@@ -247,7 +247,7 @@ int ProgramUI()
     if (ui_state.HexEditor)
     {
         hex_edit.ReadOnly = false;
-        hex_edit.DrawWindow("Hex Editor", &skillarray[ID], 144);
+        hex_edit.DrawWindow("Hex Editor", &gstorage.skill_array[ID], 144);
     }
 
     if (ui_state.AttackSkillEditor)

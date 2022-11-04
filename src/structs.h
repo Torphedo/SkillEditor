@@ -77,7 +77,7 @@ typedef struct AttackSkill
     short AnimationHeight;
 }atkskill;
 
-struct GSDataHeader
+struct
 {
     int Filesize; // The size in bytes of the entire gsdata file
     int unk0;// TBD
@@ -86,7 +86,8 @@ struct GSDataHeader
     int VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
     int SkillLimiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
     char dummy[136]; // This is actual data, but it's unimportant so it gets ignored.
-};
+    atkskill skill_array[751];
+}gstorage;
 
 typedef struct SkillPackHeaderV1
 {
