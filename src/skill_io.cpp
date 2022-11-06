@@ -69,12 +69,13 @@ void save_skill_pack(const char* packname)
     if (out_filepath != nullptr)
     {
         FILE* skill_pack_out = fopen(out_filepath, "wb");
-        if (skill_pack_out != nullptr) {
-            char skilldata[144] = { 0 }; // 144 byte buffer to read / write skill data from
-
+        if (skill_pack_out != nullptr)
+        {
             packheader1 header = { 0 };
             header.SkillCount = (short)MultiSelectCount;
-
+            header.FormatVersion = 1;
+            strcpy(header.Name, packname);
+            atkskill* skills = new atkskill[header.SkillCount];
             fwrite(&header, sizeof(packheader1), 1, skill_pack_out);
 
             for (int i = 0; i < MultiSelectCount; i++)
@@ -84,18 +85,19 @@ void save_skill_pack(const char* packname)
                 {
                     FILE* skill_in = fopen(multiselectpath[i].c_str(), "rb");
                     if (skill_in != nullptr) {
-                        fread(&skilldata, sizeof(skilldata), 1, skill_in);
+                        fread(&skills[i], sizeof(atkskill), 1, skill_in);
                         fclose(skill_in);
                     }
 
                     printf("Writing from %s...\n", multiselectpath[i].c_str());
-                    fwrite(&skilldata, sizeof(skilldata), 1, skill_pack_out);
                 }
                 else
                 {
-                    printf("Invalid skill filesize. Write skipped.\n");
+                    printf("Invalid skill size, file skipped.\n");
                 }
             }
+            fwrite(skills, sizeof(atkskill), header.SkillCount, skill_pack_out);
+            delete[] skills;
 
             fclose(skill_pack_out);
         }

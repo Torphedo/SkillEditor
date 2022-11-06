@@ -139,7 +139,7 @@ void install_mod()
         int BlobSize = 0;
         for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
-            SkillPackHeaderV1 header;
+            packheader1 header;
             FILE* SkillPack;
             fopen_s(&SkillPack, multiselectpath[n].c_str(), "rb");
             if (SkillPack == 0)
@@ -150,12 +150,13 @@ void install_mod()
             fread_s(&header, sizeof(header), sizeof(header), 1, SkillPack);
             BlobSize += (int)std::filesystem::file_size(multiselectpath[n]);
 
+            atkskill* skills = new atkskill[header.SkillCount];
             for (int i = 0; i < header.SkillCount; i++)
             {
-                atkskill skill; // Instance of struct. ID will be in the same posiiton every time, so it's fine to use the attack template.
-                fread_s(&skill, sizeof(skill), sizeof(skill), 1, SkillPack);
-                gstorage.skill_array[(skill.SkillID - 1)] = skill; // Write skills from pack into gsdata (loaded in memory by LoadGSDATA())
+                fread(&skills[i], sizeof(atkskill), 1, SkillPack);
+                gstorage.skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
             }
+            delete[] skills;
             fclose(SkillPack);
         }
         char* SkillPackBlobData = new char[BlobSize];
