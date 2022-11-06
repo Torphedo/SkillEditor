@@ -5,6 +5,12 @@ int MultiSelectCount = 0;
 
 HRESULT hr;
 
+void init_winapi()
+{
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    return;
+}
+
 char* WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
 {
     IFileOpenDialog* pFileOpen;

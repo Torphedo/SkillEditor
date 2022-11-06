@@ -1,8 +1,6 @@
 #pragma once
 #include "structs.h"
 
-extern atkskill AtkSkill; // Attack skill struct
-
 // Get the process ID, attach to it with read/write permissions, and locate gsdata in its memory.
 bool get_process();
 

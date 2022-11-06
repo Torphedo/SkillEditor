@@ -27,8 +27,6 @@ static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0
 uintptr_t gstorage_address = 0;
 gsdata gstorage = { 0 };
 
-atkskill AtkSkill = { 0 };
-
 DWORD get_pid_by_name(LPCTSTR ProcessName)
 {
     PROCESSENTRY32 pt;

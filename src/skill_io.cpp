@@ -27,12 +27,12 @@ atkskill load_attack_skill()
 }
 
 // Writes the currently open file to disk.
-void save_attack_skill()
+void save_attack_skill(atkskill skill)
 {
-    if (AtkSkill.SkillTextID != 0) // Check that we actually have data to write, this will always be > 0.
+    if (skill.SkillTextID != 0) // Check that we actually have data to write, this should always be > 0.
     {
         FILE* skill_out = fopen(most_recent_filename, "wb");
-        fwrite(&AtkSkill, sizeof(atkskill), 1, skill_out);
+        fwrite(&skill, sizeof(atkskill), 1, skill_out);
         fclose(skill_out);
 
         printf("Saved attack skill to %s\n", most_recent_filename);
@@ -41,10 +41,10 @@ void save_attack_skill()
         if (get_process() && load_gsdata_from_memory())
         {
             // Write skill into gsdata
-            gstorage.skill_array[(AtkSkill.SkillID - 1)] = AtkSkill;
+            gstorage.skill_array[(skill.SkillID - 1)] = skill;
 
             // Update version number
-            gstorage.VersionNum = crc32buf((char*)&AtkSkill, 144);
+            gstorage.VersionNum = crc32buf((char*)&skill, 144);
 
             write_gsdata_to_memory();
             printf("Wrote skill data to memory.\n");
@@ -56,10 +56,10 @@ void save_attack_skill()
     }
 }
 
-void save_attack_skill_with_file_select()
+void save_attack_skill_with_file_select(atkskill skill)
 {
     most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
-    save_attack_skill();
+    save_attack_skill(skill);
 }
 
 void save_skill_pack(const char* packname)

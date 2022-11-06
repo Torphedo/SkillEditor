@@ -27,6 +27,8 @@ bool GamePaused = false;
 short ID = 0;
 short SelectIdx = 0;
 
+atkskill AtkSkill = { 0 };
+
 static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"
 };
@@ -120,12 +122,12 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save", "Ctrl + S"))
                 {
-                    save_attack_skill();
+                    save_attack_skill(AtkSkill);
 
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
-                    save_attack_skill_with_file_select();
+                    save_attack_skill_with_file_select(AtkSkill);
                 }
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -183,11 +185,11 @@ int ProgramUI()
             // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_SHIFT))
             {
-                save_attack_skill_with_file_select();
+                save_attack_skill_with_file_select(AtkSkill);
             }
             else
             {
-                save_attack_skill();
+                save_attack_skill(AtkSkill);
             }
         }
 

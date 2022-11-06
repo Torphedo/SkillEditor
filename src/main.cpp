@@ -20,8 +20,7 @@ int main()
         config.close();
     }
 
-    // Initialize something for WinAPI file explorer calls
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    init_winapi();
     CreateUI(); // Main UI loop
     CoUninitialize();
     return 0;
