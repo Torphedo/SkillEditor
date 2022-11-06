@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
