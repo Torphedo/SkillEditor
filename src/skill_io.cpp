@@ -38,7 +38,7 @@ void save_attack_skill(atkskill skill)
         printf("Saved attack skill to %s\n", most_recent_filename);
 
         // Only perform hash and update gstorage if the game is running
-        if (get_process() && load_gsdata_from_memory())
+        if (get_process() && load_skill_data())
         {
             // Write skill into gsdata
             gstorage.skill_array[(skill.SkillID - 1)] = skill;

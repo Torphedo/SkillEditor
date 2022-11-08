@@ -18,6 +18,7 @@ struct
     bool AttackSkillEditor;
     bool Documentation;
     bool IDSelection;
+    bool text_edit;
 }ui_state;
 
 char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
@@ -92,7 +93,7 @@ int ProgramUI()
                 {
                     if (ImGui::MenuItem("Skill (From Memory)"))
                     {
-                        if (get_process() && load_gsdata_from_memory())
+                        if (get_process() && load_skill_data())
                         {
                             ui_state.IDSelection = true;
                         }
@@ -144,7 +145,7 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Skill Hex Editor"))
                 {
-                    if (get_process() && load_gsdata_from_memory())
+                    if (get_process() && load_skill_data())
                     {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }
@@ -167,6 +168,14 @@ int ProgramUI()
                         pause_game();
                     }
                     GamePaused = !GamePaused;
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Tools"))
+            {
+                if (ImGui::MenuItem("Text Edit"))
+                {
+                    ui_state.text_edit = !ui_state.text_edit;
                 }
                 ImGui::EndMenu();
             }
@@ -289,6 +298,48 @@ int ProgramUI()
         {
             save_skill_pack(packname_internal);
             ui_state.NewSkillPack = false;
+        }
+
+        ImGui::End();
+    }
+
+    if (ui_state.text_edit)
+    {
+        char buf[32] = "";
+        ImGui::Begin("Skill Text Editor");
+        InputShort("Skill ID", &ID);
+        ImGui::InputText("Skill Name", buf, 32);
+        ImGui::InputText("Skill Description", buf, 32);
+
+        if (ImGui::Button("Save"))
+        {
+            ui_state.text_edit = false;
+            get_process();
+            load_skill_data();
+            load_skill_text();
+            // FILE* file = fopen("gsdata_en.dat", "rb");
+            // gsdata header = { 0 };
+            // fread(&header, sizeof(gsdata), 1, file);
+            // fseek(file, header.unk0 + 0x1AAE0, SEEK_SET);
+            // char* text_arr[1502] = { 0 };
+            // 
+            // // Read text
+            // for (unsigned short i = 0; i < 1502; i++) {
+            //     if (i == 794) {
+            //         printf("");
+            //     }
+            //     char* text_temp = new char[200];
+            //     fscanf(file, " %[[ -~]]s", text_temp);
+            //     fseek(file, 1, SEEK_CUR);
+            //     long pos = ftell(file);
+            // 
+            //     text_arr[i] = new char[strlen(text_temp)];
+            //     strcpy(text_arr[i], text_temp);
+            //     printf("%s\n", text_arr[i]);
+            //     delete[] text_temp;
+            // }
+            // 
+            // fclose(file);
         }
 
         ImGui::End();

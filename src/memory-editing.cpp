@@ -14,6 +14,9 @@ extern "C" {
 #include <crc_32.h>
 }
 
+#define SKILL_MAX 751
+#define SKILL_MAX_DOUBLE 1502
+
 // The game's process ID.
 DWORD pid = 0;
 
@@ -91,17 +94,59 @@ bool get_process()
     return true;
 }
 
-bool load_gsdata_from_memory()
+bool load_skill_data()
 {
     if (EsperHandle != 0)
     {
+        DWORD error = 0;
+
         ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
-        DWORD error = GetLastError();
+        error = GetLastError();
         if (error != 1400 && error != 183 && error != 0)
         {
             std::cout << "Process Read Error Code: " << error << "\n";
             return false;
         }
+
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool load_skill_text()
+{
+    if (EsperHandle != 0)
+    {
+        DWORD error = 0;
+
+        // I can't find a pointer to this location or anything similar, so I'm forced
+        // to use a magic number... This hasn't caused any problems yet, I think it's
+        // fine since vanilla GSDATA will never change this location.
+        static uintptr_t text_begin = gstorage_address + gstorage.unk0 + 0x1AAE0;
+        static size_t text_buf_size = gstorage.Filesize - (gstorage.unk0 + 0x1AAE0); // EOF - start location
+        char* text = new char[text_buf_size]; // Allocate buffer for text data
+
+        ReadProcessMemory(EsperHandle, (LPVOID)text_begin, text, text_buf_size, NULL);
+        error = GetLastError();
+        if (error != 0)
+        {
+            std::cout << "Process Read Error Code: " << error << "\n";
+            return false;
+        }
+        unsigned short offset_arr[SKILL_MAX_DOUBLE] = { 0 };
+
+        // Read text
+        unsigned int read_pos = 0;
+        for (unsigned short i = 0; i < SKILL_MAX_DOUBLE; i++) {
+            offset_arr[i] = read_pos;
+            read_pos += strlen(&text[read_pos]) + 1; // Add 1 to account for null terminator
+            printf("%s\n", &text[offset_arr[i]]);
+            // i = 94 for Rapid Cannon
+        }
+        delete[] text;
+
         return true;
     }
     else {
@@ -129,7 +174,7 @@ bool write_gsdata_to_memory()
 
 void install_mod()
 {
-    if (load_gsdata_from_memory())
+    if (load_skill_data())
     {
         std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
         std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically

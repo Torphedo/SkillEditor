@@ -5,7 +5,10 @@
 bool get_process();
 
 // Loads skill data and version number from memory into addressable structs.
-bool load_gsdata_from_memory();
+bool load_skill_data();
+
+// Reads and prints all skill names and descriptions to the console.
+bool load_skill_text();
 
 // Write skill data and version number to memory.
 bool write_gsdata_to_memory();
