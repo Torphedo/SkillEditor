@@ -54,9 +54,8 @@ void Tooltip(const char* text)
 // ImGui didn't have pre-made functions for short
 // or uint8 input boxes, so I made my own.
 
-void InputShort(const char* label, void* p_data)
+void InputShort(const char* label, void* p_data, unsigned short step)
 {
-    static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
     ImGui::InputScalar(label, ImGuiDataType_S16, p_data, &step);
 }
@@ -154,6 +153,12 @@ int ProgramUI()
                 {
                     ui_state.Documentation = !ui_state.Documentation;
                 }
+                if (ImGui::MenuItem("Text Edit"))
+                {
+                    get_process();
+                    load_skill_data();
+                    ui_state.text_edit = !ui_state.text_edit;
+                }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Game"))
@@ -168,14 +173,6 @@ int ProgramUI()
                         pause_game();
                     }
                     GamePaused = !GamePaused;
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Tools"))
-            {
-                if (ImGui::MenuItem("Text Edit"))
-                {
-                    ui_state.text_edit = !ui_state.text_edit;
                 }
                 ImGui::EndMenu();
             }
@@ -223,7 +220,7 @@ int ProgramUI()
     if (ui_state.IDSelection)
     {
         ImGui::Begin("Input a skill ID: ");
-        InputShort("ID", &ID);
+        InputShort("ID", &ID, 1);
 
         if (ImGui::Button("Open"))
         {
@@ -305,42 +302,13 @@ int ProgramUI()
 
     if (ui_state.text_edit)
     {
-        char buf[32] = "";
-        ImGui::Begin("Skill Text Editor");
-        InputShort("Skill ID", &ID);
-        ImGui::InputText("Skill Name", buf, 32);
-        ImGui::InputText("Skill Description", buf, 32);
+        std::string name = load_skill_text(ID);
+        std::string desc = load_skill_text(ID + 1);
 
-        if (ImGui::Button("Save"))
-        {
-            ui_state.text_edit = false;
-            get_process();
-            load_skill_data();
-            load_skill_text();
-            // FILE* file = fopen("gsdata_en.dat", "rb");
-            // gsdata header = { 0 };
-            // fread(&header, sizeof(gsdata), 1, file);
-            // fseek(file, header.unk0 + 0x1AAE0, SEEK_SET);
-            // char* text_arr[1502] = { 0 };
-            // 
-            // // Read text
-            // for (unsigned short i = 0; i < 1502; i++) {
-            //     if (i == 794) {
-            //         printf("");
-            //     }
-            //     char* text_temp = new char[200];
-            //     fscanf(file, " %[[ -~]]s", text_temp);
-            //     fseek(file, 1, SEEK_CUR);
-            //     long pos = ftell(file);
-            // 
-            //     text_arr[i] = new char[strlen(text_temp)];
-            //     strcpy(text_arr[i], text_temp);
-            //     printf("%s\n", text_arr[i]);
-            //     delete[] text_temp;
-            // }
-            // 
-            // fclose(file);
-        }
+        ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
+        InputShort("Text ID", &ID, 2);
+        ImGui::InputText("Skill Name", name.data(), name.length());
+        ImGui::InputText("Skill Description", desc.data(), desc.length());
 
         ImGui::End();
     }
@@ -361,11 +329,11 @@ void AtkSkillWindow()
     if (ImGui::BeginTable("split1", 2, ImGuiTableFlags_NoSavedSettings))
     {
         ImGui::TableNextColumn();
-        InputShort("Skill Text ID", &AtkSkill.SkillTextID);
+        InputShort("Skill Text ID", &AtkSkill.SkillTextID, 1);
         Tooltip("The skill ID from which to get the skill's name,\ndescription, etc.");
-        InputShort("Register ID", &AtkSkill.RegisterID);
+        InputShort("Register ID", &AtkSkill.RegisterID, 1);
         Tooltip("The \"register\" / \"library\" of skills this skill\nwill belong to.");
-        InputShort("Skill ID", &AtkSkill.SkillID);
+        InputShort("Skill ID", &AtkSkill.SkillID, 1);
         Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
 
         ImGui::SetNextItemWidth(200);
@@ -376,7 +344,7 @@ void AtkSkillWindow()
         AtkSkill.RarityStars = (short) rarity - 1;
         Tooltip("The skill's in-game rarity, displayed as stars.");
 
-        InputShort("Sound File ID", &AtkSkill.SoundFileID);
+        InputShort("Sound File ID", &AtkSkill.SoundFileID, 1);
         ImGui::TableNextColumn();
 
         ImGui::SetNextItemWidth(200);
@@ -384,43 +352,43 @@ void AtkSkillWindow()
         ImGui::SliderInt("Capsule Type", (int*)&AtkSkill.CapsuleType, 0, 7 - 1, elems_names[AtkSkill.CapsuleType]);
         ImGui::TableNextColumn();
 
-        InputShort("School ID", &AtkSkill.SchoolID);
+        InputShort("School ID", &AtkSkill.SchoolID, 1);
         Tooltip("The skill's school. (Nature, Optical, Ki, etc.)");
-        InputShort("Animation Profile (Ground)", &AtkSkill.AnimationProfileGround);
+        InputShort("Animation Profile (Ground)", &AtkSkill.AnimationProfileGround, 1);
         Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground.");
-        InputShort("Animation Profile (Air)", &AtkSkill.AnimationProfileAir);
+        InputShort("Animation Profile (Air)", &AtkSkill.AnimationProfileAir, 1);
         Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air.");
-        InputShort("Multi Press 1", &AtkSkill.MultiPress1);
+        InputShort("Multi Press 1", &AtkSkill.MultiPress1, 1);
         ImGui::TableNextColumn();
-        InputShort("Multi Press 2", &AtkSkill.MultiPress2);
+        InputShort("Multi Press 2", &AtkSkill.MultiPress2, 1);
         ImGui::TableNextColumn();
-        InputShort("Double Skill 1", &AtkSkill.DoubleSkill1);
+        InputShort("Double Skill 1", &AtkSkill.DoubleSkill1, 1);
         ImGui::TableNextColumn();
-        InputShort("Double Skill 2", &AtkSkill.DoubleSkill2);
+        InputShort("Double Skill 2", &AtkSkill.DoubleSkill2, 1);
         ImGui::TableNextColumn();
-        InputShort("After Hit SFX", &AtkSkill.PostHitSFX);
+        InputShort("After Hit SFX", &AtkSkill.PostHitSFX, 1);
         ImGui::TableNextColumn();
-        InputShort("Start Up SFX", &AtkSkill.StartUpSFX);
+        InputShort("Start Up SFX", &AtkSkill.StartUpSFX, 1);
         Tooltip("The sound effect ID to be played when the skill\nis winding up / charging.");
-        InputShort("Collision SFX", &AtkSkill.CollisionSFX);
+        InputShort("Collision SFX", &AtkSkill.CollisionSFX, 1);
         Tooltip("The sound effect ID to be played when the skill\ncollides with something.");
-        InputShort("Aura Cost", &AtkSkill.Cost);
+        InputShort("Aura Cost", &AtkSkill.Cost, 1);
         Tooltip("The amount of Aura the skill costs.");
-        InputShort("Cost Effect", &AtkSkill.CostEffect);
+        InputShort("Cost Effect", &AtkSkill.CostEffect, 1);
         Tooltip("Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura");
-        InputShort("Additional Aura Cost", &AtkSkill.ExtraCost);
+        InputShort("Additional Aura Cost", &AtkSkill.ExtraCost, 1);
         Tooltip("Adds to the base Aura cost.");
-        InputShort("Health Penalty", &AtkSkill.HealthCost);
+        InputShort("Health Penalty", &AtkSkill.HealthCost, 1);
         Tooltip("The amount of health to be taken from the user\nwhen the skill is cast.");
-        InputShort("# of Uses", &AtkSkill.SkillUses);
+        InputShort("# of Uses", &AtkSkill.SkillUses, 1);
         Tooltip("How many times the skill can be used. Set this\nto 0 for infinite uses.");
-        InputShort("Self Effect", &AtkSkill.SelfEffect);
+        InputShort("Self Effect", &AtkSkill.SelfEffect, 1);
         Tooltip("An effect to be applied to the user. Undocumented,\nneeds more research.");
-        InputShort("Button Restrictions", &AtkSkill.ButtonRestrictions);
+        InputShort("Button Restrictions", &AtkSkill.ButtonRestrictions, 1);
         ImGui::TableNextColumn();
-        InputShort("Requirement Type", &AtkSkill.Requirements);
+        InputShort("Requirement Type", &AtkSkill.Requirements, 1);
         Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level");
-        InputShort("Requirement Amount", &AtkSkill.ReqAmount);
+        InputShort("Requirement Amount", &AtkSkill.ReqAmount, 1);
         Tooltip("The required amount of the type specified in\nthe previous box");
 
         ImGui::SetNextItemWidth(200);
@@ -428,41 +396,41 @@ void AtkSkillWindow()
         ImGui::SliderInt("Skill Use Restrictions", (int*)&AtkSkill.GroundAirBoth, 0, 2, items[AtkSkill.GroundAirBoth]);
         Tooltip("Where the skill may be used.");
 
-        InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect);
+        InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect, 1);
         ImGui::TableNextColumn();
-        InputShort("Applied Status ID", &AtkSkill.AppliedStatusID);
+        InputShort("Applied Status ID", &AtkSkill.AppliedStatusID, 1);
         Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poision\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
-        InputShort("Restrictions", &AtkSkill.Restriction);
+        InputShort("Restrictions", &AtkSkill.Restriction, 1);
         ImGui::TableNextColumn();
-        InputShort("Strength Effect", &AtkSkill.StrengthEffect);
+        InputShort("Strength Effect", &AtkSkill.StrengthEffect, 1);
         ImGui::TableNextColumn();
-        InputShort("Damage", &AtkSkill.Damage);
+        InputShort("Damage", &AtkSkill.Damage, 1);
         ImGui::TableNextColumn();
-        InputShort("Effect Duration / Misc. Effects", &AtkSkill.EffectDuration);
+        InputShort("Effect Duration / Misc. Effects", &AtkSkill.EffectDuration, 1);
         ImGui::TableNextColumn();
-        InputShort("Target Hand Data", &AtkSkill.TargetHand);
+        InputShort("Target Hand Data", &AtkSkill.TargetHand, 1);
         ImGui::TableNextColumn();
-        InputShort("Hit Effect Skills", &AtkSkill.HitEffectSkills);
+        InputShort("Hit Effect Skills", &AtkSkill.HitEffectSkills, 1);
         ImGui::TableNextColumn();
-        InputShort("Increase Stat", &AtkSkill.Increase);
+        InputShort("Increase Stat", &AtkSkill.Increase, 1);
         ImGui::TableNextColumn();
         InputUInt8("Status Enabler", &AtkSkill.StatusEnabler);
         ImGui::TableNextColumn();
         InputUInt8("Status ID Duration", &AtkSkill.StatusDuration);
         ImGui::TableNextColumn();
-        InputShort("Projectile Properties", &AtkSkill.ProjectileProperties);
+        InputShort("Projectile Properties", &AtkSkill.ProjectileProperties, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile ID", &AtkSkill.ProjectileID);
+        InputShort("Projectile ID", &AtkSkill.ProjectileID, 1);
         ImGui::TableNextColumn();
-        InputShort("\"Collision Skill ID\"", &AtkSkill.ProjectileID);
+        InputShort("\"Collision Skill ID\"", &AtkSkill.ProjectileID, 1);
         ImGui::TableNextColumn();
-        InputShort("Homing Range 1st Hit", &AtkSkill.HomingRangeFirstHit);
+        InputShort("Homing Range 1st Hit", &AtkSkill.HomingRangeFirstHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Knockback Strength", &AtkSkill.HomingRangeSecondHit);
+        InputShort("Knockback Strength", &AtkSkill.HomingRangeSecondHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Combo End", &AtkSkill.HomingRangeThirdHit);
+        InputShort("Combo End", &AtkSkill.HomingRangeThirdHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile Behaviour", &AtkSkill.ProjectileBehaviour);
+        InputShort("Projectile Behaviour", &AtkSkill.ProjectileBehaviour, 1);
         ImGui::TableNextColumn();
         if (AtkSkill.ProjectileBehaviour > 20)
         {
@@ -473,15 +441,15 @@ void AtkSkillWindow()
         ImGui::TableNextColumn();
         InputUInt8("Hit Range", &AtkSkill.HitRange);
         ImGui::TableNextColumn();
-        InputShort("Expand Skill Width / Start Speed", &AtkSkill.ExpandSkillWidth);
+        InputShort("Expand Skill Width / Start Speed", &AtkSkill.ExpandSkillWidth, 1);
         ImGui::TableNextColumn();
-        InputShort("Animation Size / Acceleration", &AtkSkill.AnimationSize);
+        InputShort("Animation Size / Acceleration", &AtkSkill.AnimationSize, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile End Speed", &AtkSkill.ProjectileSpeed);
+        InputShort("Projectile End Speed", &AtkSkill.ProjectileSpeed, 1);
         ImGui::TableNextColumn();
-        InputShort("Homing Strength / Accuracy", &AtkSkill.AccuracyID);
+        InputShort("Homing Strength / Accuracy", &AtkSkill.AccuracyID, 1);
         ImGui::TableNextColumn();
-        InputShort("Animation Height", &AtkSkill.AnimationHeight);
+        InputShort("Animation Height", &AtkSkill.AnimationHeight, 1);
 
         ImGui::EndTable();
     }
