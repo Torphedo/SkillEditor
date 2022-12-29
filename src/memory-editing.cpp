@@ -127,9 +127,11 @@ std::string load_skill_text(unsigned int id)
 {
     if (EsperHandle != 0)
     {
-        // I can't find a pointer to this location or anything similar, so I'm forced
-        // to use a magic number... This hasn't caused any problems yet, I think it's
-        // fine since vanilla GSDATA will never change this location.
+        // There are no pointers to the text data, so this magic number is required.
+        // Should work fine because vanilla GSData will always stay the same.
+
+        // Consider making this a separate function that loads the data into a permanent
+        // buffer on request. This will avoid needing to allocate/free ~60K multiple times.
         static uintptr_t text_begin = gstorage_address + gstorage.unk0 + 0x1AAE0;
         static size_t text_buf_size = gstorage.Filesize - (gstorage.unk0 + 0x1AAE0); // EOF - start location
         char* text = new char[text_buf_size]; // Allocate buffer for text data
@@ -140,18 +142,16 @@ std::string load_skill_text(unsigned int id)
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return "Failed to read data.";
         }
-        unsigned short offset_arr[SKILL_MAX_DOUBLE] = { 0 };
 
-        // Read text
+        // Loop until the target string is reached
         unsigned int read_pos = 0;
-        for (unsigned short i = 0; i < SKILL_MAX_DOUBLE; i++) {
-            offset_arr[i] = read_pos;
-            read_pos += strlen(&text[read_pos]) + 1; // Add 1 to account for null terminator
-            // printf("%s\n", &text[offset_arr[i]]);
-            // i = 94 for Rapid Cannon
+        for (unsigned short i = 0; i < id; i++)
+        {
+            // Increment by length of the current string plus the null terminator
+            read_pos += strlen(&text[read_pos]) + 1;
         }
 
-        std::string output = &text[offset_arr[id]];
+        std::string output = &text[read_pos];
 
         delete[] text;
 

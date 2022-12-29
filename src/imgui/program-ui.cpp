@@ -19,6 +19,10 @@ struct
     bool Documentation;
     bool IDSelection;
     bool text_edit;
+
+    // Name & description being edited in text edit box
+    std::string current_name;
+    std::string current_desc;
 }ui_state;
 
 char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
@@ -57,14 +61,14 @@ void Tooltip(const char* text)
 void InputShort(const char* label, void* p_data, unsigned short step)
 {
     ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_S16, p_data, &step);
+    ImGui::InputScalar(label, ImGuiDataType_U16, p_data, &step);
 }
 
 void InputUInt8(const char* label, void* p_data)
 {
     static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_S8, p_data, &step);
+    ImGui::InputScalar(label, ImGuiDataType_U8, p_data, &step);
 }
 
 int ProgramUI()
@@ -302,14 +306,20 @@ int ProgramUI()
 
     if (ui_state.text_edit)
     {
-        std::string name = load_skill_text(ID);
-        std::string desc = load_skill_text(ID + 1);
+        short cache = ID; // Previously selected skill ID
 
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
         InputShort("Text ID", &ID, 2);
-        ImGui::InputText("Skill Name", name.data(), name.length());
-        ImGui::InputText("Skill Description", desc.data(), desc.length());
 
+        // Allow text input, limited to the size of the original text
+        ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
+        ImGui::InputText("Skill Description", ui_state.current_desc.data(), ui_state.current_desc.length() + 1);
+
+        if (ImGui::Button("Reload") || cache != ID)
+        {
+            ui_state.current_name = load_skill_text(ID);
+            ui_state.current_desc = load_skill_text(ID + 1);
+        }
         ImGui::End();
     }
     return 0;
