@@ -9,7 +9,7 @@ extern "C" {
 }
 
 // Used to track the most recently saved attack skill filepath
-char* most_recent_filename;
+char* most_recent_filename = nullptr;
 
 // Loads a file into the AtkSkill struct
 atkskill load_attack_skill()
@@ -29,25 +29,33 @@ atkskill load_attack_skill()
 // Writes the currently open file to disk.
 void save_attack_skill(atkskill skill)
 {
-    if (skill.SkillTextID != 0) // Check that we actually have data to write, this should always be > 0.
+    // Check that we actually have data to write and a place to write it to
+    if (skill.SkillTextID != 0)
     {
-        FILE* skill_out = fopen(most_recent_filename, "wb");
-        fwrite(&skill, sizeof(atkskill), 1, skill_out);
-        fclose(skill_out);
-
-        printf("Saved attack skill to %s\n", most_recent_filename);
-
-        // Only perform hash and update gstorage if the game is running
-        if (get_process() && load_skill_data())
+        if (most_recent_filename == nullptr)
         {
-            // Write skill into gsdata
-            gstorage.skill_array[(skill.SkillID - 1)] = skill;
+            most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
+        }
+        if (most_recent_filename != nullptr) // Must be checked again in case user cancels selection
+        {
+            FILE* skill_out = fopen(most_recent_filename, "wb");
+            fwrite(&skill, sizeof(atkskill), 1, skill_out);
+            fclose(skill_out);
 
-            // Update version number
-            gstorage.VersionNum = crc32buf((char*)&skill, 144);
+            printf("Saved attack skill to %s\n", most_recent_filename);
 
-            write_gsdata_to_memory();
-            printf("Wrote skill data to memory.\n");
+            // Only perform hash and update gstorage if the game is running
+            if (get_process() && load_skill_data())
+            {
+                // Write skill into gsdata
+                gstorage.skill_array[(skill.SkillID - 1)] = skill;
+
+                // Update version number
+                gstorage.VersionNum = crc32buf((char*)&skill, 144);
+
+                write_gsdata_to_memory();
+                printf("Wrote skill data to memory.\n");
+            }
         }
     }
     else
