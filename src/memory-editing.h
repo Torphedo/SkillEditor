@@ -8,7 +8,7 @@ bool get_process();
 bool load_skill_data();
 
 // Reads and prints all skill names and descriptions to the console.
-bool load_skill_text();
+std::string load_skill_text(unsigned int id);
 
 // Write skill data and version number to memory.
 bool write_gsdata_to_memory();

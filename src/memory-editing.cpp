@@ -30,7 +30,7 @@ static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0
 uintptr_t gstorage_address = 0;
 gsdata gstorage = { 0 };
 
-DWORD get_pid_by_name(LPCTSTR ProcessName)
+static DWORD get_pid_by_name(LPCTSTR ProcessName)
 {
     PROCESSENTRY32 pt;
     HANDLE hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -49,46 +49,54 @@ DWORD get_pid_by_name(LPCTSTR ProcessName)
 
 bool get_process()
 {
-    DWORD cache = pid;
+    DWORD cache = pid; // Store the previous process ID, if it changes then the game was rebooted.
     pid = get_pid_by_name("PDUWP.exe");
-    EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-    if (!EsperHandle)
+    if (pid != 0)
     {
-        std::cout << "Failed to attach to process.\n";
-        return false;
-    }
-    else if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
-    {
-        SYSTEM_INFO si;
-        GetSystemInfo(&si);
-        MEMORY_BASIC_INFORMATION info;
-        std::vector<char> chunk;
-        char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
-        while (p < si.lpMaximumApplicationAddress)
+        EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
+        if (EsperHandle != 0)
         {
-            // Loop through memory pages to find one that's actually being used by the game
-            if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
+            if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
             {
-                if (info.State == MEM_COMMIT) // If this is a valid page of memory
+                SYSTEM_INFO sys;
+                GetSystemInfo(&sys);
+                MEMORY_BASIC_INFORMATION info;
+                std::vector<char> chunk;
+                char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
+                while (p < sys.lpMaximumApplicationAddress)
                 {
-                    chunk.resize(info.RegionSize);
-                    SIZE_T bytesRead;
-                    if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
+                    // Loop through memory pages to find one being used by the game
+                    if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
                     {
-                        for (size_t i = 0; i < (bytesRead - 16); ++i)
+                        if (info.State == MEM_COMMIT) // If this is a valid page of memory
                         {
-                            // Check if the 16 bytes at the current address matches gsdata
-                            if (memcmp(gstorage_search, &chunk[i], 16) == 0)
+                            chunk.resize(info.RegionSize);
+                            SIZE_T bytesRead;
+                            if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
                             {
-                                gstorage_address = (uintptr_t)p + i;
-                                return true;
+                                for (size_t i = 0; i < (bytesRead - 16); ++i)
+                                {
+                                    // Check if the 16 bytes at the current address matches gsdata
+                                    if (memcmp(gstorage_search, &chunk[i], 16) == 0)
+                                    {
+                                        gstorage_address = (uintptr_t)p + i;
+                                        return true;
+                                    }
+                                }
                             }
                         }
+                        p += info.RegionSize;
                     }
                 }
-                p += info.RegionSize;
             }
         }
+        else {
+            printf("Failed to open Phantom Dust process with process ID %li.\n", pid);
+            return false;
+        }
+    }
+    else {
+        printf("Couldn't find any running instances of PDUWP.exe.\n");
     }
 
     return true;
@@ -115,12 +123,10 @@ bool load_skill_data()
     }
 }
 
-bool load_skill_text()
+std::string load_skill_text(unsigned int id)
 {
     if (EsperHandle != 0)
     {
-        DWORD error = 0;
-
         // I can't find a pointer to this location or anything similar, so I'm forced
         // to use a magic number... This hasn't caused any problems yet, I think it's
         // fine since vanilla GSDATA will never change this location.
@@ -129,11 +135,10 @@ bool load_skill_text()
         char* text = new char[text_buf_size]; // Allocate buffer for text data
 
         ReadProcessMemory(EsperHandle, (LPVOID)text_begin, text, text_buf_size, NULL);
-        error = GetLastError();
-        if (error != 0)
+        if (GetLastError() != 0)
         {
-            std::cout << "Process Read Error Code: " << error << "\n";
-            return false;
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return "Failed to read data.";
         }
         unsigned short offset_arr[SKILL_MAX_DOUBLE] = { 0 };
 
@@ -142,15 +147,18 @@ bool load_skill_text()
         for (unsigned short i = 0; i < SKILL_MAX_DOUBLE; i++) {
             offset_arr[i] = read_pos;
             read_pos += strlen(&text[read_pos]) + 1; // Add 1 to account for null terminator
-            printf("%s\n", &text[offset_arr[i]]);
+            // printf("%s\n", &text[offset_arr[i]]);
             // i = 94 for Rapid Cannon
         }
+
+        std::string output = &text[offset_arr[id]];
+
         delete[] text;
 
-        return true;
+        return output;
     }
     else {
-        return false;
+        return "No running PD instance.";
     }
 }
 
