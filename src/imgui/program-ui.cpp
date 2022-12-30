@@ -40,6 +40,14 @@ static const char* DocumentationAtkLabels[50] = {
 #include "../res/AttackSkillLabels.txt"
 };
 
+static const char* DocumentationProgramBody[3] = {
+#include "../res/SkillEditorBody.txt"
+};
+
+static const char* DocumentationProgramLabels[3] = {
+#include "../res/SkillEditorLabels.txt"
+};
+
 void AtkSkillWindow();
 static void Markdown(const std::string& markdown_); // Markdown function prototype
 static MemoryEditor hex_edit;
@@ -310,6 +318,32 @@ int ProgramUI()
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
+
+            if (ImGui::BeginTabItem("Skill Editor"))
+            {
+                ImGui::BeginChild("left pane", ImVec2(200, 0), true);
+                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationProgramLabels); i++)
+                {
+                    // Selectable object for every string in the array
+                    if (ImGui::Selectable(DocumentationProgramLabels[i]))
+                    {
+                        SelectIdx = i;
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
+                // Renders the item name as an H1, then the description on a new line.
+                std::string md = "# ";
+                md += DocumentationProgramLabels[SelectIdx];
+                md += DocumentationProgramBody[SelectIdx];
+                Markdown(md);
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
             ImGui::EndTabBar();
         }
         ImGui::End();
@@ -351,6 +385,13 @@ int ProgramUI()
             skill_text text = load_skill_text(ID);
             ui_state.current_name = text.name;
             ui_state.current_desc = text.desc;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Save"))
+        {
+            skill_text text = {ui_state.current_name, ui_state.current_desc};
+            save_skill_text(text, ID);
         }
         ImGui::End();
     }
