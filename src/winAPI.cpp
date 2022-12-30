@@ -1,29 +1,28 @@
 #include "winAPI.h"
 
 std::string* multiselectpath;
-int MultiSelectCount = 0;
+unsigned int MultiSelectCount = 0;
 
 HRESULT hr;
 
 void init_winapi()
 {
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    return;
+    hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 }
 
 char* WINAPI file_select_dialog(const COMDLG_FILTERSPEC fileTypes)
 {
     IFileOpenDialog* pFileOpen;
-    char* selected_filepath;
+    char* selected_filepath = nullptr;
 
     // Create the FileOpenDialog object.
-    hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+    hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
         hr = pFileOpen->SetFileTypes(1, &fileTypes);
-        hr = pFileOpen->Show(NULL);
+        hr = pFileOpen->Show(nullptr);
 
         // Get the file name from the dialog box.
         if (hr == 0x800704c7) // ERROR_CANCELLED
@@ -62,7 +61,7 @@ HRESULT file_multiple_select_dialog()
     IFileOpenDialog* pfd;
 
     // CoCreate the dialog object.
-    hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+    hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
 
     if (SUCCEEDED(hr))
     {
@@ -79,7 +78,7 @@ HRESULT file_multiple_select_dialog()
         {
             // Show the Open dialog.
             hr = pfd->SetDefaultExtension(L".bin");
-            hr = pfd->Show(NULL);
+            hr = pfd->Show(nullptr);
 
             if (SUCCEEDED(hr))
             {
@@ -89,7 +88,7 @@ HRESULT file_multiple_select_dialog()
 
                 if (SUCCEEDED(hr))
                 {
-                    PWSTR pszFilePath = NULL;
+                    PWSTR pszFilePath = nullptr;
                     DWORD dwNumItems = 0; // number of items in multiple selection
                     std::wstring strSelected; // will hold file paths of selected items
 
@@ -101,7 +100,7 @@ HRESULT file_multiple_select_dialog()
                         // Loop through IShellItemArray and construct string for display
                         for (DWORD i = 0; i < dwNumItems; i++)
                         {
-                            IShellItem* psi = NULL;
+                            IShellItem* psi = nullptr;
                             MultiSelectCount = dwNumItems;
 
                             hr = psiaResults->GetItemAt(i, &psi); // get a selected item from the IShellItemArray
@@ -136,17 +135,17 @@ HRESULT file_multiple_select_dialog()
 char* WINAPI file_save_dialog(const COMDLG_FILTERSPEC fileTypes, LPCWSTR DefaultExtension)
 {
     IFileSaveDialog* pFileOpen;
-    char* selected_filepath = { 0 };
+    char* selected_filepath = nullptr;
 
     // Create the FileOpenDialog object.
-    hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
+    hr = CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileOpen));
 
     if (SUCCEEDED(hr))
     {
         // Show the Open dialog box.
         hr = pFileOpen->SetFileTypes(1, &fileTypes);
         hr = pFileOpen->SetDefaultExtension(DefaultExtension);
-        hr = pFileOpen->Show(NULL);
+        hr = pFileOpen->Show(nullptr);
 
         // Get the file name from the dialog box.
         if (hr == 0x800704c7) // ERROR_CANCELLED
