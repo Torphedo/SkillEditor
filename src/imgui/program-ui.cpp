@@ -6,7 +6,6 @@
 #include <imgui_markdown.h>
 
 #include "../winAPI.h"
-#include "imgui_backend.h"
 #include "program-ui.h"
 #include "../skill_io.h"
 #include "../memory-editing.h"
@@ -26,11 +25,10 @@ struct
 }ui_state;
 
 char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
-char* filepath;
 short timer;
 bool GamePaused = false;
 unsigned short ID = 1;
-short SelectIdx = 0;
+unsigned short SelectIdx = 0;
 
 atkskill AtkSkill = { 0 };
 
@@ -73,7 +71,7 @@ void InputUInt8(const char* label, void* p_data)
 
 int ProgramUI()
 {
-    ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
+    auto viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
@@ -159,7 +157,7 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Text Edit"))
                 {
-                    get_process(); // Refresh gsdata & game handle
+                    get_process(); // Refresh skill data address & game handle
 
                     skill_text text = load_skill_text(ID);
                     ui_state.current_name = text.name;
@@ -290,7 +288,7 @@ int ProgramUI()
             if (ImGui::BeginTabItem("Attack Skills"))
             {
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-                for (short i = 0; i < IM_ARRAYSIZE(DocumentationAtkLabels); i++)
+                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationAtkLabels); i++)
                 {
                     // Selectable object for every string in the array
                     if (ImGui::Selectable(DocumentationAtkLabels[i]))
@@ -334,7 +332,7 @@ int ProgramUI()
 
     if (ui_state.text_edit)
     {
-        short cache = ID; // Previously selected skill ID
+        unsigned short cache = ID; // Previously selected skill ID
 
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
         InputShort("Text ID", &ID, 1);
@@ -443,7 +441,7 @@ void AtkSkillWindow()
         InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect, 1);
         ImGui::TableNextColumn();
         InputShort("Applied Status ID", &AtkSkill.AppliedStatusID, 1);
-        Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poision\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
+        Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
         InputShort("Restrictions", &AtkSkill.Restriction, 1);
         ImGui::TableNextColumn();
         InputShort("Strength Effect", &AtkSkill.StrengthEffect, 1);
@@ -505,9 +503,9 @@ void AtkSkillWindow()
 
 // Markdown setup stuff
 
-static ImFont* H1 = NULL;
-static ImFont* H2 = NULL;
-static ImFont* H3 = NULL;
+static ImFont* H1 = nullptr;
+static ImFont* H2 = nullptr;
+static ImFont* H3 = nullptr;
 
 static ImGui::MarkdownConfig mdConfig;
 void LinkCallback(ImGui::MarkdownLinkCallbackData data_)
@@ -515,7 +513,7 @@ void LinkCallback(ImGui::MarkdownLinkCallbackData data_)
     std::string url(data_.link, data_.linkLength);
     if (!data_.isImage)
     {
-        ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     }
 }
 
@@ -542,25 +540,11 @@ inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData da
     return imageData;
 }
 
-void LoadFonts(float fontSize_)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->Clear();
-    // Base font
-    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSize_);
-    // Bold headings H2 and H3
-    H2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSize_); // Bold font, I don't have one so I'm just using the same font
-    H3 = mdConfig.headingFormats[1].font;
-    // bold heading H1
-    float fontSizeH1 = fontSize_ * 1.1f;
-    H1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", fontSizeH1); // Also supposed to be bold
-}
-
 void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
 {
     // Call the default first so any settings can be overwritten by our implementation.
     // Alternatively could be called or not called in a switch statement on a case by case basis.
-    // See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
+    // See defaultMarkdownFormatCallback definition for further examples of how to use it.
     ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
 
     switch (markdownFormatInfo_.type)
@@ -590,16 +574,16 @@ void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownForm
 
 void Markdown(const std::string& markdown_)
 {
-    // You can make your own Markdown function with your prefered string container and markdown config.
+    // You can make your own Markdown function with your preferred string container and markdown config.
     // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
     mdConfig.linkCallback = LinkCallback;
-    mdConfig.tooltipCallback = NULL;
+    mdConfig.tooltipCallback = nullptr;
     mdConfig.imageCallback = ImageCallback;
-    mdConfig.linkIcon = NULL; // Was "ICON_FA_LINK" in example
+    mdConfig.linkIcon = nullptr; // Was "ICON_FA_LINK" in example
     mdConfig.headingFormats[0] = { H1, true };
     mdConfig.headingFormats[1] = { H2, true };
     mdConfig.headingFormats[2] = { H3, false };
-    mdConfig.userData = NULL;
+    mdConfig.userData = nullptr;
     mdConfig.formatCallback = ExampleMarkdownFormatCallback;
     ImGui::Markdown(markdown_.c_str(), markdown_.length(), mdConfig);
 }
