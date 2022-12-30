@@ -60,13 +60,11 @@ bool can_read_memory()
     static unsigned char buf = 0;
     ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &buf, 1, NULL);
     DWORD error = GetLastError();
-    bool test = (error == 0);
     return (error == 0);
 }
 
 bool have_process_handle()
 {
-    bool test = (EsperHandle != 0);
     return (EsperHandle != 0);
 }
 
@@ -203,6 +201,62 @@ skill_text load_skill_text(unsigned int id)
     }
     else {
         return { "No running PD instance.", "No running PD instance." };
+    }
+}
+
+bool save_skill_text(skill_text text, unsigned int id)
+{
+    if (EsperHandle != nullptr)
+    {
+        // Memory address of the skill text table & strings
+        // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
+        static uintptr_t text_section = gstorage_address + 0x34000;
+
+        // Read section header to check the number of strings
+        text_header header = { 0 };
+        ReadProcessMemory(EsperHandle, (LPVOID)text_section, &header, sizeof(text_header), NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return false;
+        }
+
+        if (id > header.array_size - 1)
+        {
+            return false;
+        }
+
+        uintptr_t text_ptr_location = text_section + sizeof(text_header) + ((id - 1) * 0xC);
+
+        text_ptrs string_offset[2] = {0};
+        ReadProcessMemory(EsperHandle, (LPVOID)text_ptr_location, &string_offset, sizeof(text_ptrs) * 2, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return false;
+        }
+
+        uint32_t name_size = text.name.length() + 1;
+        uint32_t desc_size = text.desc.length() + 1;
+        char* name = text.name.data();
+        char* desc = text.desc.data();
+
+        WriteProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].name), name, name_size, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to write process memory (code %li)\n", GetLastError());
+            return false;
+        }
+        WriteProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].desc), desc, desc_size, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to write process memory (code %li)\n", GetLastError());
+        }
+
+        return true;
+    }
+    else {
+        return false;
     }
 }
 

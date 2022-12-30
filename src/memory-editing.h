@@ -22,6 +22,9 @@ bool load_skill_data();
 // Reads and prints all skill names and descriptions to the console.
 skill_text load_skill_text(unsigned int id);
 
+// Writes skill text to memory
+bool save_skill_text(skill_text text, unsigned int id);
+
 // Write skill data and version number to memory.
 bool write_gsdata_to_memory();
 
