@@ -79,13 +79,13 @@ typedef struct
 
 typedef struct gsdata
 {
-    int Filesize; // The size in bytes of the entire gsdata file
-    int unk0;// TBD
-    int unk1;// TBD
-    int unk2;// TBD
-    int VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
-    int SkillLimiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
-    char dummy[136]; // This is actual data, but it's unimportant so it gets ignored.
+    unsigned int filesize; // The size in bytes of the entire gsdata file
+    unsigned int unk0;// TBD
+    unsigned int unk1;// TBD
+    unsigned int unk2;// TBD
+    unsigned int VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
+    unsigned int skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
+    char dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
     atkskill skill_array[751];
 }gsdata; extern gsdata gstorage;
 
