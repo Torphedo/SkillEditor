@@ -2,6 +2,9 @@
 .vs/
 CMakeSettings.json
 
+# CLion
+.idea/
+
 # Build results
 out/
 [Dd]ebug/
