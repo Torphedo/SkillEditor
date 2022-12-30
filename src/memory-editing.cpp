@@ -14,9 +14,6 @@ extern "C" {
 #include <crc_32.h>
 }
 
-#define SKILL_MAX 751
-#define SKILL_MAX_DOUBLE 1502
-
 // The game's process ID.
 DWORD pid = 0;
 
@@ -47,17 +44,43 @@ static DWORD get_pid_by_name(LPCTSTR ProcessName)
     return 0;
 }
 
+DWORD process_id()
+{
+    return pid;
+}
+
+bool is_running()
+{
+    pid = get_pid_by_name("PDUWP.exe");
+    return (pid != 0);
+}
+
+bool can_read_memory()
+{
+    static unsigned char buf = 0;
+    ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &buf, 1, NULL);
+    DWORD error = GetLastError();
+    bool test = (error == 0);
+    return (error == 0);
+}
+
+bool have_process_handle()
+{
+    bool test = (EsperHandle != 0);
+    return (EsperHandle != 0);
+}
+
 bool get_process()
 {
-    DWORD cache = pid; // Store the previous process ID, if it changes then the game was rebooted.
-    pid = get_pid_by_name("PDUWP.exe");
-    if (pid != 0)
+    if (is_running())
     {
-        EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-        if (EsperHandle != 0)
+        if ((!have_process_handle() || !can_read_memory()))
         {
-            if (cache != pid) // Find GSData in memory if it hasn't been scanned since the last reboot
+            EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
+            if (EsperHandle != 0)
             {
+                printf("Got handle: %p\n", EsperHandle);
+
                 SYSTEM_INFO sys;
                 GetSystemInfo(&sys);
                 MEMORY_BASIC_INFORMATION info;
@@ -88,18 +111,17 @@ bool get_process()
                         p += info.RegionSize;
                     }
                 }
+                return false; // Triggered if gsdata is never found
+            }
+            else {
+                printf("Failed to open Phantom Dust process with process ID %li.\n", pid);
+                return false;
             }
         }
-        else {
-            printf("Failed to open Phantom Dust process with process ID %li.\n", pid);
-            return false;
-        }
+        else { return true; }
     }
-    else {
-        printf("Couldn't find any running instances of PDUWP.exe.\n");
-    }
+    else { return false; }
 
-    return true;
 }
 
 bool load_skill_data()
@@ -123,42 +145,64 @@ bool load_skill_data()
     }
 }
 
-std::string load_skill_text(unsigned int id)
+skill_text load_skill_text(unsigned int id)
 {
     if (EsperHandle != 0)
     {
-        // There are no pointers to the text data, so this magic number is required.
-        // Should work fine because vanilla GSData will always stay the same.
+        // Memory address of the skill text table & strings
+        // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
+        static uintptr_t text_section = gstorage_address + 0x34000;
 
-        // Consider making this a separate function that loads the data into a permanent
-        // buffer on request. This will avoid needing to allocate/free ~60K multiple times.
-        static uintptr_t text_begin = gstorage_address + gstorage.unk0 + 0x1AAE0;
-        static size_t text_buf_size = gstorage.Filesize - (gstorage.unk0 + 0x1AAE0); // EOF - start location
-        char* text = new char[text_buf_size]; // Allocate buffer for text data
-
-        ReadProcessMemory(EsperHandle, (LPVOID)text_begin, text, text_buf_size, NULL);
+        // Read section header to check the number of strings
+        text_header header = { 0 };
+        ReadProcessMemory(EsperHandle, (LPVOID)text_section, &header, sizeof(text_header), NULL);
         if (GetLastError() != 0)
         {
             printf("Failed to read process memory (code %li)\n", GetLastError());
-            return "Failed to read data.";
+            return { "Failed to read data.", "Failed to read data." };
         }
 
-        // Loop until the target string is reached
-        unsigned int read_pos = 0;
-        for (unsigned short i = 0; i < id; i++)
+        if (id > header.array_size - 1)
         {
-            // Increment by length of the current string plus the null terminator
-            read_pos += strlen(&text[read_pos]) + 1;
+            return { "No text found.", "No text found." };
         }
 
-        std::string output = &text[read_pos];
+        uintptr_t text_ptr_location = text_section + sizeof(text_header) + ((id - 1) * 0xC);
 
-        delete[] text;
+        text_ptrs string_offset[2] = {0};
+        ReadProcessMemory(EsperHandle, (LPVOID)text_ptr_location, &string_offset, sizeof(text_ptrs) * 2, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return { "Failed to read data.", "Failed to read data." };
+        }
+
+        uint32_t name_size = string_offset[0].desc - string_offset[0].name;
+        uint32_t desc_size = string_offset[1].name - string_offset[0].desc + sizeof(text_ptrs);
+        char* name = (char*)calloc(1, name_size);
+        char* desc = (char*)calloc(1, desc_size);
+
+        ReadProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].name), name, name_size, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return { "Failed to read data.", "Failed to read data." };
+        }
+        ReadProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].desc), desc, desc_size, NULL);
+        if (GetLastError() != 0)
+        {
+            printf("Failed to read process memory (code %li)\n", GetLastError());
+            return { "Failed to read data.", "Failed to read data." };
+        }
+
+        skill_text output = { name, desc };
+        free(name);
+        free(desc);
 
         return output;
     }
     else {
-        return "No running PD instance.";
+        return { "No running PD instance.", "No running PD instance." };
     }
 }
 

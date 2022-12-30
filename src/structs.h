@@ -96,3 +96,25 @@ typedef struct SkillPackHeaderV1
     short SkillCount;
     char pad[12];
 }packheader1;
+
+typedef struct skill_text
+{
+    std::string name;
+    std::string desc;
+}skill_text;
+
+typedef struct text_header
+{
+    unsigned char unknown[8];
+    uint32_t array_size;
+    uint32_t unknown2;
+    uint32_t unknown_skill_count;
+    uint32_t skill_count;
+}text_header;
+
+typedef struct text_ptrs
+{
+    uint32_t index;
+    uint32_t name;
+    uint32_t desc;
+}text_ptrs;

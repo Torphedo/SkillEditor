@@ -29,7 +29,7 @@ char packname_internal[32]; // Mod name stored inside the binary file (NOT the f
 char* filepath;
 short timer;
 bool GamePaused = false;
-short ID = 0;
+unsigned short ID = 1;
 short SelectIdx = 0;
 
 atkskill AtkSkill = { 0 };
@@ -159,8 +159,12 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Text Edit"))
                 {
-                    get_process();
-                    load_skill_data();
+                    get_process(); // Refresh gsdata & game handle
+
+                    skill_text text = load_skill_text(ID);
+                    ui_state.current_name = text.name;
+                    ui_state.current_desc = text.desc;
+
                     ui_state.text_edit = !ui_state.text_edit;
                 }
                 ImGui::EndMenu();
@@ -179,6 +183,33 @@ int ProgramUI()
                     GamePaused = !GamePaused;
                 }
                 ImGui::EndMenu();
+            }
+            
+            if (!is_running())
+            {
+                // Alignment to right side
+                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\
+                            \t\t\t\t\t\t\t\t\t\t\t");
+                ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
+            }
+            else
+            {
+                // Alignment to right side
+                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+                if (!have_process_handle()) 
+                {
+                    ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
+                }
+                else if (!can_read_memory())
+                {
+                    ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
+                }
+                else { ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t"); }
+
+                if (ImGui::Button("Retry connection")) { printf("Retrying..."); get_process(); }
+
+                ImGui::Text("Phantom Dust Process ID:");
+                ImGui::TextColored({ 0, 255, 0, 255 }, "%li", process_id());
             }
             ImGui::EndMenuBar();
         }
@@ -252,10 +283,7 @@ int ProgramUI()
     if (ui_state.Documentation)
     {
         ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
-        if (!ImGui::Begin("Documentation", &ui_state.Documentation))
-        {
-            ImGui::End();
-        }
+        ImGui::Begin("Documentation", &ui_state.Documentation);
 
         if (ImGui::BeginTabBar("DocTabs"))
         {
@@ -309,7 +337,12 @@ int ProgramUI()
         short cache = ID; // Previously selected skill ID
 
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
-        InputShort("Text ID", &ID, 2);
+        InputShort("Text ID", &ID, 1);
+        if (ID < 1)
+        {
+            // Clamp ID to > 0
+            ID = 1;
+        }
 
         // Allow text input, limited to the size of the original text
         ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
@@ -317,8 +350,9 @@ int ProgramUI()
 
         if (ImGui::Button("Reload") || cache != ID)
         {
-            ui_state.current_name = load_skill_text(ID);
-            ui_state.current_desc = load_skill_text(ID + 1);
+            skill_text text = load_skill_text(ID);
+            ui_state.current_name = text.name;
+            ui_state.current_desc = text.desc;
         }
         ImGui::End();
     }
