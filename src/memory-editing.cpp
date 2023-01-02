@@ -301,9 +301,9 @@ void install_mod()
             fread_s(&header, sizeof(header), sizeof(header), 1, SkillPack);
 
             atkskill* skills = new atkskill[header.SkillCount];
+            fread(skills, sizeof(atkskill), header.SkillCount, SkillPack);
             for (int i = 0; i < header.SkillCount; i++)
             {
-                fread(&skills[i], sizeof(atkskill), 1, SkillPack);
                 gstorage.skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
             }
             delete[] skills;
