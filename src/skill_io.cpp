@@ -25,7 +25,7 @@ unsigned int load_attack_skill(unsigned int current_id)
 
             gstorage.skill_array[buffer.SkillID - 1] = buffer;
             printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
-            return buffer.SkillID - 1;
+            return buffer.SkillID;
         }
         else { printf("Selected file was not a valid skill.\n"); return current_id; }
     }
@@ -50,7 +50,6 @@ void save_skill_to_file(unsigned int id)
 
             printf("Saved attack skill to %s\n", most_recent_filename);
         }
-        write_gsdata_to_memory();
     }
     else
     {

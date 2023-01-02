@@ -111,6 +111,7 @@ int ProgramUI()
                     if (ImGui::MenuItem("Skill File"))
                     {
                         ID = load_attack_skill(ID);
+                        write_gsdata_to_memory();
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack"))
@@ -136,10 +137,13 @@ int ProgramUI()
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Save", "Ctrl + S"))
+                if (ImGui::MenuItem("Save To File", "Ctrl + S"))
                 {
                     save_skill_to_file(ID);
-
+                }
+                if (ImGui::MenuItem("Save To Memory"))
+                {
+                    write_gsdata_to_memory();
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
@@ -397,6 +401,7 @@ int ProgramUI()
 
 void AtkSkillWindow()
 {
+    if (gstorage.filesize == 0) { get_process(); }
     if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor))
     {
         ImGui::End();
