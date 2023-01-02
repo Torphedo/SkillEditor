@@ -70,9 +70,10 @@ bool have_process_handle()
 
 bool get_process()
 {
+    DWORD cache = pid;
     if (is_running())
     {
-        if ((!have_process_handle() || !can_read_memory()))
+        if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid))
         {
             EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
             if (EsperHandle != 0)
@@ -101,7 +102,7 @@ bool get_process()
                                     if (memcmp(gstorage_search, &chunk[i], 16) == 0)
                                     {
                                         gstorage_address = (uintptr_t)p + i;
-                                        return true;
+                                        return load_skill_data();
                                     }
                                 }
                             }
@@ -124,7 +125,7 @@ bool get_process()
 
 bool load_skill_data()
 {
-    if (EsperHandle != 0)
+    if (have_process_handle())
     {
         DWORD error = 0;
 
@@ -262,8 +263,11 @@ bool save_skill_text(skill_text text, unsigned int id)
 
 bool write_gsdata_to_memory()
 {
-    if (EsperHandle != 0)
+    if (get_process())
     {
+        // Update version number
+        gstorage.VersionNum = crc32buf((char*)&gstorage, sizeof(gstorage));
+
         WriteProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         DWORD error = GetLastError();
         if (error != 1400 && error != 183 && error != 0)
@@ -271,21 +275,19 @@ bool write_gsdata_to_memory()
             std::cout << "Process Write Error Code: " << error << "\n";
             return false;
         }
-        return true;
+        else 
+        {
+            printf("Wrote skill data to memory.\n");
+            return true;
+        }
     }
-    else {
-        return false;
-    }
+    else { return false; }
 }
 
 void install_mod()
 {
-    if (load_skill_data())
+    if (get_process())
     {
-        std::vector<std::string> strArray(multiselectpath, multiselectpath + MultiSelectCount);
-        std::sort(strArray.begin(), strArray.end()); // Sort paths alphabetically
-
-        int BlobSize = 0;
         for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
             packheader1 header;
@@ -293,11 +295,10 @@ void install_mod()
             fopen_s(&SkillPack, multiselectpath[n].c_str(), "rb");
             if (SkillPack == 0)
             {
-                std::cout << "Failed to load file!";
+                printf("Failed to open %s\n", multiselectpath[n].c_str());
                 return;
             }
             fread_s(&header, sizeof(header), sizeof(header), 1, SkillPack);
-            BlobSize += (int)std::filesystem::file_size(multiselectpath[n]);
 
             atkskill* skills = new atkskill[header.SkillCount];
             for (int i = 0; i < header.SkillCount; i++)
@@ -308,30 +309,8 @@ void install_mod()
             delete[] skills;
             fclose(SkillPack);
         }
-        char* SkillPackBlobData = new char[BlobSize];
-        FILE* SkillPackBlob; // Separate stream that will only have skill pack data, so that we can just pass it as a buffer to be hashed.
-                             // This is way more efficient than writing them all to a single file on disk, hashing that, then deleting it.
 
-        for (int n = 0; n < MultiSelectCount; n++)
-        {
-            fopen_s(&SkillPackBlob, multiselectpath[n].c_str(), "rb");
-            if (SkillPackBlob == 0)
-            {
-                std::cout << "Failed to load file!";
-                fclose(SkillPackBlob);
-                return;
-            }
-            fread_s(SkillPackBlobData, sizeof(SkillPackBlobData), sizeof(SkillPackBlobData), 1, SkillPackBlob);
-        }
-        fclose(SkillPackBlob);
-
-        uint32_t hash = crc32buf(SkillPackBlobData, BlobSize);
-        gstorage.VersionNum = (unsigned int)hash;
-        std::cout << "New version number: " << hash << "\n";
-
-        delete[] SkillPackBlobData;
-
-        write_gsdata_to_memory();
+        write_gsdata_to_memory(); // Automatically updates version number
     }
 }
 

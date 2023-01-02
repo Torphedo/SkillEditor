@@ -11,26 +11,32 @@ extern "C" {
 // Used to track the most recently saved attack skill filepath
 char* most_recent_filename = nullptr;
 
-// Loads a file into the AtkSkill struct
-atkskill load_attack_skill()
+unsigned int load_attack_skill(unsigned int current_id)
 {
-    atkskill skill_buffer = { 0 };
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
     if (most_recent_filename != nullptr)
     {
-        FILE* skill_file = fopen(most_recent_filename, "rb");
-        fread(&skill_buffer, sizeof(atkskill), 1, skill_file);
-        fclose(skill_file);
-        printf("Imported attack skill %s\n", most_recent_filename);
+        if (std::filesystem::file_size(most_recent_filename) == 144)
+        {
+            atkskill buffer = { 0 };
+            FILE* skill_file = fopen(most_recent_filename, "rb");
+            fread(&buffer, sizeof(atkskill), 1, skill_file);
+            fclose(skill_file);
+
+            gstorage.skill_array[buffer.SkillID - 1] = buffer;
+            printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
+            return buffer.SkillID - 1;
+        }
+        else { printf("Selected file was not a valid skill.\n"); return current_id; }
     }
-    return skill_buffer;
+    else { return current_id; }
 }
 
 // Writes the currently open file to disk.
-void save_attack_skill(atkskill skill)
+void save_skill_to_file(unsigned int id)
 {
     // Check that we actually have data to write and a place to write it to
-    if (skill.SkillTextID != 0)
+    if (gstorage.skill_array[id - 1].SkillID != 0)
     {
         if (most_recent_filename == nullptr)
         {
@@ -39,35 +45,23 @@ void save_attack_skill(atkskill skill)
         if (most_recent_filename != nullptr) // Must be checked again in case user cancels selection
         {
             FILE* skill_out = fopen(most_recent_filename, "wb");
-            fwrite(&skill, sizeof(atkskill), 1, skill_out);
+            fwrite(&gstorage.skill_array[id - 1], sizeof(atkskill), 1, skill_out);
             fclose(skill_out);
 
             printf("Saved attack skill to %s\n", most_recent_filename);
-
-            // Only perform hash and update gstorage if the game is running
-            if (get_process() && load_skill_data())
-            {
-                // Write skill into gsdata
-                gstorage.skill_array[(skill.SkillID - 1)] = skill;
-
-                // Update version number
-                gstorage.VersionNum = crc32buf((char*)&skill, 144);
-
-                write_gsdata_to_memory();
-                printf("Wrote skill data to memory.\n");
-            }
         }
+        write_gsdata_to_memory();
     }
     else
     {
-        printf("Tried to save without opening a file.\n");
+        printf("Invalid skill ID.\n");
     }
 }
 
-void save_attack_skill_with_file_select(atkskill skill)
+void save_skill_with_dialog(unsigned int id)
 {
     most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
-    save_attack_skill(skill);
+    save_skill_to_file(id);
 }
 
 void save_skill_pack(const char* packname)

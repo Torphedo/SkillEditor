@@ -1,7 +1,7 @@
 #pragma once
 #include "structs.h"
 
-// Get the process ID, attach to it with read/write permissions, and locate gsdata in its memory.
+// Gets the process ID, attaches to it with read/write permissions, then updates our copy of gsdata if it's missing or the game was rebooted
 bool get_process();
 
 // Checks if the game is running.
@@ -16,7 +16,7 @@ bool can_read_memory();
 // Returns the process handle by value
 bool have_process_handle();
 
-// Loads skill data and version number from memory into addressable structs.
+// Loads gsdata from memory into addressable structs.
 bool load_skill_data();
 
 // Reads and prints all skill names and descriptions to the console.

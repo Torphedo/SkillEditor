@@ -11,6 +11,7 @@ add_executable(skill_editor
 	"../vendor/imGUI/backends/imgui_impl_dx9.cpp"
 	"../vendor/imGUI/backends/imgui_impl_win32.cpp"
 	"../vendor/imGUI/imgui.cpp"
+	"../vendor/imGUI/imgui_demo.cpp"
 	"../vendor/imGUI/imgui_draw.cpp"
 	"../vendor/imGUI/imgui_tables.cpp"
 	"../vendor/imGUI/imgui_widgets.cpp"

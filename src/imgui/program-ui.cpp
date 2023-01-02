@@ -28,9 +28,10 @@ char packname_internal[32]; // Mod name stored inside the binary file (NOT the f
 short timer;
 bool GamePaused = false;
 unsigned short ID = 1;
+unsigned short text_id = 0;
+// Temporary storage to hold an ID before actually updating the selected ID
+unsigned short temp_id = 0;
 unsigned short SelectIdx = 0;
-
-atkskill AtkSkill = { 0 };
 
 static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"
@@ -95,49 +96,54 @@ int ProgramUI()
                         ui_state.NewSkillPack = true;
                     }
                     else {
-                        std::cout << "Skill selection canceled.\n";
+                        printf("Skill selection canceled.\n");
                     }
                 }
                 if (ImGui::BeginMenu("Open"))
                 {
                     if (ImGui::MenuItem("Skill (From Memory)"))
                     {
-                        if (get_process() && load_skill_data())
+                        if (get_process())
                         {
                             ui_state.IDSelection = true;
                         }
                     }
                     if (ImGui::MenuItem("Skill File"))
                     {
-                        AtkSkill = load_attack_skill();   // Loads the current file into the atkskill struct
-                        ui_state.AttackSkillEditor = true;    // Opens the Attack Skill Editor window
+                        ID = load_attack_skill(ID);
+                        ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack"))
                     {
-                        get_process();
-                        if (SUCCEEDED(file_multiple_select_dialog())) // Open a multiple file open dialog
+                        if (get_process())
                         {
-                            install_mod();
-                            for (int i = 0; i < MultiSelectCount; i++)
+                            if (SUCCEEDED(file_multiple_select_dialog())) // Open a multiple file open dialog
                             {
-                                std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                install_mod();
+                                for (int i = 0; i < MultiSelectCount; i++)
+                                {
+                                    std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                }
+                            }
+                            else
+                            {
+                                printf("File selection canceled.\n");
                             }
                         }
-                        else
-                        {
-                            std::cout << "File selection canceled.\n";
+                        else {
+                            printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
                         }
                     }
                     ImGui::EndMenu();
                 }
                 if (ImGui::MenuItem("Save", "Ctrl + S"))
                 {
-                    save_attack_skill(AtkSkill);
+                    save_skill_to_file(ID);
 
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
                 {
-                    save_attack_skill_with_file_select(AtkSkill);
+                    save_skill_with_dialog(ID);
                 }
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -148,46 +154,40 @@ int ProgramUI()
             }
             if (ImGui::BeginMenu("Window"))
             {
-                if (ImGui::MenuItem("Attack Skill Editor"))
-                {
-                    ui_state.AttackSkillEditor = !ui_state.AttackSkillEditor; // Toggle Attack Skill Editor window
-                }
+                ImGui::MenuItem("Attack Skill Editor", nullptr, &ui_state.AttackSkillEditor);
                 if (ImGui::MenuItem("Skill Hex Editor"))
                 {
-                    if (get_process() && load_skill_data())
+                    if (get_process())
                     {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }
                 }
-                if (ImGui::MenuItem("Documentation"))
-                {
-                    ui_state.Documentation = !ui_state.Documentation;
-                }
-                if (ImGui::MenuItem("Text Edit"))
+                ImGui::MenuItem("Documentation", nullptr, &ui_state.Documentation);
+                if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit))
                 {
                     get_process(); // Refresh skill data address & game handle
 
                     skill_text text = load_skill_text(ID);
                     ui_state.current_name = text.name;
                     ui_state.current_desc = text.desc;
-
-                    ui_state.text_edit = !ui_state.text_edit;
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Game"))
-            {
-                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
-                {
+            if (ImGui::BeginMenu("Game")) {
+                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust")) {
                     if (GamePaused) {
                         resume_game();
                         GamePaused = true;
-                    }
-                    else {
+                    } else {
                         pause_game();
                     }
                     GamePaused = !GamePaused;
                 }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Settings")) {
+                bool enabled = true;
+                ImGui::Checkbox("File Mode", &enabled);
                 ImGui::EndMenu();
             }
             
@@ -195,13 +195,13 @@ int ProgramUI()
             {
                 // Alignment to right side
                 ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\
-                            \t\t\t\t\t\t\t\t\t\t\t");
+                            \t\t\t\t\t\t\t");
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else
             {
                 // Alignment to right side
-                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
                 if (!have_process_handle()) 
                 {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
@@ -210,7 +210,7 @@ int ProgramUI()
                 {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
-                else { ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t"); }
+                else { ImGui::Text("\t\t\t\t\t\t\t\t\t\t"); }
 
                 if (ImGui::Button("Retry connection")) { printf("Retrying..."); get_process(); }
 
@@ -222,6 +222,8 @@ int ProgramUI()
         ImGui::End();
     }
 
+    // ImGui::ShowDemoWindow();
+
     if (timer == 0)
     {
         // Save: Ctrl + S
@@ -232,11 +234,11 @@ int ProgramUI()
             // Save As: Ctrl + Shift + S
             if (GetKeyState(VK_SHIFT))
             {
-                save_attack_skill_with_file_select(AtkSkill);
+                save_skill_with_dialog(ID);
             }
             else
             {
-                save_attack_skill(AtkSkill);
+                save_skill_to_file(ID);
             }
         }
 
@@ -261,12 +263,12 @@ int ProgramUI()
     if (ui_state.IDSelection)
     {
         ImGui::Begin("Input a skill ID: ");
-        InputShort("ID", &ID, 1);
+        InputShort("ID", &temp_id, 1);
 
         if (ImGui::Button("Open"))
         {
-            memcpy(&AtkSkill, &gstorage.skill_array[ID], 144);
-            std::cout << "Loaded skill with ID " << ID << ".\n";
+            ID = temp_id;
+            printf("Loaded skill with ID %d\n", ID);
             ui_state.IDSelection = false;      // Close this window
             ui_state.AttackSkillEditor = true; // Opens the Attack Skill Editor window
         }
@@ -277,7 +279,7 @@ int ProgramUI()
     if (ui_state.HexEditor)
     {
         hex_edit.ReadOnly = false;
-        hex_edit.DrawWindow("Hex Editor", &gstorage.skill_array[ID], 144);
+        hex_edit.DrawWindow("Hex Editor", &gstorage.skill_array[ID - 1], 144);
     }
 
     if (ui_state.AttackSkillEditor)
@@ -366,23 +368,18 @@ int ProgramUI()
 
     if (ui_state.text_edit)
     {
-        unsigned short cache = ID; // Previously selected skill ID
+        unsigned short cache = text_id; // Previously selected skill ID
+        text_id = gstorage.skill_array[ID - 1].SkillTextID + 1;
 
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
-        InputShort("Text ID", &ID, 1);
-        if (ID < 1)
-        {
-            // Clamp ID to > 0
-            ID = 1;
-        }
 
         // Allow text input, limited to the size of the original text
         ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
         ImGui::InputText("Skill Description", ui_state.current_desc.data(), ui_state.current_desc.length() + 1);
 
-        if (ImGui::Button("Reload") || cache != ID)
+        if (ImGui::Button("Reload") || cache != text_id)
         {
-            skill_text text = load_skill_text(ID);
+            skill_text text = load_skill_text(text_id);
             ui_state.current_name = text.name;
             ui_state.current_desc = text.desc;
         }
@@ -391,7 +388,7 @@ int ProgramUI()
         if (ImGui::Button("Save"))
         {
             skill_text text = {ui_state.current_name, ui_state.current_desc};
-            save_skill_text(text, ID);
+            save_skill_text(text, text_id);
         }
         ImGui::End();
     }
@@ -412,127 +409,127 @@ void AtkSkillWindow()
     if (ImGui::BeginTable("split1", 2, ImGuiTableFlags_NoSavedSettings))
     {
         ImGui::TableNextColumn();
-        InputShort("Skill Text ID", &AtkSkill.SkillTextID, 1);
+        InputShort("Skill Text ID", &gstorage.skill_array[ID - 1].SkillTextID, 1);
         Tooltip("The skill ID from which to get the skill's name,\ndescription, etc.");
-        InputShort("Register ID", &AtkSkill.RegisterID, 1);
+        InputShort("Register ID", &gstorage.skill_array[ID - 1].RegisterID, 1);
         Tooltip("The \"register\" / \"library\" of skills this skill\nwill belong to.");
-        InputShort("Skill ID", &AtkSkill.SkillID, 1);
+        InputShort("Skill ID", &gstorage.skill_array[ID - 1].SkillID, 1);
         Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
 
         ImGui::SetNextItemWidth(200);
         // Int pointer with value (rarity + 1). This means that the slider function will
         // automatically update the actual rarity value despite it being a short.
-        int rarity = (int) (AtkSkill.RarityStars + 1);
+        int rarity = (int) (gstorage.skill_array[ID - 1].RarityStars + 1);
         ImGui::SliderInt("Rarity", &rarity, 1, 5);
-        AtkSkill.RarityStars = (short) rarity - 1;
+        gstorage.skill_array[ID - 1].RarityStars = (short) rarity - 1;
         Tooltip("The skill's in-game rarity, displayed as stars.");
 
-        InputShort("Sound File ID", &AtkSkill.SoundFileID, 1);
+        InputShort("Sound File ID", &gstorage.skill_array[ID - 1].SoundFileID, 1);
         ImGui::TableNextColumn();
 
         ImGui::SetNextItemWidth(200);
         const char* elems_names[7] = { "Aura", "Attack", "Defense", "Erase", "Environmental", "Status", "Special" };
-        ImGui::SliderInt("Capsule Type", (int*)&AtkSkill.CapsuleType, 0, 7 - 1, elems_names[AtkSkill.CapsuleType]);
+        ImGui::SliderInt("Capsule Type", (int*)&gstorage.skill_array[ID - 1].CapsuleType, 0, 7 - 1, elems_names[gstorage.skill_array[ID - 1].CapsuleType]);
         ImGui::TableNextColumn();
 
-        InputShort("School ID", &AtkSkill.SchoolID, 1);
+        InputShort("School ID", &gstorage.skill_array[ID - 1].SchoolID, 1);
         Tooltip("The skill's school. (Nature, Optical, Ki, etc.)");
-        InputShort("Animation Profile (Ground)", &AtkSkill.AnimationProfileGround, 1);
+        InputShort("Animation Profile (Ground)", &gstorage.skill_array[ID - 1].AnimationProfileGround, 1);
         Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground.");
-        InputShort("Animation Profile (Air)", &AtkSkill.AnimationProfileAir, 1);
+        InputShort("Animation Profile (Air)", &gstorage.skill_array[ID - 1].AnimationProfileAir, 1);
         Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air.");
-        InputShort("Multi Press 1", &AtkSkill.MultiPress1, 1);
+        InputShort("Multi Press 1", &gstorage.skill_array[ID - 1].MultiPress1, 1);
         ImGui::TableNextColumn();
-        InputShort("Multi Press 2", &AtkSkill.MultiPress2, 1);
+        InputShort("Multi Press 2", &gstorage.skill_array[ID - 1].MultiPress2, 1);
         ImGui::TableNextColumn();
-        InputShort("Double Skill 1", &AtkSkill.DoubleSkill1, 1);
+        InputShort("Double Skill 1", &gstorage.skill_array[ID - 1].DoubleSkill1, 1);
         ImGui::TableNextColumn();
-        InputShort("Double Skill 2", &AtkSkill.DoubleSkill2, 1);
+        InputShort("Double Skill 2", &gstorage.skill_array[ID - 1].DoubleSkill2, 1);
         ImGui::TableNextColumn();
-        InputShort("After Hit SFX", &AtkSkill.PostHitSFX, 1);
+        InputShort("After Hit SFX", &gstorage.skill_array[ID - 1].PostHitSFX, 1);
         ImGui::TableNextColumn();
-        InputShort("Start Up SFX", &AtkSkill.StartUpSFX, 1);
+        InputShort("Start Up SFX", &gstorage.skill_array[ID - 1].StartUpSFX, 1);
         Tooltip("The sound effect ID to be played when the skill\nis winding up / charging.");
-        InputShort("Collision SFX", &AtkSkill.CollisionSFX, 1);
+        InputShort("Collision SFX", &gstorage.skill_array[ID - 1].CollisionSFX, 1);
         Tooltip("The sound effect ID to be played when the skill\ncollides with something.");
-        InputShort("Aura Cost", &AtkSkill.Cost, 1);
+        InputShort("Aura Cost", &gstorage.skill_array[ID - 1].Cost, 1);
         Tooltip("The amount of Aura the skill costs.");
-        InputShort("Cost Effect", &AtkSkill.CostEffect, 1);
+        InputShort("Cost Effect", &gstorage.skill_array[ID - 1].CostEffect, 1);
         Tooltip("Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura");
-        InputShort("Additional Aura Cost", &AtkSkill.ExtraCost, 1);
+        InputShort("Additional Aura Cost", &gstorage.skill_array[ID - 1].ExtraCost, 1);
         Tooltip("Adds to the base Aura cost.");
-        InputShort("Health Penalty", &AtkSkill.HealthCost, 1);
+        InputShort("Health Penalty", &gstorage.skill_array[ID - 1].HealthCost, 1);
         Tooltip("The amount of health to be taken from the user\nwhen the skill is cast.");
-        InputShort("# of Uses", &AtkSkill.SkillUses, 1);
+        InputShort("# of Uses", &gstorage.skill_array[ID - 1].SkillUses, 1);
         Tooltip("How many times the skill can be used. Set this\nto 0 for infinite uses.");
-        InputShort("Self Effect", &AtkSkill.SelfEffect, 1);
+        InputShort("Self Effect", &gstorage.skill_array[ID - 1].SelfEffect, 1);
         Tooltip("An effect to be applied to the user. Undocumented,\nneeds more research.");
-        InputShort("Button Restrictions", &AtkSkill.ButtonRestrictions, 1);
+        InputShort("Button Restrictions", &gstorage.skill_array[ID - 1].ButtonRestrictions, 1);
         ImGui::TableNextColumn();
-        InputShort("Requirement Type", &AtkSkill.Requirements, 1);
+        InputShort("Requirement Type", &gstorage.skill_array[ID - 1].Requirements, 1);
         Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level");
-        InputShort("Requirement Amount", &AtkSkill.ReqAmount, 1);
+        InputShort("Requirement Amount", &gstorage.skill_array[ID - 1].ReqAmount, 1);
         Tooltip("The required amount of the type specified in\nthe previous box");
 
         ImGui::SetNextItemWidth(200);
         const char* items[] = { "Ground","Air","Both" };
-        ImGui::SliderInt("Skill Use Restrictions", (int*)&AtkSkill.GroundAirBoth, 0, 2, items[AtkSkill.GroundAirBoth]);
+        ImGui::SliderInt("Skill Use Restrictions", (int*)&gstorage.skill_array[ID - 1].GroundAirBoth, 0, 2, items[gstorage.skill_array[ID - 1].GroundAirBoth]);
         Tooltip("Where the skill may be used.");
 
-        InputShort("Skill Button Effect", &AtkSkill.SkillButtonEffect, 1);
+        InputShort("Skill Button Effect", &gstorage.skill_array[ID - 1].SkillButtonEffect, 1);
         ImGui::TableNextColumn();
-        InputShort("Applied Status ID", &AtkSkill.AppliedStatusID, 1);
+        InputShort("Applied Status ID", &gstorage.skill_array[ID - 1].AppliedStatusID, 1);
         Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
-        InputShort("Restrictions", &AtkSkill.Restriction, 1);
+        InputShort("Restrictions", &gstorage.skill_array[ID - 1].Restriction, 1);
         ImGui::TableNextColumn();
-        InputShort("Strength Effect", &AtkSkill.StrengthEffect, 1);
+        InputShort("Strength Effect", &gstorage.skill_array[ID - 1].StrengthEffect, 1);
         ImGui::TableNextColumn();
-        InputShort("Damage", &AtkSkill.Damage, 1);
+        InputShort("Damage", &gstorage.skill_array[ID - 1].Damage, 1);
         ImGui::TableNextColumn();
-        InputShort("Effect Duration / Misc. Effects", &AtkSkill.EffectDuration, 1);
+        InputShort("Effect Duration / Misc. Effects", &gstorage.skill_array[ID - 1].EffectDuration, 1);
         ImGui::TableNextColumn();
-        InputShort("Target Hand Data", &AtkSkill.TargetHand, 1);
+        InputShort("Target Hand Data", &gstorage.skill_array[ID - 1].TargetHand, 1);
         ImGui::TableNextColumn();
-        InputShort("Hit Effect Skills", &AtkSkill.HitEffectSkills, 1);
+        InputShort("Hit Effect Skills", &gstorage.skill_array[ID - 1].HitEffectSkills, 1);
         ImGui::TableNextColumn();
-        InputShort("Increase Stat", &AtkSkill.Increase, 1);
+        InputShort("Increase Stat", &gstorage.skill_array[ID - 1].Increase, 1);
         ImGui::TableNextColumn();
-        InputUInt8("Status Enabler", &AtkSkill.StatusEnabler);
+        InputUInt8("Status Enabler", &gstorage.skill_array[ID - 1].StatusEnabler);
         ImGui::TableNextColumn();
-        InputUInt8("Status ID Duration", &AtkSkill.StatusDuration);
+        InputUInt8("Status ID Duration", &gstorage.skill_array[ID - 1].StatusDuration);
         ImGui::TableNextColumn();
-        InputShort("Projectile Properties", &AtkSkill.ProjectileProperties, 1);
+        InputShort("Projectile Properties", &gstorage.skill_array[ID - 1].ProjectileProperties, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile ID", &AtkSkill.ProjectileID, 1);
+        InputShort("Projectile ID", &gstorage.skill_array[ID - 1].ProjectileID, 1);
         ImGui::TableNextColumn();
-        InputShort("\"Collision Skill ID\"", &AtkSkill.ProjectileID, 1);
+        InputShort("\"Collision Skill ID\"", &gstorage.skill_array[ID - 1].ProjectileID, 1);
         ImGui::TableNextColumn();
-        InputShort("Homing Range 1st Hit", &AtkSkill.HomingRangeFirstHit, 1);
+        InputShort("Homing Range 1st Hit", &gstorage.skill_array[ID - 1].HomingRangeFirstHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Knockback Strength", &AtkSkill.HomingRangeSecondHit, 1);
+        InputShort("Knockback Strength", &gstorage.skill_array[ID - 1].HomingRangeSecondHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Combo End", &AtkSkill.HomingRangeThirdHit, 1);
+        InputShort("Combo End", &gstorage.skill_array[ID - 1].HomingRangeThirdHit, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile Behaviour", &AtkSkill.ProjectileBehaviour, 1);
+        InputShort("Projectile Behaviour", &gstorage.skill_array[ID - 1].ProjectileBehaviour, 1);
         ImGui::TableNextColumn();
-        if (AtkSkill.ProjectileBehaviour > 20)
+        if (gstorage.skill_array[ID - 1].ProjectileBehaviour > 20)
         {
             // The game will crash if this is over 0x14
-            AtkSkill.ProjectileBehaviour = 20;
+            gstorage.skill_array[ID - 1].ProjectileBehaviour = 20;
         }
-        InputUInt8("Skill Duration", &AtkSkill.SkillDuration);
+        InputUInt8("Skill Duration", &gstorage.skill_array[ID - 1].SkillDuration);
         ImGui::TableNextColumn();
-        InputUInt8("Hit Range", &AtkSkill.HitRange);
+        InputUInt8("Hit Range", &gstorage.skill_array[ID - 1].HitRange);
         ImGui::TableNextColumn();
-        InputShort("Expand Skill Width / Start Speed", &AtkSkill.ExpandSkillWidth, 1);
+        InputShort("Expand Skill Width / Start Speed", &gstorage.skill_array[ID - 1].ExpandSkillWidth, 1);
         ImGui::TableNextColumn();
-        InputShort("Animation Size / Acceleration", &AtkSkill.AnimationSize, 1);
+        InputShort("Animation Size / Acceleration", &gstorage.skill_array[ID - 1].AnimationSize, 1);
         ImGui::TableNextColumn();
-        InputShort("Projectile End Speed", &AtkSkill.ProjectileSpeed, 1);
+        InputShort("Projectile End Speed", &gstorage.skill_array[ID - 1].ProjectileSpeed, 1);
         ImGui::TableNextColumn();
-        InputShort("Homing Strength / Accuracy", &AtkSkill.AccuracyID, 1);
+        InputShort("Homing Strength / Accuracy", &gstorage.skill_array[ID - 1].AccuracyID, 1);
         ImGui::TableNextColumn();
-        InputShort("Animation Height", &AtkSkill.AnimationHeight, 1);
+        InputShort("Animation Height", &gstorage.skill_array[ID - 1].AnimationHeight, 1);
 
         ImGui::EndTable();
     }
