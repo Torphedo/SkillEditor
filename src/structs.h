@@ -89,13 +89,21 @@ typedef struct gsdata
     atkskill skill_array[751];
 }gsdata; extern gsdata gstorage;
 
-typedef struct SkillPackHeaderV1
+// Original format, skill data only
+typedef struct skill_pack_header_v1
 {
-    char Name[32];
-    short FormatVersion;
-    short SkillCount;
+    char name[32];
+    short format_version; // 1
+    short skill_count;
     char pad[12];
-}packheader1;
+}pack_header1;
+
+// Second format, skill and text data
+typedef struct skill_pack_v2_text
+{
+    uint16_t name_length; // Should be calculated with strlen()
+    uint16_t desc_length;
+}pack2_text;
 
 typedef struct skill_text
 {

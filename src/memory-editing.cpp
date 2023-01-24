@@ -290,28 +290,64 @@ void install_mod()
     {
         for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
         {
-            packheader1 header;
-            FILE* SkillPack;
-            fopen_s(&SkillPack, multiselectpath[n].c_str(), "rb");
-            if (SkillPack == 0)
+            pack_header1 header = {0};
+            FILE* skill_pack = fopen(multiselectpath[n].c_str(), "rb");
+            if (skill_pack == nullptr)
             {
                 printf("Failed to open %s\n", multiselectpath[n].c_str());
-                return;
+                continue; // Skip to next mod file
             }
-            fread_s(&header, sizeof(header), sizeof(header), 1, SkillPack);
+            fread_s(&header, sizeof(pack_header1), sizeof(pack_header1), 1, skill_pack);
 
-            atkskill* skills = new atkskill[header.SkillCount];
-            fread(skills, sizeof(atkskill), header.SkillCount, SkillPack);
-            for (int i = 0; i < header.SkillCount; i++)
+            atkskill* skills = new atkskill[header.skill_count];
+            fread(skills, sizeof(atkskill), header.skill_count, skill_pack);
+            for (int i = 0; i < header.skill_count; i++)
             {
                 gstorage.skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
             }
+            pack2_text* text_meta = (pack2_text*) malloc(sizeof(pack2_text) * header.skill_count);
+            fread(text_meta, sizeof(pack2_text), header.skill_count, skill_pack);
+            if (header.format_version == 2)
+            {
+                for (uint16_t i = 0; i < header.skill_count; i++)
+                {
+                    auto original_text = load_skill_text(skills[i].SkillTextID + 1);
+                    if (original_text.name.length() <= text_meta[i].name_length)
+                    {
+                        int text_id = skills[i].SkillTextID + 1;
+                        char* name = (char*) malloc(text_meta[i].name_length);
+                        char* desc = (char*) malloc(text_meta[i].desc_length);
+                        fread(name, text_meta[i].name_length, 1, skill_pack);
+                        fread(desc, text_meta[i].desc_length, 1, skill_pack);
+                        save_skill_text({name, desc}, skills[i].SkillTextID + 1);
+                        free(name);
+                        free(desc);
+                    }
+
+                }
+            }
             delete[] skills;
-            fclose(SkillPack);
+
+            fclose(skill_pack);
         }
 
         write_gsdata_to_memory(); // Automatically updates version number
     }
+}
+
+void toggle_game_pause()
+{
+    static bool GamePaused = false;
+    pid = get_pid_by_name("PDUWP.exe");
+    if (GamePaused)
+    {
+        DebugActiveProcessStop(pid);
+        GamePaused = true;
+    }
+    else {
+        DebugActiveProcess(pid);
+    }
+    GamePaused = !GamePaused;
 }
 
 void pause_game()

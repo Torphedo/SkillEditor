@@ -31,8 +31,5 @@ bool write_gsdata_to_memory();
 // Installs a skill pack into the game's memory.
 void install_mod();
 
-// Freezes the game's execution.
-void pause_game();
-
-// Unfreezes the game.
-void resume_game();
+// Toggles whether the game is currently frozen by Skill Editor
+void toggle_game_pause();

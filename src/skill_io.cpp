@@ -46,6 +46,17 @@ void save_skill_to_file(unsigned int id)
         {
             FILE* skill_out = fopen(most_recent_filename, "wb");
             fwrite(&gstorage.skill_array[id - 1], sizeof(atkskill), 1, skill_out);
+            auto skill_text = load_skill_text(gstorage.skill_array[id - 1].SkillTextID + 1);
+            skill_pack_v2_text text_meta = {
+                    .name_length = (uint16_t) (skill_text.name.length() + 1),
+                    .desc_length = (uint16_t) (skill_text.desc.length() + 1)
+            };
+            fwrite(&text_meta, sizeof(skill_pack_v2_text), 1, skill_out);
+            static const uint8_t null_terminator = 0x0;
+            fwrite(skill_text.name.c_str(), skill_text.name.length(), 1, skill_out);
+            fwrite(&null_terminator, 1, 1, skill_out);
+            fwrite(skill_text.desc.c_str(), skill_text.desc.length(), 1, skill_out);
+            fwrite(&null_terminator, 1, 1, skill_out);
             fclose(skill_out);
 
             printf("Saved attack skill to %s\n", most_recent_filename);
@@ -72,33 +83,55 @@ void save_skill_pack(const char* packname)
         FILE* skill_pack_out = fopen(out_filepath, "wb");
         if (skill_pack_out != nullptr)
         {
-            packheader1 header = { 0 };
-            header.SkillCount = (short)MultiSelectCount;
-            header.FormatVersion = 1;
-            strcpy(header.Name, packname);
-            atkskill* skills = new atkskill[header.SkillCount];
-            fwrite(&header, sizeof(packheader1), 1, skill_pack_out);
+            pack_header1 header = { 0 };
+            bool has_text_data = false;
+            header.skill_count = (short)MultiSelectCount;
+            header.format_version = 2;
+            memcpy(&header.name, packname, sizeof(header.name));
 
+            atkskill* skills = (atkskill*) malloc(sizeof(atkskill) * header.skill_count);
+            pack2_text* text = (pack2_text*) malloc(sizeof(pack2_text) * header.skill_count);
+            char** text_data = (char**) calloc(header.skill_count * 2, sizeof(char*));
             for (int i = 0; i < MultiSelectCount; i++)
             {
-                // Only allow skill data to be written if the skill file is the correct size
-                if (std::filesystem::file_size(multiselectpath[i]) == 144)
-                {
                     FILE* skill_in = fopen(multiselectpath[i].c_str(), "rb");
                     if (skill_in != nullptr) {
                         fread(&skills[i], sizeof(atkskill), 1, skill_in);
+                        if (std::filesystem::file_size(multiselectpath[i]) > 144)
+                        {
+                            has_text_data = true;
+                            fread(&text[i], sizeof(pack2_text), 1, skill_in);
+                            text_data[(i * 2)] = (char*) malloc(text[i].name_length);
+                            text_data[(i * 2) + 1] = (char*) malloc(text[i].desc_length);
+                            fread(text_data[(i * 2)], text[i].name_length, 1, skill_in);
+                            fread(text_data[(i * 2) + 1], text[i].desc_length, 1, skill_in);
+                        }
                         fclose(skill_in);
                     }
 
                     printf("Writing from %s...\n", multiselectpath[i].c_str());
-                }
-                else
-                {
-                    printf("Invalid skill size, file skipped.\n");
+            }
+
+            if (!has_text_data) { header.format_version = 1; }
+            fwrite(&header, sizeof(pack_header1), 1, skill_pack_out);
+            fwrite(skills, sizeof(atkskill), header.skill_count, skill_pack_out);
+
+            if (has_text_data)
+            {
+                fwrite(text, sizeof(pack2_text), header.skill_count, skill_pack_out);
+                for (int i = 0; i < header.skill_count; i++) {
+                    if (text_data[i * 2] != nullptr) {
+                        fwrite(text_data[i * 2], text[i * 2].name_length, 1, skill_pack_out);
+                        free(text_data[i * 2]);
+                    }
+                    if (text_data[(i * 2) + 1] != nullptr) {
+                        fwrite(text_data[(i * 2) + 1], text[i * 2].desc_length, 1, skill_pack_out);
+                        free(text_data[(i * 2) + 1]);
+                    }
                 }
             }
-            fwrite(skills, sizeof(atkskill), header.SkillCount, skill_pack_out);
-            delete[] skills;
+            free(text);
+            free(skills);
 
             fclose(skill_pack_out);
         }
