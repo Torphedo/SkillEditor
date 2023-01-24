@@ -24,14 +24,7 @@ struct
     std::string current_desc;
 }ui_state;
 
-char packname_internal[32]; // Mod name stored inside the binary file (NOT the filename)
-short timer;
-bool GamePaused = false;
 unsigned short ID = 1;
-unsigned short text_id = 0;
-// Temporary storage to hold an ID before actually updating the selected ID
-unsigned short temp_id = 0;
-unsigned short SelectIdx = 0;
 
 static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"
@@ -89,7 +82,7 @@ int ProgramUI()
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New Skill Pack", "Ctrl + N"))
+                if (ImGui::MenuItem("New Skill Pack", "N"))
                 {
                     if (SUCCEEDED(file_multiple_select_dialog()))
                     {
@@ -137,7 +130,7 @@ int ProgramUI()
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Save To File", "Ctrl + S"))
+                if (ImGui::MenuItem("Save To File", "S"))
                 {
                     save_skill_to_file(ID);
                 }
@@ -145,7 +138,7 @@ int ProgramUI()
                 {
                     write_gsdata_to_memory();
                 }
-                if (ImGui::MenuItem("Save As", "Ctrl + Shift + S"))
+                if (ImGui::MenuItem("Save As", "Ctrl + S"))
                 {
                     save_skill_with_dialog(ID);
                 }
@@ -178,19 +171,14 @@ int ProgramUI()
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Game")) {
-                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust")) {
-                    if (GamePaused) {
-                        resume_game();
-                        GamePaused = true;
-                    } else {
-                        pause_game();
-                    }
-                    GamePaused = !GamePaused;
+                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
+                {
+                    toggle_game_pause();
                 }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Settings")) {
-                bool enabled = true;
+                static bool enabled = true;
                 ImGui::Checkbox("File Mode", &enabled);
                 ImGui::EndMenu();
             }
@@ -228,47 +216,32 @@ int ProgramUI()
 
     // ImGui::ShowDemoWindow();
 
-    if (timer == 0)
-    {
-        // Save: Ctrl + S
-        if (GetKeyState(VK_CONTROL) & GetKeyState('S') & 0x8000)
-        {
-            timer = 20;
+    if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
+        toggle_game_pause();
+    }
 
-            // Save As: Ctrl + Shift + S
-            if (GetKeyState(VK_SHIFT))
-            {
-                save_skill_with_dialog(ID);
-            }
-            else
-            {
-                save_skill_to_file(ID);
-            }
-        }
-
-        // New: Ctrl + N
-        if (GetKeyState(VK_CONTROL) & GetKeyState('N') & 0x8000 && !ui_state.NewSkillPack)
-        {
-            if (SUCCEEDED(file_multiple_select_dialog()))
-            {
-                ui_state.NewSkillPack = true;
-            }
-            else {
-                std::cout << "Skill selection canceled.\n";
-            }
-            timer = 20;
+    // Save
+    if (ImGui::IsKeyPressed(ImGuiKey_S)) {
+        // Save As
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl)) {
+            save_skill_with_dialog(ID);
+        } else {
+            save_skill_to_file(ID);
         }
     }
-    else
+    if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack)
     {
-        timer--; // Decrement cooldown timer until it hits 0
+        if (SUCCEEDED(file_multiple_select_dialog())) {
+            ui_state.NewSkillPack = true;
+        }
     }
 
     if (ui_state.IDSelection)
     {
+        // Temporary storage to hold an ID before actually updating the selected ID
+        static uint16_t temp_id = 0;
         ImGui::Begin("Input a skill ID: ");
         InputShort("ID", &temp_id, 1);
-
         if (ImGui::Button("Open"))
         {
             ID = temp_id;
@@ -276,7 +249,6 @@ int ProgramUI()
             ui_state.IDSelection = false;      // Close this window
             ui_state.AttackSkillEditor = true; // Opens the Attack Skill Editor window
         }
-
         ImGui::End();
     }
 
@@ -301,13 +273,14 @@ int ProgramUI()
         {
             if (ImGui::BeginTabItem("Attack Skills"))
             {
+                static uint16_t select_idx = 0;
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
                 for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationAtkLabels); i++)
                 {
                     // Selectable object for every string in the array
                     if (ImGui::Selectable(DocumentationAtkLabels[i]))
                     {
-                        SelectIdx = i;
+                        select_idx = i;
                     }
                 }
                 ImGui::EndChild();
@@ -317,8 +290,8 @@ int ProgramUI()
                 ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
                 // Renders the item name as an H1, then the description on a new line.
                 std::string md = "# ";
-                md += DocumentationAtkLabels[SelectIdx];
-                md += DocumentationAtkBody[SelectIdx];
+                md += DocumentationAtkLabels[select_idx];
+                md += DocumentationAtkBody[select_idx];
                 Markdown(md);
 
                 ImGui::EndChild();
@@ -327,13 +300,14 @@ int ProgramUI()
 
             if (ImGui::BeginTabItem("Skill Editor"))
             {
+                static uint16_t select_idx = 0;
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
                 for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationProgramLabels); i++)
                 {
                     // Selectable object for every string in the array
                     if (ImGui::Selectable(DocumentationProgramLabels[i]))
                     {
-                        SelectIdx = i;
+                        select_idx = i;
                     }
                 }
                 ImGui::EndChild();
@@ -343,8 +317,8 @@ int ProgramUI()
                 ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
                 // Renders the item name as an H1, then the description on a new line.
                 std::string md = "# ";
-                md += DocumentationProgramLabels[SelectIdx];
-                md += DocumentationProgramBody[SelectIdx];
+                md += DocumentationProgramLabels[select_idx];
+                md += DocumentationProgramBody[select_idx];
                 Markdown(md);
 
                 ImGui::EndChild();
@@ -358,28 +332,27 @@ int ProgramUI()
 
     if (ui_state.NewSkillPack)
     {
+        static char packname_internal[32] = {0}; // Mod name that will be stored in the binary
         ImGui::Begin("Enter a name for your skill pack: ");
         ImGui::InputText("Skill Pack Name", packname_internal, 32);
-
         if (ImGui::Button("Save"))
         {
             save_skill_pack(packname_internal);
             ui_state.NewSkillPack = false;
         }
-
         ImGui::End();
     }
 
     if (ui_state.text_edit)
     {
-        unsigned short cache = text_id; // Previously selected skill ID
-        text_id = gstorage.skill_array[ID - 1].SkillTextID + 1;
-
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
-
         // Allow text input, limited to the size of the original text
         ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
         ImGui::InputText("Skill Description", ui_state.current_desc.data(), ui_state.current_desc.length() + 1);
+
+        static uint16_t text_id = 0;
+        uint16_t cache = text_id; // Previously selected skill ID
+        text_id = gstorage.skill_array[ID - 1].SkillTextID + 1;
 
         if (ImGui::Button("Reload") || cache != text_id)
         {
@@ -401,7 +374,6 @@ int ProgramUI()
 
 void AtkSkillWindow()
 {
-    if (gstorage.filesize == 0) { get_process(); }
     if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor))
     {
         ImGui::End();
