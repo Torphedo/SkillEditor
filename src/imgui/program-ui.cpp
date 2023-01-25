@@ -130,17 +130,18 @@ int ProgramUI()
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Save To File", "S"))
+                if (ImGui::MenuItem("Save To File", "Shift + S"))
                 {
-                    save_skill_to_file(ID);
+                    ImGui::OpenPopup("save_text_prompt");
                 }
-                if (ImGui::MenuItem("Save To Memory"))
+                if (ImGui::MenuItem("Save To Memory", "S"))
                 {
                     write_gsdata_to_memory();
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + S"))
                 {
-                    save_skill_with_dialog(ID);
+                    skill_select();
+                    ImGui::OpenPopup("save_text_prompt");
                 }
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -171,7 +172,7 @@ int ProgramUI()
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Game")) {
-                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust"))
+                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4"))
                 {
                     toggle_game_pause();
                 }
@@ -185,15 +186,12 @@ int ProgramUI()
             
             if (!is_running())
             {
-                // Alignment to right side
-                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\
-                            \t\t\t\t\t\t\t");
+                ImGui::SameLine(viewport->Size.x - 250);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else
             {
-                // Alignment to right side
-                ImGui::Text("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+                ImGui::SameLine(viewport->Size.x - 15 - 500);
                 if (!have_process_handle()) 
                 {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
@@ -202,7 +200,7 @@ int ProgramUI()
                 {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
-                else { ImGui::Text("\t\t\t\t\t\t\t\t\t\t"); }
+                ImGui::SameLine(viewport->Size.x - 350);
 
                 if (ImGui::Button("Retry connection")) { printf("Retrying..."); get_process(); }
 
@@ -219,14 +217,19 @@ int ProgramUI()
     if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
         toggle_game_pause();
     }
-
     // Save
     if (ImGui::IsKeyPressed(ImGuiKey_S)) {
         // Save As
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl)) {
-            save_skill_with_dialog(ID);
-        } else {
-            save_skill_to_file(ID);
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl, false) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl, false)) {
+            skill_select();
+            ImGui::OpenPopup("save_text_prompt");
+        }
+        // Save
+        else if (ImGui::IsKeyPressed(ImGuiKey_LeftShift, false) || ImGui::IsKeyPressed(ImGuiKey_RightShift, false)) {
+            ImGui::OpenPopup("save_text_prompt");
+        }
+        else {
+            write_gsdata_to_memory();
         }
     }
     if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack)
@@ -234,6 +237,21 @@ int ProgramUI()
         if (SUCCEEDED(file_multiple_select_dialog())) {
             ui_state.NewSkillPack = true;
         }
+    }
+
+    if (ImGui::BeginPopup("save_text_prompt"))
+    {
+        ImGui::Text("Save text to the skill file?");
+        if (ImGui::Button("No")) {
+            save_skill_to_file(ID, false);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Yes")) {
+            save_skill_to_file(ID, true);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
 
     if (ui_state.IDSelection)

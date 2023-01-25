@@ -11,6 +11,11 @@ extern "C" {
 // Used to track the most recently saved attack skill filepath
 char* most_recent_filename = nullptr;
 
+void skill_select()
+{
+    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
+}
+
 unsigned int load_attack_skill(unsigned int current_id)
 {
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
@@ -32,8 +37,8 @@ unsigned int load_attack_skill(unsigned int current_id)
     else { return current_id; }
 }
 
-// Writes the currently open file to disk.
-void save_skill_to_file(unsigned int id)
+// Writes the currently open skill to disk.
+void save_skill_to_file(unsigned int id, bool write_text)
 {
     // Check that we actually have data to write and a place to write it to
     if (gstorage.skill_array[id - 1].SkillID != 0)
@@ -46,17 +51,17 @@ void save_skill_to_file(unsigned int id)
         {
             FILE* skill_out = fopen(most_recent_filename, "wb");
             fwrite(&gstorage.skill_array[id - 1], sizeof(atkskill), 1, skill_out);
-            auto skill_text = load_skill_text(gstorage.skill_array[id - 1].SkillTextID + 1);
-            skill_pack_v2_text text_meta = {
-                    .name_length = (uint16_t) (skill_text.name.length() + 1),
-                    .desc_length = (uint16_t) (skill_text.desc.length() + 1)
-            };
-            fwrite(&text_meta, sizeof(skill_pack_v2_text), 1, skill_out);
-            static const uint8_t null_terminator = 0x0;
-            fwrite(skill_text.name.c_str(), skill_text.name.length(), 1, skill_out);
-            fwrite(&null_terminator, 1, 1, skill_out);
-            fwrite(skill_text.desc.c_str(), skill_text.desc.length(), 1, skill_out);
-            fwrite(&null_terminator, 1, 1, skill_out);
+            if (write_text)
+            {
+                auto skill_text = load_skill_text(gstorage.skill_array[id - 1].SkillTextID + 1);
+                skill_pack_v2_text text_meta = {
+                        .name_length = (uint16_t) (skill_text.name.length() + 1),
+                        .desc_length = (uint16_t) (skill_text.desc.length() + 1)
+                };
+                fwrite(&text_meta, sizeof(skill_pack_v2_text), 1, skill_out);
+                fwrite(skill_text.name.c_str(), skill_text.name.length() + 1, 1, skill_out);
+                fwrite(skill_text.desc.c_str(), skill_text.desc.length() + 1, 1, skill_out);
+            }
             fclose(skill_out);
 
             printf("Saved attack skill to %s\n", most_recent_filename);
@@ -66,12 +71,6 @@ void save_skill_to_file(unsigned int id)
     {
         printf("Invalid skill ID.\n");
     }
-}
-
-void save_skill_with_dialog(unsigned int id)
-{
-    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
-    save_skill_to_file(id);
 }
 
 void save_skill_pack(const char* packname)
