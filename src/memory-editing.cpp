@@ -148,6 +148,7 @@ skill_text load_skill_text(unsigned int id)
 {
     if (EsperHandle != 0)
     {
+        SetLastError(0);
         // Memory address of the skill text table & strings
         // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
         static uintptr_t text_section = gstorage_address + 0x34000;
@@ -158,7 +159,7 @@ skill_text load_skill_text(unsigned int id)
         if (GetLastError() != 0)
         {
             printf("Failed to read process memory (code %li)\n", GetLastError());
-            return { "Failed to read data.", "Failed to read data." };
+            return { "", ""};
         }
 
         if (id > header.array_size - 1)
@@ -173,7 +174,7 @@ skill_text load_skill_text(unsigned int id)
         if (GetLastError() != 0)
         {
             printf("Failed to read process memory (code %li)\n", GetLastError());
-            return { "Failed to read data.", "Failed to read data." };
+            return { "", "" };
         }
 
         uint32_t name_size = string_offset[0].desc - string_offset[0].name;
@@ -185,13 +186,13 @@ skill_text load_skill_text(unsigned int id)
         if (GetLastError() != 0)
         {
             printf("Failed to read process memory (code %li)\n", GetLastError());
-            return { "Failed to read data.", "Failed to read data." };
+            return { "", "" };
         }
         ReadProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].desc), desc, desc_size, NULL);
         if (GetLastError() != 0)
         {
             printf("Failed to read process memory (code %li)\n", GetLastError());
-            return { "Failed to read data.", "Failed to read data." };
+            return { "", "" };
         }
 
         skill_text output = { name, desc };
@@ -201,7 +202,7 @@ skill_text load_skill_text(unsigned int id)
         return output;
     }
     else {
-        return { "No running PD instance.", "No running PD instance." };
+        return { "", "" };
     }
 }
 
@@ -209,6 +210,7 @@ bool save_skill_text(skill_text text, unsigned int id)
 {
     if (EsperHandle != nullptr)
     {
+        SetLastError(0);
         // Memory address of the skill text table & strings
         // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
         static uintptr_t text_section = gstorage_address + 0x34000;

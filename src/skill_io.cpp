@@ -21,18 +21,32 @@ unsigned int load_attack_skill(unsigned int current_id)
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
     if (most_recent_filename != nullptr)
     {
-        if (std::filesystem::file_size(most_recent_filename) == 144)
-        {
-            atkskill buffer = { 0 };
-            FILE* skill_file = fopen(most_recent_filename, "rb");
-            fread(&buffer, sizeof(atkskill), 1, skill_file);
-            fclose(skill_file);
+        atkskill buffer = { 0 };
+        FILE* skill_file = fopen(most_recent_filename, "rb");
+        fread(&buffer, sizeof(atkskill), 1, skill_file);
 
-            gstorage.skill_array[buffer.SkillID - 1] = buffer;
-            printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
-            return buffer.SkillID;
+        gstorage.skill_array[buffer.SkillID - 1] = buffer;
+        printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
+        if (std::filesystem::file_size(most_recent_filename) > 144)
+        {
+            pack2_text text_meta = {0};
+            fread(&text_meta, sizeof(pack2_text), 1, skill_file);
+
+            auto original_text = load_skill_text(buffer.SkillTextID + 1);
+            if (original_text.name.length() <= text_meta.name_length)
+            {
+                int text_id = buffer.SkillTextID + 1;
+                char* name = (char*) malloc(text_meta.name_length);
+                char* desc = (char*) malloc(text_meta.desc_length);
+                fread(name, text_meta.name_length, 1, skill_file);
+                fread(desc, text_meta.desc_length, 1, skill_file);
+                save_skill_text({name, desc}, buffer.SkillTextID + 1);
+                free(name);
+                free(desc);
+            }
         }
-        else { printf("Selected file was not a valid skill.\n"); return current_id; }
+        fclose(skill_file);
+        return buffer.SkillID;
     }
     else { return current_id; }
 }

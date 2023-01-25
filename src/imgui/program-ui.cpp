@@ -18,6 +18,7 @@ struct
     bool Documentation;
     bool IDSelection;
     bool text_edit;
+    bool text_prompt;
 
     // Name & description being edited in text edit box
     std::string current_name;
@@ -132,7 +133,7 @@ int ProgramUI()
                 }
                 if (ImGui::MenuItem("Save To File", "Shift + S"))
                 {
-                    ImGui::OpenPopup("save_text_prompt");
+                    ui_state.text_prompt = true;
                 }
                 if (ImGui::MenuItem("Save To Memory", "S"))
                 {
@@ -141,7 +142,7 @@ int ProgramUI()
                 if (ImGui::MenuItem("Save As", "Ctrl + S"))
                 {
                     skill_select();
-                    ImGui::OpenPopup("save_text_prompt");
+                    ui_state.text_prompt = true;
                 }
 
                 if (ImGui::MenuItem("Exit", "Alt + F4"))
@@ -222,11 +223,11 @@ int ProgramUI()
         // Save As
         if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl, false) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl, false)) {
             skill_select();
-            ImGui::OpenPopup("save_text_prompt");
+            ui_state.text_prompt = true;
         }
         // Save
         else if (ImGui::IsKeyPressed(ImGuiKey_LeftShift, false) || ImGui::IsKeyPressed(ImGuiKey_RightShift, false)) {
-            ImGui::OpenPopup("save_text_prompt");
+            ui_state.text_prompt = true;
         }
         else {
             write_gsdata_to_memory();
@@ -239,16 +240,25 @@ int ProgramUI()
         }
     }
 
+    if (ui_state.text_prompt)
+    {
+        // Stupid and convoluted. If we don't use OpenPopup(), it will create it with the default
+        // frame ("Debug" label). But it breaks if called from a menu item, so we need this.
+        ImGui::OpenPopup("save_text_prompt");
+    }
+
     if (ImGui::BeginPopup("save_text_prompt"))
     {
         ImGui::Text("Save text to the skill file?");
         if (ImGui::Button("No")) {
             save_skill_to_file(ID, false);
+            ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::Button("Yes")) {
             save_skill_to_file(ID, true);
+            ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
