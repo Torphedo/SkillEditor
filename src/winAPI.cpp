@@ -128,7 +128,6 @@ HRESULT file_multiple_select_dialog()
             }
         }
         pfd->Release();
-        return hr;
     }
     return hr;
 }
