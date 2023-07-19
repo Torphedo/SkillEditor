@@ -57,7 +57,7 @@ bool is_running()
 
 bool can_read_memory()
 {
-    static unsigned char buf = 0;
+    unsigned char buf = 0;
     ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &buf, 1, NULL);
     DWORD error = GetLastError();
     return (error == 0);
