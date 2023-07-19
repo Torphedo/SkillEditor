@@ -166,7 +166,7 @@ int ProgramUI()
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else {
-                ImGui::SameLine(viewport->Size.x - 15 - 500);
+                ImGui::SameLine(viewport->Size.x - 15 - 575);
                 if (!have_process_handle()) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
@@ -174,7 +174,7 @@ int ProgramUI()
                     // TODO: Maybe don't do this constantly? It spams ReadProcessMemory()...
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
-                ImGui::SameLine(viewport->Size.x - 350);
+                ImGui::SameLine(viewport->Size.x - 425);
 
                 if (ImGui::Button("Retry connection")) {
                     printf("Retrying...");
