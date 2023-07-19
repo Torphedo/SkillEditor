@@ -47,10 +47,8 @@ void AtkSkillWindow();
 static void Markdown(const std::string& markdown_); // Markdown function prototype
 static MemoryEditor hex_edit;
 
-void Tooltip(const char* text)
-{
-    if (ImGui::IsItemHovered())
-    {
+void Tooltip(const char* text) {
+    if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("%s", text);
     }
     ImGui::TableNextColumn();
@@ -59,76 +57,61 @@ void Tooltip(const char* text)
 // ImGui didn't have pre-made functions for short
 // or uint8 input boxes, so I made my own.
 
-void InputShort(const char* label, void* p_data, unsigned short step)
-{
+void InputShort(const char* label, void* p_data, unsigned short step) {
     ImGui::SetNextItemWidth(200);
     ImGui::InputScalar(label, ImGuiDataType_U16, p_data, &step);
 }
 
-void InputUInt8(const char* label, void* p_data)
-{
+void InputUInt8(const char* label, void* p_data) {
     static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
     ImGui::InputScalar(label, ImGuiDataType_U8, p_data, &step);
 }
 
 namespace ImGui {
-    bool SliderShort(const char* label, short* v, short v_min, short v_max, const char* format, ImGuiSliderFlags flags)
-    {
+    bool SliderShort(const char* label, short* v, short v_min, short v_max, const char* format, ImGuiSliderFlags flags) {
         return SliderScalar(label, ImGuiDataType_S16, v, &v_min, &v_max, format, flags);
     }
 }
 
 int ProgramUI()
 {
-    auto viewport = (ImGuiViewportP*)(void*)ImGui::GetMainViewport();
+    ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File"))
-            {
-                if (ImGui::MenuItem("New Skill Pack", "N"))
-                {
-                    if (SUCCEEDED(file_multiple_select_dialog()))
-                    {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("New Skill Pack", "N")) {
+                    if (SUCCEEDED(file_multiple_select_dialog())) {
                         ui_state.NewSkillPack = true;
                     }
                     else {
                         printf("Skill selection canceled.\n");
                     }
                 }
-                if (ImGui::BeginMenu("Open"))
-                {
-                    if (ImGui::MenuItem("Skill (From Memory)"))
-                    {
-                        if (get_process())
-                        {
+                if (ImGui::BeginMenu("Open")) {
+                    if (ImGui::MenuItem("Skill (From Memory)")) {
+                        if (get_process()) {
                             ui_state.IDSelection = true;
                         }
                     }
-                    if (ImGui::MenuItem("Skill File"))
-                    {
+                    if (ImGui::MenuItem("Skill File")) {
                         ID = load_attack_skill(ID);
                         write_gsdata_to_memory();
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
-                    if (ImGui::MenuItem("Install Skill Pack"))
-                    {
-                        if (get_process())
-                        {
-                            if (SUCCEEDED(file_multiple_select_dialog())) // Open a multiple file open dialog
-                            {
+                    if (ImGui::MenuItem("Install Skill Pack")) {
+                        if (get_process()) {
+                            if (SUCCEEDED(file_multiple_select_dialog())) { // Open a multiple file open dialog
                                 install_mod();
-                                for (int i = 0; i < MultiSelectCount; i++)
-                                {
+                                for (int i = 0; i < MultiSelectCount; i++) {
                                     std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }
                             }
-                            else
-                            {
+                            else {
                                 printf("File selection canceled.\n");
                             }
                         }
@@ -138,39 +121,31 @@ int ProgramUI()
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Save To File", "Shift + S"))
-                {
+                if (ImGui::MenuItem("Save To File", "Shift + S")) {
                     ui_state.text_prompt = true;
                 }
-                if (ImGui::MenuItem("Save To Memory", "S"))
-                {
+                if (ImGui::MenuItem("Save To Memory", "S")) {
                     write_gsdata_to_memory();
                 }
-                if (ImGui::MenuItem("Save As", "Ctrl + S"))
-                {
+                if (ImGui::MenuItem("Save As", "Ctrl + S")) {
                     skill_select();
                     ui_state.text_prompt = true;
                 }
 
-                if (ImGui::MenuItem("Exit", "Alt + F4"))
-                {
+                if (ImGui::MenuItem("Exit", "Alt + F4")) {
                     return 1;
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Window"))
-            {
+            if (ImGui::BeginMenu("Window")) {
                 ImGui::MenuItem("Attack Skill Editor", nullptr, &ui_state.AttackSkillEditor);
-                if (ImGui::MenuItem("Skill Hex Editor"))
-                {
-                    if (get_process())
-                    {
+                if (ImGui::MenuItem("Skill Hex Editor")) {
+                    if (get_process()) {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }
                 }
                 ImGui::MenuItem("Documentation", nullptr, &ui_state.Documentation);
-                if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit))
-                {
+                if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit)) {
                     get_process(); // Refresh skill data address & game handle
 
                     skill_text text = load_skill_text(ID);
@@ -180,32 +155,32 @@ int ProgramUI()
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Game")) {
-                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4"))
-                {
+                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4")) {
                     toggle_game_pause();
                 }
                 ImGui::EndMenu();
             }
             
-            if (!is_running())
-            {
+            // TODO: This constantly loops through running processes and may be a bit wasteful.
+            if (!is_running()) {
                 ImGui::SameLine(viewport->Size.x - 250);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
-            else
-            {
+            else {
                 ImGui::SameLine(viewport->Size.x - 15 - 500);
-                if (!have_process_handle()) 
-                {
+                if (!have_process_handle()) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
-                else if (!can_read_memory())
-                {
+                else if (!can_read_memory()) {
+                    // TODO: Maybe don't do this constantly? It spams ReadProcessMemory()...
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
                 ImGui::SameLine(viewport->Size.x - 350);
 
-                if (ImGui::Button("Retry connection")) { printf("Retrying..."); get_process(); }
+                if (ImGui::Button("Retry connection")) {
+                    printf("Retrying...");
+                    get_process();
+                }
 
                 ImGui::Text("Phantom Dust Process ID:");
                 ImGui::TextColored({ 0, 255, 0, 255 }, "%li", process_id());
@@ -235,22 +210,19 @@ int ProgramUI()
             write_gsdata_to_memory();
         }
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack)
-    {
+    if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
         if (SUCCEEDED(file_multiple_select_dialog())) {
             ui_state.NewSkillPack = true;
         }
     }
 
-    if (ui_state.text_prompt)
-    {
+    if (ui_state.text_prompt) {
         // Stupid and convoluted. If we don't use OpenPopup(), it will create it with the default
         // frame ("Debug" label). But it breaks if called from a menu item, so we need this.
         ImGui::OpenPopup("save_text_prompt");
     }
 
-    if (ImGui::BeginPopup("save_text_prompt"))
-    {
+    if (ImGui::BeginPopup("save_text_prompt")) {
         ImGui::Text("Save text to the skill file?");
         if (ImGui::Button("No")) {
             save_skill_to_file(ID, false);
@@ -266,14 +238,12 @@ int ProgramUI()
         ImGui::EndPopup();
     }
 
-    if (ui_state.IDSelection)
-    {
+    if (ui_state.IDSelection) {
         // Temporary storage to hold an ID before actually updating the selected ID
         static uint16_t temp_id = 0;
         ImGui::Begin("Input a skill ID: ");
         InputShort("ID", &temp_id, 1);
-        if (ImGui::Button("Open"))
-        {
+        if (ImGui::Button("Open")) {
             ID = temp_id;
             printf("Loaded skill with ID %d\n", ID);
             ui_state.IDSelection = false;      // Close this window
@@ -282,34 +252,27 @@ int ProgramUI()
         ImGui::End();
     }
 
-    if (ui_state.HexEditor)
-    {
+    if (ui_state.HexEditor) {
         hex_edit.ReadOnly = false;
         hex_edit.DrawWindow("Hex Editor", &gstorage.skill_array[ID - 1], 144);
     }
 
-    if (ui_state.AttackSkillEditor)
-    {
-        // This is the only window that's not inlined, because it would actually make the flow of logic harder to follow.
+    if (ui_state.AttackSkillEditor) {
+        // This window is way too long to inline here
         AtkSkillWindow();
     }
 
-    if (ui_state.Documentation)
-    {
+    if (ui_state.Documentation) {
         ImGui::SetNextWindowSize(ImVec2(850, 650), ImGuiCond_FirstUseEver);
         ImGui::Begin("Documentation", &ui_state.Documentation);
 
-        if (ImGui::BeginTabBar("DocTabs"))
-        {
-            if (ImGui::BeginTabItem("Attack Skills"))
-            {
+        if (ImGui::BeginTabBar("DocTabs")) {
+            if (ImGui::BeginTabItem("Attack Skills")) {
                 static uint16_t select_idx = 0;
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationAtkLabels); i++)
-                {
+                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationAtkLabels); i++) {
                     // Selectable object for every string in the array
-                    if (ImGui::Selectable(DocumentationAtkLabels[i]))
-                    {
+                    if (ImGui::Selectable(DocumentationAtkLabels[i])) {
                         select_idx = i;
                     }
                 }
@@ -328,15 +291,12 @@ int ProgramUI()
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("Skill Editor"))
-            {
+            if (ImGui::BeginTabItem("Skill Editor")) {
                 static uint16_t select_idx = 0;
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationProgramLabels); i++)
-                {
+                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationProgramLabels); i++) {
                     // Selectable object for every string in the array
-                    if (ImGui::Selectable(DocumentationProgramLabels[i]))
-                    {
+                    if (ImGui::Selectable(DocumentationProgramLabels[i])) {
                         select_idx = i;
                     }
                 }
@@ -360,21 +320,18 @@ int ProgramUI()
     }
 
 
-    if (ui_state.NewSkillPack)
-    {
+    if (ui_state.NewSkillPack) {
         static char packname_internal[32] = {0}; // Mod name that will be stored in the binary
         ImGui::Begin("Enter a name for your skill pack: ");
         ImGui::InputText("Skill Pack Name", packname_internal, 32);
-        if (ImGui::Button("Save"))
-        {
+        if (ImGui::Button("Save")) {
             save_skill_pack(packname_internal);
             ui_state.NewSkillPack = false;
         }
         ImGui::End();
     }
 
-    if (ui_state.text_edit)
-    {
+    if (ui_state.text_edit) {
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
         // Allow text input, limited to the size of the original text
         ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
@@ -384,16 +341,14 @@ int ProgramUI()
         uint16_t cache = text_id; // Previously selected skill ID
         text_id = gstorage.skill_array[ID - 1].SkillTextID + 1;
 
-        if (ImGui::Button("Reload") || cache != text_id)
-        {
+        if (ImGui::Button("Reload") || cache != text_id) {
             skill_text text = load_skill_text(text_id);
             ui_state.current_name = text.name;
             ui_state.current_desc = text.desc;
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Save"))
-        {
+        if (ImGui::Button("Save")) {
             skill_text text = {ui_state.current_name, ui_state.current_desc};
             save_skill_text(text, text_id);
         }
@@ -402,8 +357,7 @@ int ProgramUI()
     return 0;
 }
 
-void AtkSkillWindow()
-{
+void AtkSkillWindow() {
     if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor)) {
         ImGui::End();
         return;
@@ -525,8 +479,7 @@ void AtkSkillWindow()
         ImGui::TableNextColumn();
         InputShort("Projectile Behaviour", &skill->ProjectileBehaviour, 1);
         ImGui::TableNextColumn();
-        if (skill->ProjectileBehaviour > 20)
-        {
+        if (skill->ProjectileBehaviour > 20) {
             // The game will crash if this is over 0x14
             skill->ProjectileBehaviour = 20;
         }
@@ -559,17 +512,14 @@ static ImFont* H2 = nullptr;
 static ImFont* H3 = nullptr;
 
 static ImGui::MarkdownConfig mdConfig;
-void LinkCallback(ImGui::MarkdownLinkCallbackData data_)
-{
+void LinkCallback(ImGui::MarkdownLinkCallbackData data_) {
     std::string url(data_.link, data_.linkLength);
-    if (!data_.isImage)
-    {
+    if (!data_.isImage) {
         ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     }
 }
 
-inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData data_)
-{
+inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData data_) {
     // In your application you would load an image based on data_ input. Here we just use the imgui font texture.
     ImTextureID image = ImGui::GetIO().Fonts->TexID;
     // > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
@@ -581,8 +531,7 @@ inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData da
 
     // For image resize when available size.x > image width, add
     ImVec2 const contentSize = ImGui::GetContentRegionAvail();
-    if (imageData.size.x > contentSize.x)
-    {
+    if (imageData.size.x > contentSize.x) {
         float const ratio = imageData.size.y / imageData.size.x;
         imageData.size.x = contentSize.x;
         imageData.size.y = contentSize.x * ratio;
@@ -591,40 +540,32 @@ inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData da
     return imageData;
 }
 
-void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
-{
+void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_) {
     // Call the default first so any settings can be overwritten by our implementation.
     // Alternatively could be called or not called in a switch statement on a case by case basis.
     // See defaultMarkdownFormatCallback definition for further examples of how to use it.
     ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
 
-    switch (markdownFormatInfo_.type)
-    {
+    switch (markdownFormatInfo_.type) {
         // example: change the colour of heading level 2
-    case ImGui::MarkdownFormatType::HEADING:
-    {
-        if (markdownFormatInfo_.level == 2)
-        {
-            if (start_)
-            {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+        case ImGui::MarkdownFormatType::HEADING: {
+            if (markdownFormatInfo_.level == 2) {
+                if (start_) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+                }
+                else {
+                    ImGui::PopStyleColor();
+                }
             }
-            else
-            {
-                ImGui::PopStyleColor();
-            }
+            break;
         }
-        break;
-    }
-    default:
-    {
-        break;
-    }
+        default: {
+            break;
+        }
     }
 }
 
-void Markdown(const std::string& markdown_)
-{
+void Markdown(const std::string& markdown_) {
     // You can make your own Markdown function with your preferred string container and markdown config.
     // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
     mdConfig.linkCallback = LinkCallback;

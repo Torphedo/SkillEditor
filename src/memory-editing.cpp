@@ -1,4 +1,3 @@
-#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <filesystem>
@@ -28,8 +27,7 @@ static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0
 uintptr_t gstorage_address = 0;
 gsdata gstorage = { 0 };
 
-static DWORD get_pid_by_name(LPCTSTR ProcessName)
-{
+static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     PROCESSENTRY32 pt;
     HANDLE hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     pt.dwSize = sizeof(PROCESSENTRY32);
@@ -45,32 +43,27 @@ static DWORD get_pid_by_name(LPCTSTR ProcessName)
     return 0;
 }
 
-DWORD process_id()
-{
+DWORD process_id() {
     return pid;
 }
 
-bool is_running()
-{
+bool is_running() {
     pid = get_pid_by_name("PDUWP.exe");
     return (pid != 0);
 }
 
-bool can_read_memory()
-{
+bool can_read_memory() {
     unsigned char buf = 0;
     ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &buf, 1, NULL);
     DWORD error = GetLastError();
     return (error == 0);
 }
 
-bool have_process_handle()
-{
+bool have_process_handle() {
     return (EsperHandle != 0);
 }
 
-bool get_process()
-{
+bool get_process() {
     DWORD cache = pid;
     if (is_running()) {
         if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid)) {
@@ -119,17 +112,14 @@ bool get_process()
 
 }
 
-bool load_skill_data()
-{
-    if (have_process_handle())
-    {
+bool load_skill_data() {
+    if (have_process_handle()) {
         DWORD error = 0;
 
         ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         error = GetLastError();
-        if (error != 1400 && error != 183 && error != 0)
-        {
-            std::cout << "Process Read Error Code: " << error << "\n";
+        if (error != 1400 && error != 183 && error != 0) {
+            printf("Process Read Error Code: %d\n", error);
             return false;
         }
 
@@ -140,10 +130,9 @@ bool load_skill_data()
     }
 }
 
-skill_text load_skill_text(unsigned int id)
-{
-    if (EsperHandle != 0)
-    {
+// TODO: This is some janky bullshit.
+skill_text load_skill_text(unsigned int id) {
+    if (have_process_handle()) {
         SetLastError(0);
         // Memory address of the skill text table & strings
         // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
@@ -152,14 +141,12 @@ skill_text load_skill_text(unsigned int id)
         // Read section header to check the number of strings
         text_header header = { 0 };
         ReadProcessMemory(EsperHandle, (LPVOID)text_section, &header, sizeof(text_header), NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return { "", ""};
         }
 
-        if (id > header.array_size - 1)
-        {
+        if (id > header.array_size - 1) {
             return { "No text found.", "No text found." };
         }
 
@@ -167,8 +154,7 @@ skill_text load_skill_text(unsigned int id)
 
         text_ptrs string_offset[2] = {0};
         ReadProcessMemory(EsperHandle, (LPVOID)text_ptr_location, &string_offset, sizeof(text_ptrs) * 2, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return { "", "" };
         }
@@ -179,14 +165,12 @@ skill_text load_skill_text(unsigned int id)
         char* desc = (char*)calloc(1, desc_size);
 
         ReadProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].name), name, name_size, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return { "", "" };
         }
         ReadProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].desc), desc, desc_size, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return { "", "" };
         }
@@ -202,10 +186,9 @@ skill_text load_skill_text(unsigned int id)
     }
 }
 
-bool save_skill_text(skill_text text, unsigned int id)
-{
-    if (EsperHandle != nullptr)
-    {
+// TODO: This is also some janky bullshit.
+bool save_skill_text(skill_text text, unsigned int id) {
+    if (have_process_handle()) {
         SetLastError(0);
         // Memory address of the skill text table & strings
         // static uintptr_t text_section = gstorage_address + (gstorage.unk0 & 0xFFFFF000) + 0x1A000;
@@ -214,14 +197,12 @@ bool save_skill_text(skill_text text, unsigned int id)
         // Read section header to check the number of strings
         text_header header = { 0 };
         ReadProcessMemory(EsperHandle, (LPVOID)text_section, &header, sizeof(text_header), NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return false;
         }
 
-        if (id > header.array_size - 1)
-        {
+        if (id > header.array_size - 1) {
             return false;
         }
 
@@ -229,8 +210,7 @@ bool save_skill_text(skill_text text, unsigned int id)
 
         text_ptrs string_offset[2] = {0};
         ReadProcessMemory(EsperHandle, (LPVOID)text_ptr_location, &string_offset, sizeof(text_ptrs) * 2, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to read process memory (code %li)\n", GetLastError());
             return false;
         }
@@ -241,14 +221,12 @@ bool save_skill_text(skill_text text, unsigned int id)
         char* desc = text.desc.data();
 
         WriteProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].name), name, name_size, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to write process memory (code %li)\n", GetLastError());
             return false;
         }
         WriteProcessMemory(EsperHandle, (LPVOID)(text_ptr_location + string_offset[0].desc), desc, desc_size, NULL);
-        if (GetLastError() != 0)
-        {
+        if (GetLastError() != 0) {
             printf("Failed to write process memory (code %li)\n", GetLastError());
         }
 
@@ -259,22 +237,18 @@ bool save_skill_text(skill_text text, unsigned int id)
     }
 }
 
-bool write_gsdata_to_memory()
-{
-    if (get_process())
-    {
+bool write_gsdata_to_memory() {
+    if (get_process()) {
         // Update version number
         gstorage.VersionNum = crc32buf((char*)&gstorage, sizeof(gstorage));
 
         WriteProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         DWORD error = GetLastError();
-        if (error != 1400 && error != 183 && error != 0)
-        {
-            std::cout << "Process Write Error Code: " << error << "\n";
+        if (error != 1400 && error != 183 && error != 0) {
+            printf("Process Write Error Code: %d\n", error);
             return false;
         }
-        else 
-        {
+        else {
             printf("Wrote skill data to memory.\n");
             return true;
         }
@@ -282,16 +256,12 @@ bool write_gsdata_to_memory()
     else { return false; }
 }
 
-void install_mod()
-{
-    if (get_process())
-    {
-        for (int n = 0; n < MultiSelectCount; n++) // Loop through every selected skill pack file
-        {
+void install_mod() {
+    if (get_process()) {
+        for (int n = 0; n < MultiSelectCount; n++) { // Loop through every selected skill pack file
             pack_header1 header = {0};
             FILE* skill_pack = fopen(multiselectpath[n].c_str(), "rb");
-            if (skill_pack == nullptr)
-            {
+            if (skill_pack == nullptr) {
                 printf("Failed to open %s\n", multiselectpath[n].c_str());
                 continue; // Skip to next mod file
             }
@@ -299,31 +269,33 @@ void install_mod()
 
             atkskill* skills = new atkskill[header.skill_count];
             fread(skills, sizeof(atkskill), header.skill_count, skill_pack);
-            for (int i = 0; i < header.skill_count; i++)
-            {
+            for (int i = 0; i < header.skill_count; i++) {
                 gstorage.skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
             }
             pack2_text* text_meta = (pack2_text*) malloc(sizeof(pack2_text) * header.skill_count);
-            fread(text_meta, sizeof(pack2_text), header.skill_count, skill_pack);
-            if (header.format_version == 2)
-            {
-                for (uint16_t i = 0; i < header.skill_count; i++)
-                {
-                    auto original_text = load_skill_text(skills[i].SkillTextID + 1);
-                    if (original_text.name.length() <= text_meta[i].name_length)
-                    {
-                        int text_id = skills[i].SkillTextID + 1;
-                        char* name = (char*) malloc(text_meta[i].name_length);
-                        char* desc = (char*) malloc(text_meta[i].desc_length);
-                        fread(name, text_meta[i].name_length, 1, skill_pack);
-                        fread(desc, text_meta[i].desc_length, 1, skill_pack);
-                        save_skill_text({name, desc}, skills[i].SkillTextID + 1);
-                        free(name);
-                        free(desc);
-                    }
+            if (text_meta != nullptr) {
+                fread(text_meta, sizeof(pack2_text), header.skill_count, skill_pack);
 
+                // This is really hard to read. Sorry.
+                if (header.format_version == 2) {
+                    for (uint16_t i = 0; i < header.skill_count; i++) {
+                        skill_text original_text = load_skill_text(skills[i].SkillTextID + 1);
+
+                        if (original_text.name.length() <= text_meta[i].name_length) {
+                            int text_id = skills[i].SkillTextID + 1;
+                            char* name = (char*)malloc(text_meta[i].name_length);
+                            char* desc = (char*)malloc(text_meta[i].desc_length);
+                            fread(name, text_meta[i].name_length, 1, skill_pack);
+                            fread(desc, text_meta[i].desc_length, 1, skill_pack);
+                            save_skill_text({ name, desc }, skills[i].SkillTextID + 1);
+                            free(name);
+                            free(desc);
+                        }
+                    }
                 }
             }
+            // TODO: Test if freeing this breaks anything.
+            // free(text_meta);
             delete[] skills;
 
             fclose(skill_pack);
@@ -333,12 +305,10 @@ void install_mod()
     }
 }
 
-void toggle_game_pause()
-{
+void toggle_game_pause() {
     static bool GamePaused = false;
     pid = get_pid_by_name("PDUWP.exe");
-    if (GamePaused)
-    {
+    if (GamePaused) {
         DebugActiveProcessStop(pid);
         GamePaused = true;
     }
@@ -346,16 +316,4 @@ void toggle_game_pause()
         DebugActiveProcess(pid);
     }
     GamePaused = !GamePaused;
-}
-
-void pause_game()
-{
-    pid = get_pid_by_name("PDUWP.exe");
-    DebugActiveProcess(pid);
-}
-
-void resume_game()
-{
-    pid = get_pid_by_name("PDUWP.exe");
-    DebugActiveProcessStop(pid);
 }

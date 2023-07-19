@@ -13,8 +13,7 @@ typedef enum : uint16_t {
 
 const uintptr_t gstorage_offset = 0x4C5240;
 
-typedef struct
-{
+typedef struct {
     int unkint;
     short unk0;
     short unk1;
@@ -90,8 +89,7 @@ typedef struct
     short AnimationHeight;
 }atkskill;
 
-typedef struct gsdata
-{
+typedef struct gsdata {
     unsigned int filesize; // The size in bytes of the entire gsdata file
     unsigned int unk0;// TBD
     unsigned int unk1;// TBD
@@ -100,11 +98,12 @@ typedef struct gsdata
     unsigned int skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
     char dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
     atkskill skill_array[751];
-}gsdata; extern gsdata gstorage;
+}gsdata;
+
+extern gsdata gstorage;
 
 // Original format, skill data only
-typedef struct skill_pack_header_v1
-{
+typedef struct skill_pack_header_v1 {
     char name[32];
     short format_version; // 1
     short skill_count;
@@ -112,20 +111,17 @@ typedef struct skill_pack_header_v1
 }pack_header1;
 
 // Second format, skill and text data
-typedef struct skill_pack_v2_text
-{
+typedef struct skill_pack_v2_text {
     uint16_t name_length; // Should be calculated with strlen()
     uint16_t desc_length;
 }pack2_text;
 
-typedef struct skill_text
-{
+typedef struct skill_text {
     std::string name;
     std::string desc;
 }skill_text;
 
-typedef struct text_header
-{
+typedef struct text_header {
     unsigned char unknown[8];
     uint32_t array_size;
     uint32_t unknown2;
@@ -133,8 +129,7 @@ typedef struct text_header
     uint32_t skill_count;
 }text_header;
 
-typedef struct text_ptrs
-{
+typedef struct text_ptrs {
     uint32_t index;
     uint32_t name;
     uint32_t desc;
