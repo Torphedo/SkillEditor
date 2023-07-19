@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-typedef enum : uint16_t {
+typedef enum {
     AURA,
     ATTACK,
     DEFENSE,
@@ -24,7 +24,7 @@ typedef struct {
     uint16_t RarityStars; // n + 1
     uint16_t unk3;
     uint16_t SoundFileID;
-    capsule_t CapsuleType; // Aura, Atk, Def, etc.
+    uint16_t CapsuleType; // Aura, Atk, Def, etc.
     uint16_t unk4; // Pursuit has 01 for this.
     uint16_t SchoolID;
     uint16_t AnimationProfileGround;

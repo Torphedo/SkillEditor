@@ -68,7 +68,7 @@ void InputUInt8(const char* label, void* p_data) {
 }
 
 namespace ImGui {
-    bool SliderShort(const char* label, short* v, short v_min, short v_max, const char* format, ImGuiSliderFlags flags) {
+    bool SliderShort(const char* label, uint16_t* v, uint16_t v_min, uint16_t v_max, const char* format, ImGuiSliderFlags flags) {
         return SliderScalar(label, ImGuiDataType_S16, v, &v_min, &v_max, format, flags);
     }
 }
@@ -388,12 +388,12 @@ void AtkSkillWindow() {
 
         ImGui::SetNextItemWidth(200);
         static const char* elems_names[7] = { "Aura", "Attack", "Defense", "Erase", "Environmental", "Status", "Special" };
-        capsule_t* capsule_type = &skill->CapsuleType;
+        uint16_t* capsule_type = &skill->CapsuleType;
         if (*capsule_type > 6) {
-            ImGui::SliderShort("Capsule Type", (short*)capsule_type, 0, 32, nullptr, 0);
+            ImGui::SliderShort("Capsule Type", (uint16_t*)capsule_type, 0, 32, nullptr, 0);
         }
         else {
-            ImGui::SliderShort("Capsule Type", (short*)capsule_type, 0, 32, elems_names[*capsule_type], 0);
+            ImGui::SliderShort("Capsule Type", (uint16_t*)capsule_type, 0, 32, elems_names[*capsule_type], 0);
         }
 
         ImGui::TableNextColumn();
