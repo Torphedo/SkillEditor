@@ -515,7 +515,7 @@ void AtkSkillWindow()
         ImGui::TableNextColumn();
         InputShort("Projectile ID", &skill->ProjectileID, 1);
         ImGui::TableNextColumn();
-        InputShort("\"Collision Skill ID\"", &skill->ProjectileID, 1);
+        InputShort("\"Collision Skill ID\"", &skill->CollisionSkillID, 1);
         ImGui::TableNextColumn();
         InputShort("Homing Range 1st Hit", &skill->HomingRangeFirstHit, 1);
         ImGui::TableNextColumn();
