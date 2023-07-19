@@ -186,11 +186,6 @@ int ProgramUI()
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Settings")) {
-                static bool enabled = true;
-                ImGui::Checkbox("File Mode", &enabled);
-                ImGui::EndMenu();
-            }
             
             if (!is_running())
             {
