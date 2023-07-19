@@ -11,6 +11,8 @@ typedef enum : uint16_t {
     SPECIAL
 }capsule_t;
 
+const uintptr_t gstorage_offset = 0x4C5240;
+
 typedef struct
 {
     int unkint;

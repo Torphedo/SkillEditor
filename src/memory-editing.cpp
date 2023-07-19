@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <shobjidl.h> 
 #include <tlhelp32.h>
+#include <psapi.h>
 
 #include "memory-editing.h"
 #include "structs.h"
@@ -71,46 +72,41 @@ bool have_process_handle()
 bool get_process()
 {
     DWORD cache = pid;
-    if (is_running())
-    {
-        if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid))
-        {
+    if (is_running()) {
+        if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid)) {
             EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-            if (EsperHandle != 0)
-            {
+            if (EsperHandle != 0) {
                 printf("Got handle: %p\n", EsperHandle);
 
-                SYSTEM_INFO sys;
-                GetSystemInfo(&sys);
-                MEMORY_BASIC_INFORMATION info;
-                std::vector<char> chunk;
-                char* p = (char*)0x7FF600000000; // Address to start searching for valid memory pages
-                while (p < sys.lpMaximumApplicationAddress)
-                {
-                    // Loop through memory pages to find one being used by the game
-                    if (VirtualQueryEx(EsperHandle, p, &info, sizeof(info)) == sizeof(info))
-                    {
-                        if (info.State == MEM_COMMIT) // If this is a valid page of memory
-                        {
-                            chunk.resize(info.RegionSize);
-                            SIZE_T bytesRead;
-                            if (ReadProcessMemory(EsperHandle, p, &chunk[0], info.RegionSize, &bytesRead))
-                            {
-                                for (size_t i = 0; i < (bytesRead - 16); ++i)
-                                {
-                                    // Check if the 16 bytes at the current address matches gsdata
-                                    if (memcmp(gstorage_search, &chunk[i], 16) == 0)
-                                    {
-                                        gstorage_address = (uintptr_t)p + i;
-                                        return load_skill_data();
-                                    }
-                                }
+                HMODULE modules[1024] = {0};
+                DWORD bytes_needed = 0;
+
+                // Get path to PDUWP.exe
+                TCHAR base_exe_name[MAX_PATH] = {0};
+                HMODULE base_exe_module = 0;
+                GetModuleFileNameEx(EsperHandle, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
+
+                if (EnumProcessModules(EsperHandle, modules, sizeof(modules), &bytes_needed)) {
+                    for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
+                        TCHAR module_name[MAX_PATH] = {0};
+
+                        if (GetModuleFileNameEx(EsperHandle, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
+                            // Check name against the base EXE name (PDUWP.exe)
+                            if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
+                                base_exe_module = modules[i];
                             }
+
                         }
-                        p += info.RegionSize;
                     }
                 }
-                return false; // Triggered if gsdata is never found
+
+                MODULEINFO info = {0};
+                if (base_exe_module != 0 && GetModuleInformation(EsperHandle, base_exe_module, &info, sizeof(info))) {
+                    gstorage_address = ((uintptr_t)info.lpBaseOfDll + gstorage_offset);
+                    return load_skill_data();
+                }
+
+                return false; // We couldn't get the gsdata offset.
             }
             else {
                 printf("Failed to open Phantom Dust process with process ID %li.\n", pid);
