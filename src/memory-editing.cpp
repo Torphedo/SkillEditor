@@ -299,7 +299,7 @@ void install_mod()
                 printf("Failed to open %s\n", multiselectpath[n].c_str());
                 continue; // Skip to next mod file
             }
-            fread_s(&header, sizeof(pack_header1), sizeof(pack_header1), 1, skill_pack);
+            fread(&header, sizeof(pack_header1), 1, skill_pack);
 
             atkskill* skills = new atkskill[header.skill_count];
             fread(skills, sizeof(atkskill), header.skill_count, skill_pack);
