@@ -14,89 +14,89 @@ typedef enum : uint16_t {
 const uintptr_t gstorage_offset = 0x4C5240;
 
 typedef struct {
-    int unkint;
-    short unk0;
-    short unk1;
-    short SkillTextID;
-    short unk2;
-    short RegisterID;
-    short SkillID;
-    short RarityStars; // n + 1
-    short unk3;
-    short SoundFileID;
+    uint32_t unkint;
+    uint16_t unk0;
+    uint16_t unk1;
+    uint16_t SkillTextID;
+    uint16_t unk2;
+    uint16_t RegisterID;
+    uint16_t SkillID;
+    uint16_t RarityStars; // n + 1
+    uint16_t unk3;
+    uint16_t SoundFileID;
     capsule_t CapsuleType; // Aura, Atk, Def, etc.
-    short unk4; // Pursuit has 01 for this.
-    short SchoolID;
-    short AnimationProfileGround;
-    short AnimationProfileAir;
-    short MultiPress1;
-    short MultiPress2;
-    short DoubleSkill1;
-    short DoubleSkill2;
-    short unk5;
-    short PostHitSFX;
-    short StartUpSFX;
-    short CollisionSFX;
-    short Cost;
-    short CostEffect;
-    short ExtraCost;
-    short HealthCost;
-    short SkillUses;
-    short SkillUsageUnk1;
-    short SkillUsageUnk2;
-    short SkillUsageUnk3;
-    short unk6;
-    short unk7;
-    short unk8;
-    short unk9;
-    short unk10;
-    short unk11;
-    short SelfEffect;
-    short ButtonRestrictions;
-    short Requirements;
-    short ReqAmount;
-    short GroundAirBoth; // 00 00, 01 00, or 02 00
-    short SkillButtonEffect; // ???
-    short unk12;
-    short AppliedStatusID;
-    short Restriction;
-    short StrengthEffect; // ???
-    short Damage;
-    short EffectDuration; // Misc effects?
-    short TargetHand; // Hand-in-hand with HitEffectSkills
-    short unk13;
-    short HitEffectSkills; // 01 = Erase skill on hit. Only used on Lightning Sword in vanilla.
-    short Increase; // 09 = Health, 0B = Lvl (Increase = atk) // Increase stat by the damage value
+    uint16_t unk4; // Pursuit has 01 for this.
+    uint16_t SchoolID;
+    uint16_t AnimationProfileGround;
+    uint16_t AnimationProfileAir;
+    uint16_t MultiPress1;
+    uint16_t MultiPress2;
+    uint16_t DoubleSkill1;
+    uint16_t DoubleSkill2;
+    uint16_t unk5;
+    uint16_t PostHitSFX;
+    uint16_t StartUpSFX;
+    uint16_t CollisionSFX;
+    uint16_t Cost;
+    uint16_t CostEffect;
+    uint16_t ExtraCost;
+    uint16_t HealthCost;
+    uint16_t SkillUses;
+    uint16_t SkillUsageUnk1;
+    uint16_t SkillUsageUnk2;
+    uint16_t SkillUsageUnk3;
+    uint16_t unk6;
+    uint16_t unk7;
+    uint16_t unk8;
+    uint16_t unk9;
+    uint16_t unk10;
+    uint16_t unk11;
+    uint16_t SelfEffect;
+    uint16_t ButtonRestrictions;
+    uint16_t Requirements;
+    uint16_t ReqAmount;
+    uint16_t GroundAirBoth; // 00 00, 01 00, or 02 00
+    uint16_t SkillButtonEffect; // ???
+    uint16_t unk12;
+    uint16_t AppliedStatusID;
+    uint16_t Restriction;
+    uint16_t StrengthEffect; // ???
+    uint16_t Damage;
+    uint16_t EffectDuration; // Misc effects?
+    uint16_t TargetHand; // Hand-in-hand with HitEffectSkills
+    uint16_t unk13;
+    uint16_t HitEffectSkills; // 01 = Erase skill on hit. Only used on Lightning Sword in vanilla.
+    uint16_t Increase; // 09 = Health, 0B = Lvl (Increase = atk) // Increase stat by the damage value
     uint8_t StatusEnabler; // Status ID won't apply unless this is 2C
     uint8_t StatusDuration; // Status ID Duration
-    short unk14;
-    short ProjectileProperties; // 02 = Penetrate Defense
-    short ProjectileID; // See spreadsheet.
-    short CollisionSkillID; // ???
-    short HomingRangeFirstHit;  // First hit
-    short HomingRangeSecondHit; // Knock down (if 0, no stagger at all)
-    short HomingRangeThirdHit;  // Combo end (removing this makes infinite range)
-    short unk15;
-    short unk16;
-    short unk17;
-    short ProjectileBehaviour; // Downed Hit Animation or Projectile Behaviour
+    uint16_t unk14;
+    uint16_t ProjectileProperties; // 02 = Penetrate Defense
+    uint16_t ProjectileID; // See spreadsheet.
+    uint16_t CollisionSkillID; // ???
+    uint16_t HomingRangeFirstHit;  // First hit
+    uint16_t HomingRangeSecondHit; // Knock down (if 0, no stagger at all)
+    uint16_t HomingRangeThirdHit;  // Combo end (removing this makes infinite range)
+    uint16_t unk15;
+    uint16_t unk16;
+    uint16_t unk17;
+    uint16_t ProjectileBehaviour; // Downed Hit Animation or Projectile Behaviour
     uint8_t SkillDuration;
     uint8_t hitbox_size;
-    short ExpandSkillWidth;
-    short AnimationSize;
-    short ProjectileSpeed; // Can also be projectile rain count
-    short AccuracyID;
-    short AnimationHeight;
+    uint16_t ExpandSkillWidth;
+    uint16_t AnimationSize;
+    uint16_t ProjectileSpeed; // Can also be projectile rain count
+    uint16_t AccuracyID;
+    uint16_t AnimationHeight;
 }atkskill;
 
 typedef struct gsdata {
-    unsigned int filesize; // The size in bytes of the entire gsdata file
-    unsigned int unk0;// TBD
-    unsigned int unk1;// TBD
-    unsigned int unk2;// TBD
-    unsigned int VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
-    unsigned int skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
-    char dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
+    uint32_t filesize; // The size in bytes of the entire gsdata file
+    uint32_t unk0;// TBD
+    uint32_t unk1;// TBD
+    uint32_t unk2;// TBD
+    uint32_t VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
+    uint32_t skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
+    uint8_t dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
     atkskill skill_array[751];
 }gsdata;
 
@@ -105,9 +105,9 @@ extern gsdata gstorage;
 // Original format, skill data only
 typedef struct skill_pack_header_v1 {
     char name[32];
-    short format_version; // 1
-    short skill_count;
-    char pad[12];
+    uint16_t format_version; // 1
+    uint16_t skill_count;
+    uint8_t pad[12];
 }pack_header1;
 
 // Second format, skill and text data

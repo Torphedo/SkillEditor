@@ -10,8 +10,7 @@
 #include "../skill_io.h"
 #include "../memory-editing.h"
 
-struct
-{
+struct {
     bool NewSkillPack;
     bool HexEditor;
     bool AttackSkillEditor;
