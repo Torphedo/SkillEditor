@@ -80,7 +80,7 @@ typedef struct
     short unk17;
     short ProjectileBehaviour; // Downed Hit Animation or Projectile Behaviour
     uint8_t SkillDuration;
-    uint8_t HitRange;
+    uint8_t hitbox_size;
     short ExpandSkillWidth;
     short AnimationSize;
     short ProjectileSpeed; // Can also be projectile rain count

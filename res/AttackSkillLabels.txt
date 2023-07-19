@@ -42,7 +42,7 @@
 "Combo End",
 "Projectile Behaviour",
 "Skill Duration",
-"Hit Range",
+"Hitbox Size",
 "Start Speed",
 "Acceleration Speed",
 "End Speed",

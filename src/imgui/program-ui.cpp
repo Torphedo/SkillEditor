@@ -532,7 +532,7 @@ void AtkSkillWindow()
         }
         InputUInt8("Skill Duration", &skill->SkillDuration);
         ImGui::TableNextColumn();
-        InputUInt8("Hit Range", &skill->HitRange);
+        InputUInt8("Hitbox Size", &skill->hitbox_size);
         ImGui::TableNextColumn();
         InputShort("Expand Skill Width / Start Speed", &skill->ExpandSkillWidth, 1);
         ImGui::TableNextColumn();
