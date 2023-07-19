@@ -429,11 +429,10 @@ void AtkSkillWindow()
         Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
 
         ImGui::SetNextItemWidth(200);
-        // Int pointer with value (rarity + 1). This means that the slider function will
-        // automatically update the actual rarity value despite it being a short.
-        int rarity = (int) (skill->RarityStars + 1);
-        ImGui::SliderInt("Rarity", &rarity, 1, 5);
-        skill->RarityStars = (short) rarity - 1;
+        // Display rarity as being 1 higher than it really is by using a temp variable
+        short rarity = skill->RarityStars + 1;
+        ImGui::SliderShort("Rarity", &rarity, 1, 5, nullptr, 0);
+        skill->RarityStars = rarity - 1;
         Tooltip("The skill's in-game rarity, displayed as stars.");
 
         InputShort("Sound File ID", &skill->SoundFileID, 1);
