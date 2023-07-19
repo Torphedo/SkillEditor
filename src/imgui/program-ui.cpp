@@ -162,7 +162,7 @@ int ProgramUI()
             
             // TODO: This constantly loops through running processes and may be a bit wasteful.
             if (!is_running()) {
-                ImGui::SameLine(viewport->Size.x - 250);
+                ImGui::SameLine(viewport->Size.x - 300);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else {
