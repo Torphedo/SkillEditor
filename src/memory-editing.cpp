@@ -20,9 +20,6 @@ DWORD pid = 0;
 // A handle to the game process with read/write permissions.
 HANDLE EsperHandle;
 
-// 16 bytes of gstorage that can be checked against while searching memory to find where it begins.
-static constexpr uint8_t gstorage_search[16] = { 0x04,0x40,0x04,0x00,0xA4,0xA7,0x01,0x00,0xF1,0x02,0x00,0x00,0xA4,0xA7,0x01,0x00 };
-
 // Used to store the address where gstorage is located in the game's memory.
 uintptr_t gstorage_address = 0;
 gsdata gstorage = { 0 };
