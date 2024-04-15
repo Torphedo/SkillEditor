@@ -1,14 +1,18 @@
 #pragma once
+#include "types.h"
 #include "structs.h"
 
+typedef struct {
+    u32 pid;
+    void* h;
+    uintptr_t gstorage_addr;
+}pd_meta;
+
 // Gets the process ID, attaches to it with read/write permissions, then updates our copy of gsdata if it's missing or the game was rebooted
-bool get_process();
+pd_meta get_process();
 
 // Checks if the game is running.
-bool is_running();
-
-// Returns the current process ID.
-DWORD process_id();
+u32 is_running();
 
 // Checks if 1 byte can be read from memory
 bool can_read_memory();

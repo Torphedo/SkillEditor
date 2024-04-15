@@ -2,13 +2,16 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "program-ui.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "backends/imgui_impl_dx9.h"
 #include "backends/imgui_impl_win32.h"
+
 #include <d3d9.h>
 #include <tchar.h>
+
+#include "program-ui.h"
+#include "../memory-editing.h"
 
 // Data
 static LPDIRECT3D9              g_pD3D = NULL;
@@ -22,7 +25,7 @@ void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Main code
-int CreateUI()
+int CreateUI(pd_meta p)
 {
     // Create application window
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -110,7 +113,7 @@ int CreateUI()
         ImGui::NewFrame();
 
         // Skill Editor UI call
-        if (ProgramUI() == 1)
+        if (ProgramUI(p) == 1)
         {
             break;
         }

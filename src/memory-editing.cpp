@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <vector>
-#include <filesystem>
 #include <Windows.h>
 #include <shobjidl.h> 
 #include <tlhelp32.h>
@@ -40,13 +37,8 @@ static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     return 0;
 }
 
-DWORD process_id() {
-    return pid;
-}
-
-bool is_running() {
-    pid = get_pid_by_name("PDUWP.exe");
-    return (pid != 0);
+u32 is_running() {
+    return get_pid_by_name("PDUWP.exe");
 }
 
 bool can_read_memory() {
@@ -63,55 +55,51 @@ bool have_process_handle() {
     return (EsperHandle != INVALID_HANDLE_VALUE);
 }
 
-bool get_process() {
-    DWORD cache = pid;
-    if (is_running()) {
-        if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid)) {
-            DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION;
-            EsperHandle = OpenProcess(access, FALSE, pid);
-            if (have_process_handle()) {
-                printf("Got handle: %p\n", EsperHandle);
+pd_meta get_process() {
+    pd_meta out = {0};
+    if (!is_running()) {
+        return out;
+    }
+    out.pid = get_pid_by_name("PDUWP.exe");
 
-                HMODULE modules[1024] = {0};
-                DWORD bytes_needed = 0;
+    // Open game process
+    DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION;
+    out.h = OpenProcess(access, FALSE, out.pid);
+    if (out.h == INVALID_HANDLE_VALUE) {
+        return out;
+    }
+    printf("Got handle: %p\n", out.h);
 
-                // Get path to PDUWP.exe
-                char base_exe_name[MAX_PATH] = {0};
-                HMODULE base_exe_module = 0;
-                int size = sizeof(base_exe_name) / sizeof(*base_exe_name);
-                GetModuleFileNameEx(EsperHandle, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
+    HMODULE modules[1024] = {0};
+    DWORD bytes_needed = 0;
 
-                if (EnumProcessModules(EsperHandle, modules, sizeof(modules), &bytes_needed)) {
-                    for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
-                        char module_name[MAX_PATH] = {0};
+    // Get path to PDUWP.exe
+    char base_exe_name[MAX_PATH] = {0};
+    HMODULE base_exe_module = 0;
+    int size = sizeof(base_exe_name) / sizeof(*base_exe_name);
+    GetModuleFileNameEx(EsperHandle, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
 
-                        if (GetModuleFileNameExA(EsperHandle, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
-                            // Check name against the base EXE name (PDUWP.exe)
-                            if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
-                                base_exe_module = modules[i];
-                                break;
-                            }
-                        }
-                    }
+    if (EnumProcessModules(EsperHandle, modules, sizeof(modules), &bytes_needed)) {
+        for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
+            char module_name[MAX_PATH] = {0};
+
+            if (GetModuleFileNameExA(EsperHandle, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
+                // Check name against the base EXE name (PDUWP.exe)
+                if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
+                    base_exe_module = modules[i];
+                    break;
                 }
-
-                MODULEINFO info = {0};
-                if (base_exe_module != INVALID_HANDLE_VALUE && GetModuleInformation(EsperHandle, base_exe_module, &info, sizeof(info))) {
-                    gstorage_address = ((uintptr_t)info.lpBaseOfDll + gstorage_offset);
-                    return load_skill_data();
-                }
-
-                return false; // We couldn't get the gsdata offset.
-            }
-            else {
-                printf("Failed to open Phantom Dust process with process ID %li.\n", pid);
-                return false;
             }
         }
-        else { return true; }
     }
-    else { return false; }
 
+    if (base_exe_module != INVALID_HANDLE_VALUE) {
+        out.gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
+        load_skill_data();
+        return out;
+    }
+
+    return out; // We couldn't get the gsdata offset.
 }
 
 bool load_skill_data() {
@@ -240,7 +228,7 @@ bool save_skill_text(skill_text text, unsigned int id) {
 }
 
 bool write_gsdata_to_memory() {
-    if (get_process()) {
+    if (can_read_memory()) {
         // Update version number
         gstorage.VersionNum = crc32buf((char*)&gstorage, sizeof(gstorage));
 
@@ -259,7 +247,7 @@ bool write_gsdata_to_memory() {
 }
 
 void install_mod() {
-    if (get_process()) {
+    if (can_read_memory()) {
         for (int n = 0; n < MultiSelectCount; n++) { // Loop through every selected skill pack file
             pack_header1 header = {0};
             FILE* skill_pack = fopen(multiselectpath[n].c_str(), "rb");

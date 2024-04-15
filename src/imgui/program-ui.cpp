@@ -73,12 +73,13 @@ namespace ImGui {
     }
 }
 
-int ProgramUI()
+int ProgramUI(pd_meta p)
 {
     ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
+    bool game_available = can_read_memory();
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
@@ -93,7 +94,7 @@ int ProgramUI()
                 }
                 if (ImGui::BeginMenu("Open")) {
                     if (ImGui::MenuItem("Skill (From Memory)")) {
-                        if (get_process()) {
+                        if (game_available) {
                             ui_state.IDSelection = true;
                         }
                     }
@@ -103,7 +104,7 @@ int ProgramUI()
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {
-                        if (get_process()) {
+                        if (game_available) {
                             if (SUCCEEDED(file_multiple_select_dialog())) { // Open a multiple file open dialog
                                 install_mod();
                                 for (int i = 0; i < MultiSelectCount; i++) {
@@ -139,7 +140,7 @@ int ProgramUI()
             if (ImGui::BeginMenu("Window")) {
                 ImGui::MenuItem("Attack Skill Editor", nullptr, &ui_state.AttackSkillEditor);
                 if (ImGui::MenuItem("Skill Hex Editor")) {
-                    if (get_process()) {
+                    if (game_available) {
                         ui_state.HexEditor = !ui_state.HexEditor;
                     }
                 }
@@ -170,7 +171,7 @@ int ProgramUI()
                 if (!have_process_handle()) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
-                else if (!can_read_memory()) {
+                else if (!game_available) {
                     // TODO: Maybe don't do this constantly? It spams ReadProcessMemory()...
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
@@ -182,7 +183,7 @@ int ProgramUI()
                 }
 
                 ImGui::Text("Phantom Dust Process ID:");
-                ImGui::TextColored({ 0, 255, 0, 255 }, "%li", process_id());
+                ImGui::TextColored({ 0, 255, 0, 255 }, "%u", p.pid);
             }
             ImGui::EndMenuBar();
         }
@@ -378,7 +379,7 @@ void AtkSkillWindow() {
 
         ImGui::SetNextItemWidth(200);
         // Display rarity as being 1 higher than it really is by using a temp variable
-        short rarity = skill->RarityStars + 1;
+        u16 rarity = skill->RarityStars + 1;
         ImGui::SliderShort("Rarity", &rarity, 1, 5, nullptr, 0);
         skill->RarityStars = rarity - 1;
         Tooltip("The skill's in-game rarity, displayed as stars.");

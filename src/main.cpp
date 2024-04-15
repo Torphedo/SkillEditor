@@ -21,8 +21,8 @@ int main() {
     }
 
     init_winapi();
-    get_process();
-    CreateUI(); // Main UI loop
+    pd_meta p = get_process();
+    CreateUI(p); // Main UI loop
     CoUninitialize();
     return 0;
 }
