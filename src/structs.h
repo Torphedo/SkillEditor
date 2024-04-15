@@ -102,8 +102,6 @@ typedef struct gsdata {
     atkskill skill_array[751];
 }gsdata;
 
-extern gsdata gstorage;
-
 // Original format, skill data only
 typedef struct skill_pack_header_v1 {
     char name[32];

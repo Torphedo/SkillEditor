@@ -15,27 +15,27 @@ void skill_select() {
     most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
 }
 
-unsigned int load_attack_skill(unsigned int current_id) {
+unsigned int load_attack_skill(pd_meta p, unsigned int current_id) {
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
     if (most_recent_filename != nullptr) {
         atkskill buffer = { 0 };
         FILE* skill_file = fopen(most_recent_filename, "rb");
         fread(&buffer, sizeof(atkskill), 1, skill_file);
 
-        gstorage.skill_array[buffer.SkillID - 1] = buffer;
+        p.gstorage->skill_array[buffer.SkillID - 1] = buffer;
         printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
         if (std::filesystem::file_size(most_recent_filename) > 144) {
             pack2_text text_meta = {0};
             fread(&text_meta, sizeof(pack2_text), 1, skill_file);
 
-            skill_text original_text = load_skill_text(buffer.SkillTextID + 1);
+            skill_text original_text = load_skill_text(p, buffer.SkillTextID + 1);
             if (original_text.name.length() <= text_meta.name_length) {
                 int text_id = buffer.SkillTextID + 1;
                 char* name = (char*) malloc(text_meta.name_length);
                 char* desc = (char*) malloc(text_meta.desc_length);
                 fread(name, text_meta.name_length, 1, skill_file);
                 fread(desc, text_meta.desc_length, 1, skill_file);
-                save_skill_text({name, desc}, buffer.SkillTextID + 1);
+                save_skill_text(p, {name, desc}, buffer.SkillTextID + 1);
                 free(name);
                 free(desc);
             }
@@ -49,17 +49,17 @@ unsigned int load_attack_skill(unsigned int current_id) {
 }
 
 // Writes the currently open skill to disk.
-void save_skill_to_file(unsigned int id, bool write_text) {
+void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
     // Check that we actually have data to write and a place to write it to
-    if (gstorage.skill_array[id - 1].SkillID != 0) {
+    if (p.gstorage->skill_array[id - 1].SkillID != 0) {
         if (most_recent_filename == nullptr) {
             most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
         }
         if (most_recent_filename != nullptr) { // Must be checked again in case user cancels selection
             FILE* skill_out = fopen(most_recent_filename, "wb");
-            fwrite(&gstorage.skill_array[id - 1], sizeof(atkskill), 1, skill_out);
+            fwrite(&p.gstorage->skill_array[id - 1], sizeof(atkskill), 1, skill_out);
             if (write_text) {
-                auto skill_text = load_skill_text(gstorage.skill_array[id - 1].SkillTextID + 1);
+                auto skill_text = load_skill_text(p, p.gstorage->skill_array[id - 1].SkillTextID + 1);
                 skill_pack_v2_text text_meta = {
                         .name_length = (uint16_t) (skill_text.name.length() + 1),
                         .desc_length = (uint16_t) (skill_text.desc.length() + 1)

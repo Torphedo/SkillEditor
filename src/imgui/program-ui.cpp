@@ -42,7 +42,7 @@ static const char* DocumentationProgramLabels[3] = {
 #include "../res/SkillEditorLabels.txt"
 };
 
-void AtkSkillWindow();
+void AtkSkillWindow(atkskill* skill);
 static void Markdown(const std::string& markdown_); // Markdown function prototype
 static MemoryEditor hex_edit;
 
@@ -79,7 +79,7 @@ int ProgramUI(pd_meta p)
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
-    bool game_available = can_read_memory();
+    bool game_available = can_read_memory(p);
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
@@ -99,14 +99,14 @@ int ProgramUI(pd_meta p)
                         }
                     }
                     if (ImGui::MenuItem("Skill File")) {
-                        ID = load_attack_skill(ID);
-                        write_gsdata_to_memory();
+                        ID = load_attack_skill(p, ID);
+                        write_gsdata_to_memory(p);
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {
                         if (game_available) {
                             if (SUCCEEDED(file_multiple_select_dialog())) { // Open a multiple file open dialog
-                                install_mod();
+                                install_mod(p);
                                 for (int i = 0; i < MultiSelectCount; i++) {
                                     std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }
@@ -125,7 +125,7 @@ int ProgramUI(pd_meta p)
                     ui_state.text_prompt = true;
                 }
                 if (ImGui::MenuItem("Save To Memory", "S")) {
-                    write_gsdata_to_memory();
+                    write_gsdata_to_memory(p);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + S")) {
                     skill_select();
@@ -148,7 +148,7 @@ int ProgramUI(pd_meta p)
                 if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit)) {
                     get_process(); // Refresh skill data address & game handle
 
-                    skill_text text = load_skill_text(ID);
+                    skill_text text = load_skill_text(p, ID);
                     ui_state.current_name = text.name;
                     ui_state.current_desc = text.desc;
                 }
@@ -156,7 +156,7 @@ int ProgramUI(pd_meta p)
             }
             if (ImGui::BeginMenu("Game")) {
                 if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4")) {
-                    toggle_game_pause();
+                    toggle_game_pause(p);
                 }
                 ImGui::EndMenu();
             }
@@ -168,7 +168,7 @@ int ProgramUI(pd_meta p)
             }
             else {
                 ImGui::SameLine(viewport->Size.x - 15 - 575);
-                if (!have_process_handle()) {
+                if (!have_process_handle(p)) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
                 else if (!game_available) {
@@ -193,7 +193,7 @@ int ProgramUI(pd_meta p)
     // ImGui::ShowDemoWindow();
 
     if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
-        toggle_game_pause();
+        toggle_game_pause(p);
     }
     // Save
     if (ImGui::IsKeyPressed(ImGuiKey_S)) {
@@ -207,7 +207,7 @@ int ProgramUI(pd_meta p)
             ui_state.text_prompt = true;
         }
         else {
-            write_gsdata_to_memory();
+            write_gsdata_to_memory(p);
         }
     }
     if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
@@ -225,13 +225,13 @@ int ProgramUI(pd_meta p)
     if (ImGui::BeginPopup("save_text_prompt")) {
         ImGui::Text("Save text to the skill file?");
         if (ImGui::Button("No")) {
-            save_skill_to_file(ID, false);
+            save_skill_to_file(p, ID, false);
             ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::Button("Yes")) {
-            save_skill_to_file(ID, true);
+            save_skill_to_file(p, ID, true);
             ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
@@ -254,12 +254,13 @@ int ProgramUI(pd_meta p)
 
     if (ui_state.HexEditor) {
         hex_edit.ReadOnly = false;
-        hex_edit.DrawWindow("Hex Editor", &gstorage.skill_array[ID - 1], 144);
+        hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
     }
 
     if (ui_state.AttackSkillEditor) {
         // This window is way too long to inline here
-        AtkSkillWindow();
+        atkskill* skill = &p.gstorage->skill_array[ID - 1];
+        AtkSkillWindow(skill);
     }
 
     if (ui_state.Documentation) {
@@ -339,10 +340,10 @@ int ProgramUI(pd_meta p)
 
         static uint16_t text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
-        text_id = gstorage.skill_array[ID - 1].SkillTextID + 1;
+        text_id = p.gstorage->skill_array[ID - 1].SkillTextID + 1;
 
         if (ImGui::Button("Reload") || cache != text_id) {
-            skill_text text = load_skill_text(text_id);
+            skill_text text = load_skill_text(p, text_id);
             ui_state.current_name = text.name;
             ui_state.current_desc = text.desc;
         }
@@ -350,14 +351,14 @@ int ProgramUI(pd_meta p)
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
             skill_text text = {ui_state.current_name, ui_state.current_desc};
-            save_skill_text(text, text_id);
+            save_skill_text(p, text, text_id);
         }
         ImGui::End();
     }
     return 0;
 }
 
-void AtkSkillWindow() {
+void AtkSkillWindow(atkskill* skill) {
     if (!ImGui::Begin("Attack Skill Editor", &ui_state.AttackSkillEditor)) {
         ImGui::End();
         return;
@@ -367,7 +368,6 @@ void AtkSkillWindow() {
     ImGui::AlignTextToFramePadding();
 
     if (ImGui::BeginTable("split1", 2, ImGuiTableFlags_NoSavedSettings)) {
-        atkskill* skill = &gstorage.skill_array[ID - 1];
 
         ImGui::TableNextColumn();
         InputShort("Skill Text ID", &skill->SkillTextID, 1);
