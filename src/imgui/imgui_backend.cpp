@@ -113,7 +113,7 @@ int CreateUI(pd_meta p)
         ImGui::NewFrame();
 
         // Skill Editor UI call
-        if (ProgramUI(p) == 1)
+        if (ProgramUI(&p) == 1)
         {
             break;
         }

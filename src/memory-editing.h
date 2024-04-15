@@ -3,17 +3,17 @@
 #include "structs.h"
 
 typedef struct {
-    u32 pid;
     void* h;
     uintptr_t gstorage_addr;
     gsdata* gstorage;
+    u32 pid;
 }pd_meta;
 
 // Gets the process ID, attaches to it with read/write permissions, then retrieves a copy of gsdata
 pd_meta get_process();
 
 // Refresh all process information as needed, including gsdata. Otherwise, nothing.
-void update_process(pd_meta* p);
+void update_process(pd_meta* p, bool force);
 
 bool still_running(void* handle);
 

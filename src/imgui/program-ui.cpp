@@ -18,6 +18,8 @@ struct {
     bool IDSelection;
     bool text_edit;
     bool text_prompt;
+    bool limitless;
+    bool decimal_id;
 
     // Name & description being edited in text edit box
     std::string current_name;
@@ -73,18 +75,16 @@ namespace ImGui {
     }
 }
 
-int ProgramUI(pd_meta p)
+int ProgramUI(pd_meta* p)
 {
     ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
-    bool game_available = still_running(p.h);
-    /*
-    if (game_available) {
-        game_available = can_read_memory(p);
+    if (!still_running(p->h)) {
+        update_process(p, false);
     }
-     */
+    bool game_available = still_running(p->h);
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
@@ -104,14 +104,14 @@ int ProgramUI(pd_meta p)
                         }
                     }
                     if (ImGui::MenuItem("Skill File")) {
-                        ID = load_attack_skill(p, ID);
-                        write_gsdata_to_memory(p);
+                        ID = load_attack_skill(*p, ID);
+                        write_gsdata_to_memory(*p);
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {
                         if (game_available) {
                             if (SUCCEEDED(file_multiple_select_dialog())) { // Open a multiple file open dialog
-                                install_mod(p);
+                                install_mod(*p);
                                 for (int i = 0; i < MultiSelectCount; i++) {
                                     std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
                                 }
@@ -130,7 +130,7 @@ int ProgramUI(pd_meta p)
                     ui_state.text_prompt = true;
                 }
                 if (ImGui::MenuItem("Save To Memory", "S")) {
-                    write_gsdata_to_memory(p);
+                    write_gsdata_to_memory(*p);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + S")) {
                     skill_select();
@@ -151,44 +151,43 @@ int ProgramUI(pd_meta p)
                 }
                 ImGui::MenuItem("Documentation", nullptr, &ui_state.Documentation);
                 if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit)) {
-                    update_process(&p); // Refresh skill data address & game handle
+                    update_process(p, false); // Refresh skill data address & game handle
 
-                    skill_text text = load_skill_text(p, ID);
+                    skill_text text = load_skill_text(*p, ID);
                     ui_state.current_name = text.name;
                     ui_state.current_desc = text.desc;
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Game")) {
+            if (ImGui::BeginMenu("Options")) {
                 if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4")) {
-                    toggle_game_pause(p);
+                    toggle_game_pause(*p);
                 }
+                ImGui::Checkbox("Input Box Limits", &ui_state.limitless);
                 ImGui::EndMenu();
             }
             
-            // TODO: This constantly loops through running processes and may be a bit wasteful.
-            if (!still_running(p.h)) {
+            if (!still_running(p->h)) {
                 ImGui::SameLine(viewport->Size.x - 300);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else {
                 ImGui::SameLine(viewport->Size.x - 15 - 575);
-                if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {
+                if (p->h == INVALID_HANDLE_VALUE || p->h == NULL) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
                 else if (!game_available) {
-                    // TODO: Maybe don't do this constantly? It spams ReadProcessMemory()...
                     ImGui::TextColored({ 255, 0, 0, 255 }, "Can't read from process!");
                 }
                 ImGui::SameLine(viewport->Size.x - 425);
 
-                if (ImGui::Button("Retry connection")) {
-                    printf("Retrying...");
-                    update_process(&p);
+                if (ImGui::Button("Refresh process")) {
+                    printf("Refreshing process info & skill/text data... \n");
+                    update_process(p, true);
                 }
 
                 ImGui::Text("Phantom Dust Process ID:");
-                ImGui::TextColored({ 0, 255, 0, 255 }, "%u", p.pid);
+                ImGui::TextColored({ 0, 255, 0, 255 }, "%u", p->pid);
             }
             ImGui::EndMenuBar();
         }
@@ -198,7 +197,7 @@ int ProgramUI(pd_meta p)
     // ImGui::ShowDemoWindow();
 
     if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
-        toggle_game_pause(p);
+        toggle_game_pause(*p);
     }
     // Save
     if (ImGui::IsKeyPressed(ImGuiKey_S)) {
@@ -212,7 +211,7 @@ int ProgramUI(pd_meta p)
             ui_state.text_prompt = true;
         }
         else {
-            write_gsdata_to_memory(p);
+            write_gsdata_to_memory(*p);
         }
     }
     if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
@@ -230,13 +229,13 @@ int ProgramUI(pd_meta p)
     if (ImGui::BeginPopup("save_text_prompt")) {
         ImGui::Text("Save text to the skill file?");
         if (ImGui::Button("No")) {
-            save_skill_to_file(p, ID, false);
+            save_skill_to_file(*p, ID, false);
             ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::Button("Yes")) {
-            save_skill_to_file(p, ID, true);
+            save_skill_to_file(*p, ID, true);
             ui_state.text_prompt = false;
             ImGui::CloseCurrentPopup();
         }
@@ -245,9 +244,12 @@ int ProgramUI(pd_meta p)
 
     if (ui_state.IDSelection) {
         // Temporary storage to hold an ID before actually updating the selected ID
-        static uint16_t temp_id = 0;
+        static s32 temp_id = 0;
+        static bool hex = true;
+
         ImGui::Begin("Input a skill ID: ");
-        InputShort("ID", &temp_id, 1);
+        ImGui::Checkbox("Hexidecimal", &hex);
+        ImGui::InputInt("ID", &temp_id, 1, 1, ImGuiInputTextFlags_CharsHexadecimal * hex);
         if (ImGui::Button("Open")) {
             ID = temp_id;
             printf("Loaded skill with ID %d\n", ID);
@@ -259,12 +261,12 @@ int ProgramUI(pd_meta p)
 
     if (ui_state.HexEditor) {
         hex_edit.ReadOnly = false;
-        hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
+        hex_edit.DrawWindow("Hex Editor", &p->gstorage->skill_array[ID - 1], 144);
     }
 
     if (ui_state.AttackSkillEditor) {
         // This window is way too long to inline here
-        atkskill* skill = &p.gstorage->skill_array[ID - 1];
+        atkskill* skill = &p->gstorage->skill_array[ID - 1];
         AtkSkillWindow(skill);
     }
 
@@ -345,10 +347,10 @@ int ProgramUI(pd_meta p)
 
         static uint16_t text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
-        text_id = p.gstorage->skill_array[ID - 1].SkillTextID + 1;
+        text_id = p->gstorage->skill_array[ID - 1].SkillTextID + 1;
 
         if (ImGui::Button("Reload") || cache != text_id) {
-            skill_text text = load_skill_text(p, text_id);
+            skill_text text = load_skill_text(*p, text_id);
             ui_state.current_name = text.name;
             ui_state.current_desc = text.desc;
         }
@@ -356,7 +358,7 @@ int ProgramUI(pd_meta p)
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
             skill_text text = {ui_state.current_name, ui_state.current_desc};
-            save_skill_text(p, text, text_id);
+            save_skill_text(*p, text, text_id);
         }
         ImGui::End();
     }
@@ -383,23 +385,30 @@ void AtkSkillWindow(atkskill* skill) {
         Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
 
         ImGui::SetNextItemWidth(200);
-        // Display rarity as being 1 higher than it really is by using a temp variable
-        u16 rarity = skill->RarityStars + 1;
-        ImGui::SliderShort("Rarity", &rarity, 1, 5, nullptr, 0);
-        skill->RarityStars = rarity - 1;
-        Tooltip("The skill's in-game rarity, displayed as stars.");
+        if (ui_state.limitless) {
+            InputShort("Rarity", &skill->RarityStars, 1);
+        }
+        else {
+            ImGui::SliderShort("Rarity", &skill->RarityStars, 1, 5, nullptr, 0);
+        }
+        Tooltip("The skill's in-game rarity, displayed as stars.\n0 -> 1 star, 1 -> 2 stars, etc.");
 
         InputShort("Sound File ID", &skill->SoundFileID, 1);
         ImGui::TableNextColumn();
 
         ImGui::SetNextItemWidth(200);
-        static const char* elems_names[7] = { "Aura", "Attack", "Defense", "Erase", "Environmental", "Status", "Special" };
-        uint16_t* capsule_type = &skill->CapsuleType;
-        if (*capsule_type > 6) {
-            ImGui::SliderShort("Capsule Type", (uint16_t*)capsule_type, 0, 32, nullptr, 0);
+        u16* capsule_type = &skill->CapsuleType;
+        if (ui_state.limitless) {
+            InputShort("Capsule Type", capsule_type, 1);
         }
         else {
-            ImGui::SliderShort("Capsule Type", (uint16_t*)capsule_type, 0, 32, elems_names[*capsule_type], 0);
+            static const char *elems_names[7] = {"Aura", "Attack", "Defense", "Erase", "Environmental", "Status",
+                                                 "Special"};
+            if (*capsule_type > 6) {
+                ImGui::SliderShort("Capsule Type", (uint16_t *) capsule_type, 0, 32, nullptr, 0);
+            } else {
+                ImGui::SliderShort("Capsule Type", (uint16_t *) capsule_type, 0, 6, elems_names[*capsule_type], 0);
+            }
         }
 
         ImGui::TableNextColumn();
@@ -444,8 +453,13 @@ void AtkSkillWindow(atkskill* skill) {
         Tooltip("The required amount of the type specified in\nthe previous box");
 
         ImGui::SetNextItemWidth(200);
-        const char* items[] = { "Ground","Air","Both" };
-        ImGui::SliderInt("Skill Use Restrictions", (int*)&skill->GroundAirBoth, 0, 2, items[skill->GroundAirBoth]);
+        if (ui_state.limitless) {
+            ImGui::InputInt("Skill Use Restrictions", (int*)&skill->GroundAirBoth, 1);
+        }
+        else {
+            const char *items[] = {"Ground", "Air", "Both"};
+            ImGui::SliderInt("Skill Use Restrictions", (int *) &skill->GroundAirBoth, 0, 2,items[skill->GroundAirBoth]);
+        }
         Tooltip("Where the skill may be used.");
 
         InputShort("Skill Button Effect", &skill->SkillButtonEffect, 1);

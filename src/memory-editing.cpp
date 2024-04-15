@@ -108,15 +108,20 @@ bool still_running(void* handle) {
     return (result == WAIT_TIMEOUT);
 }
 
-void update_process(pd_meta* p) {
+void update_process(pd_meta* p, bool force) {
     // Don't bother updating if the game is still running
     // (meaning our handle & remote gsdata pointer are still good)
-    if (still_running(p->h)) {
+    // Caller can force an update (to refresh gsdata, for example)
+    if (!force && still_running(p->h)) {
         return;
     }
 
     // Update everything
-    CloseHandle(p->h);
+    if (p->h != INVALID_HANDLE_VALUE && p->h != NULL) {
+        CloseHandle(p->h);
+    }
+    // TODO: This causes use-after-free crash when we close the game with a
+    // text edit window open. Make sure game is opened again before deleting
     free(p->gstorage);
     *p = get_process();
 }
