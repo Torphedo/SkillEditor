@@ -32,17 +32,14 @@ u32 is_running() {
 }
 
 bool can_read_memory(pd_meta p) {
+    if (!still_running(p.h)) {
+        return false;
+    }
     unsigned char buf = 0;
     ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
     DWORD error = GetLastError();
     SetLastError(0);
-    // Ignore error 298
-    // ("too many posts made to semaphore", caused when we spam remote memory reads)
-    return (error == 298) || (error = 0);
-}
-
-bool have_process_handle(pd_meta p) {
-    return (p.h != INVALID_HANDLE_VALUE);
+    return (error == 298) || (error == 0);
 }
 
 pd_meta get_process() {
@@ -53,7 +50,7 @@ pd_meta get_process() {
     out.pid = get_pid_by_name("PDUWP.exe");
 
     // Open game process
-    DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION;
+    DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE;
     out.h = OpenProcess(access, FALSE, out.pid);
     if (out.h == INVALID_HANDLE_VALUE) {
         return out;
@@ -98,6 +95,30 @@ pd_meta get_process() {
     }
 
     return out; // We couldn't get the gsdata offset.
+}
+
+bool still_running(void* handle) {
+    // If waiting on the process for 0ms times out, process is still running.
+    // If it returns something else, the process was terminated.
+    DWORD result = WaitForSingleObject(handle, 0);
+    if (result == WAIT_FAILED) {
+        DWORD err = GetLastError();
+        printf("Process check failed with code %ld\n", err);
+    }
+    return (result == WAIT_TIMEOUT);
+}
+
+void update_process(pd_meta* p) {
+    // Don't bother updating if the game is still running
+    // (meaning our handle & remote gsdata pointer are still good)
+    if (still_running(p->h)) {
+        return;
+    }
+
+    // Update everything
+    CloseHandle(p->h);
+    free(p->gstorage);
+    *p = get_process();
 }
 
 // TODO: This is some janky bullshit.

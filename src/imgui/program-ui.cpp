@@ -79,7 +79,12 @@ int ProgramUI(pd_meta p)
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
-    bool game_available = can_read_memory(p);
+    bool game_available = still_running(p.h);
+    /*
+    if (game_available) {
+        game_available = can_read_memory(p);
+    }
+     */
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
@@ -146,7 +151,7 @@ int ProgramUI(pd_meta p)
                 }
                 ImGui::MenuItem("Documentation", nullptr, &ui_state.Documentation);
                 if (ImGui::MenuItem("Text Edit", nullptr, &ui_state.text_edit)) {
-                    get_process(); // Refresh skill data address & game handle
+                    update_process(&p); // Refresh skill data address & game handle
 
                     skill_text text = load_skill_text(p, ID);
                     ui_state.current_name = text.name;
@@ -162,13 +167,13 @@ int ProgramUI(pd_meta p)
             }
             
             // TODO: This constantly loops through running processes and may be a bit wasteful.
-            if (!is_running()) {
+            if (!still_running(p.h)) {
                 ImGui::SameLine(viewport->Size.x - 300);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
             else {
                 ImGui::SameLine(viewport->Size.x - 15 - 575);
-                if (!have_process_handle(p)) {
+                if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
                 }
                 else if (!game_available) {
@@ -179,7 +184,7 @@ int ProgramUI(pd_meta p)
 
                 if (ImGui::Button("Retry connection")) {
                     printf("Retrying...");
-                    get_process();
+                    update_process(&p);
                 }
 
                 ImGui::Text("Phantom Dust Process ID:");

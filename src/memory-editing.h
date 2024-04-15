@@ -9,17 +9,16 @@ typedef struct {
     gsdata* gstorage;
 }pd_meta;
 
-// Gets the process ID, attaches to it with read/write permissions, then updates our copy of gsdata if it's missing or the game was rebooted
+// Gets the process ID, attaches to it with read/write permissions, then retrieves a copy of gsdata
 pd_meta get_process();
 
-// Checks if the game is running.
-u32 is_running();
+// Refresh all process information as needed, including gsdata. Otherwise, nothing.
+void update_process(pd_meta* p);
+
+bool still_running(void* handle);
 
 // Checks if 1 byte can be read from memory
 bool can_read_memory(pd_meta p);
-
-// Returns the process handle by value
-bool have_process_handle(pd_meta p);
 
 // Loads gsdata from memory into addressable structs.
 bool load_skill_data(pd_meta p);
