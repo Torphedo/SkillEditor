@@ -3,6 +3,7 @@
 
 #include "winAPI.h"
 #include "memory-editing.h"
+#include "text.h"
 
 extern "C" {
 #include <crc_32.h>

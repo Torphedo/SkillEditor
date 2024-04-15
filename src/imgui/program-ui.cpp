@@ -8,6 +8,7 @@
 #include "../winAPI.h"
 #include "program-ui.h"
 #include "../skill_io.h"
+#include "../text.h"
 #include "../memory-editing.h"
 
 struct {

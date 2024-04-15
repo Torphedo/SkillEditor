@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 
 #include "types.h"
 
@@ -116,10 +115,10 @@ typedef struct skill_pack_v2_text {
     u16 desc_length;
 }pack2_text;
 
-typedef struct skill_text {
-    std::string name;
-    std::string desc;
-}skill_text;
+typedef struct {
+    char* str;
+    u16 len;
+}sized_str;
 
 typedef struct text_header {
     unsigned char unknown[8];

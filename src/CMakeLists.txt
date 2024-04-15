@@ -1,9 +1,10 @@
 add_executable(skill_editor
 	"main.cpp"
-	"memory-editing.cpp"
 	"skill_io.cpp"
 	"winAPI.cpp"
+	"text.cpp"
 	"../vendor/crc_32.c"
+	"memory-editing.cpp"
 
 	"imgui/imgui_backend.cpp"
 	"imgui/program-ui.cpp"
