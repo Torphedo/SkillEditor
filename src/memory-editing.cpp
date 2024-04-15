@@ -53,45 +53,50 @@ bool can_read_memory() {
     unsigned char buf = 0;
     ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &buf, 1, NULL);
     DWORD error = GetLastError();
-    return (error == 0);
+    SetLastError(0);
+    // Ignore error 298
+    // ("too many posts made to semaphore", caused when we spam remote memory reads)
+    return (error == 298) || (error = 0);
 }
 
 bool have_process_handle() {
-    return (EsperHandle != 0);
+    return (EsperHandle != INVALID_HANDLE_VALUE);
 }
 
 bool get_process() {
     DWORD cache = pid;
     if (is_running()) {
         if ((!have_process_handle() || !can_read_memory() || gstorage.filesize == 0 || cache != pid)) {
-            EsperHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, pid);
-            if (EsperHandle != 0) {
+            DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION;
+            EsperHandle = OpenProcess(access, FALSE, pid);
+            if (have_process_handle()) {
                 printf("Got handle: %p\n", EsperHandle);
 
                 HMODULE modules[1024] = {0};
                 DWORD bytes_needed = 0;
 
                 // Get path to PDUWP.exe
-                TCHAR base_exe_name[MAX_PATH] = {0};
+                char base_exe_name[MAX_PATH] = {0};
                 HMODULE base_exe_module = 0;
+                int size = sizeof(base_exe_name) / sizeof(*base_exe_name);
                 GetModuleFileNameEx(EsperHandle, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
 
                 if (EnumProcessModules(EsperHandle, modules, sizeof(modules), &bytes_needed)) {
                     for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
-                        TCHAR module_name[MAX_PATH] = {0};
+                        char module_name[MAX_PATH] = {0};
 
-                        if (GetModuleFileNameEx(EsperHandle, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
+                        if (GetModuleFileNameExA(EsperHandle, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
                             // Check name against the base EXE name (PDUWP.exe)
                             if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
                                 base_exe_module = modules[i];
+                                break;
                             }
-
                         }
                     }
                 }
 
                 MODULEINFO info = {0};
-                if (base_exe_module != 0 && GetModuleInformation(EsperHandle, base_exe_module, &info, sizeof(info))) {
+                if (base_exe_module != INVALID_HANDLE_VALUE && GetModuleInformation(EsperHandle, base_exe_module, &info, sizeof(info))) {
                     gstorage_address = ((uintptr_t)info.lpBaseOfDll + gstorage_offset);
                     return load_skill_data();
                 }
@@ -116,7 +121,7 @@ bool load_skill_data() {
         ReadProcessMemory(EsperHandle, (LPVOID)gstorage_address, &gstorage, sizeof(gstorage), NULL);
         error = GetLastError();
         if (error != 1400 && error != 183 && error != 0) {
-            printf("Process Read Error Code: %d\n", error);
+            printf("Process Read Error Code: %ld\n", error);
             return false;
         }
 
