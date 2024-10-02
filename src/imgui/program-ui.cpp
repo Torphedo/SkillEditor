@@ -64,6 +64,11 @@ void InputShort(const char* label, void* p_data, unsigned short step) {
     ImGui::InputScalar(label, ImGuiDataType_U16, p_data, &step);
 }
 
+void InputU32(const char* label, void* p_data, unsigned short step) {
+    ImGui::SetNextItemWidth(200);
+    ImGui::InputScalar(label, ImGuiDataType_U32, p_data, &step);
+}
+
 void InputUInt8(const char* label, void* p_data) {
     static constexpr int step = 1;
     ImGui::SetNextItemWidth(200);
@@ -72,7 +77,7 @@ void InputUInt8(const char* label, void* p_data) {
 
 namespace ImGui {
     bool SliderShort(const char* label, uint16_t* v, uint16_t v_min, uint16_t v_max, const char* format, ImGuiSliderFlags flags) {
-        return SliderScalar(label, ImGuiDataType_S16, v, &v_min, &v_max, format, flags);
+        return SliderScalar(label, ImGuiDataType_U16, v, &v_min, &v_max, format, flags);
     }
 }
 
@@ -455,7 +460,7 @@ void AtkSkillWindow(atkskill* skill) {
 
         ImGui::SetNextItemWidth(200);
         if (ui_state.limitless) {
-            ImGui::InputInt("Skill Use Restrictions", (int*)&skill->GroundAirBoth, 1);
+            InputU32("Skill Use Restrictions", (int*)&skill->GroundAirBoth, 1);
         }
         else {
             const char *items[] = {"Ground", "Air", "Both"};
