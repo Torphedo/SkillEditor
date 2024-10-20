@@ -347,6 +347,7 @@ int ProgramUI(pd_meta* p)
 
     if (ui_state.text_edit) {
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
+
         // Allow text input, limited to the size of the original text
         ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
         ImGui::InputText("Skill Description", ui_state.current_desc.data(), ui_state.current_desc.length() + 1);
@@ -408,8 +409,8 @@ void AtkSkillWindow(atkskill* skill) {
             InputShort("Capsule Type", capsule_type, 1);
         }
         else {
-            static const char *elems_names[7] = {"Aura", "Attack", "Defense", "Erase", "Environmental", "Status",
-                                                 "Special"};
+            static const char *elems_names[7] = {"Aura", "Attack", "Defense", "Erase", "Special", "Status",
+                                                 "Environmental"};
             if (*capsule_type > 6) {
                 ImGui::SliderShort("Capsule Type", (uint16_t *) capsule_type, 0, 32, nullptr, 0);
             } else {
@@ -464,7 +465,7 @@ void AtkSkillWindow(atkskill* skill) {
         }
         else {
             const char *items[] = {"Ground", "Air", "Both"};
-            ImGui::SliderInt("Skill Use Restrictions", (int *) &skill->GroundAirBoth, 0, 2,items[skill->GroundAirBoth]);
+            ImGui::SliderInt("Skill Use Restrictions", (int *) &skill->GroundAirBoth, 0, 2,items[skill->GroundAirBoth % 2]);
         }
         Tooltip("Where the skill may be used.");
 
