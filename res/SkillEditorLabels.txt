@@ -1,3 +1,4 @@
 "Connecting to the game",
+"Syncing",
 "Skill Packs",
 "Text Editing"

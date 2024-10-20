@@ -38,11 +38,11 @@ static const char* DocumentationAtkLabels[50] = {
 #include "../res/AttackSkillLabels.txt"
 };
 
-static const char* DocumentationProgramBody[3] = {
+static const char* DocumentationProgramBody[] = {
 #include "../res/SkillEditorBody.txt"
 };
 
-static const char* DocumentationProgramLabels[3] = {
+static const char* DocumentationProgramLabels[] = {
 #include "../res/SkillEditorLabels.txt"
 };
 
@@ -82,8 +82,7 @@ namespace ImGui {
     }
 }
 
-int ProgramUI(pd_meta* p)
-{
+int ProgramUI(pd_meta* p) {
     ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
