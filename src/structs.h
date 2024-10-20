@@ -90,17 +90,6 @@ typedef struct {
     u16 AnimationHeight;
 }atkskill;
 
-typedef struct gsdata {
-    u32 filesize; // The size in bytes of the entire gsdata file
-    u32 unk0;// TBD
-    u32 unk1;// TBD
-    u32 unk2;// TBD
-    u32 VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
-    u32 skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
-    u8 dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
-    atkskill skill_array[751];
-}gsdata;
-
 // Original format, skill data only
 typedef struct skill_pack_header_v1 {
     char name[32];
@@ -121,11 +110,11 @@ typedef struct {
 }sized_str;
 
 typedef struct text_header {
-    unsigned char unknown[8];
-    u32 array_size;
-    u32 unknown2;
-    u32 unknown_skill_count;
-    u32 skill_count;
+    u32 text_size; // Size of the header, offset table, and all skill text
+    u32 offset_count;
+    u32 offset_table_size; // offset_count * sizeof(text_ptrs)
+    u32 version_num; // Duplicate from header?
+    u32 skill_limiter; // Duplicate from header?
 }text_header;
 
 typedef struct text_ptrs {
@@ -133,3 +122,25 @@ typedef struct text_ptrs {
     u32 name;
     u32 desc;
 }text_ptrs;
+
+enum {
+    GSDATA_PADDING_SIZE = 0x198F4,
+    GSDATA_TEXTPTR_COUNT = 393,
+    GSDATA_TEXTBUF_SIZE = 56504,
+};
+
+typedef struct gsdata {
+    u32 filesize; // The size in bytes of the entire gsdata file
+    u32 unk0;// TBD
+    u32 unk1;// TBD
+    u32 unk2;// TBD
+    u32 VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
+    u32 skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
+    u8 dummy[136]; // This is actual data, but it's unimportant to us and gets ignored.
+    atkskill skill_array[751];
+    u8 pad[GSDATA_PADDING_SIZE];
+    text_header textHeader;
+    text_ptrs textPtrs[GSDATA_TEXTPTR_COUNT];
+    char textbuf[GSDATA_TEXTBUF_SIZE];
+}gsdata;
+

@@ -20,9 +20,14 @@ int main() {
         }
     }
 
+
     init_winapi();
-    pd_meta p = get_process();
+    printf("Looking for Phantom Dust...\n");
+    pd_meta p = {0};
+    get_process(&p);
+
     CreateUI(p); // Main UI loop
     CoUninitialize();
+    VirtualFree(p.gstorage, sizeof(*p.gstorage), MEM_RELEASE);
     return 0;
 }

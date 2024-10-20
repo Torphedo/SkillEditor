@@ -14,9 +14,6 @@ skill_text load_skill_text(pd_meta p, unsigned int id);
 // Writes skill text to memory
 bool save_skill_text(pd_meta p, skill_text text, unsigned int id);
 
-// Write skill data and version number to memory.
-bool write_gsdata_to_memory(pd_meta p);
-
 // Installs a skill pack into the game's memory.
 void install_mod(pd_meta p);
 

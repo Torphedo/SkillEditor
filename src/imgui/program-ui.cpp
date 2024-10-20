@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
@@ -87,10 +88,16 @@ int ProgramUI(pd_meta* p)
     float height = ImGui::GetFrameHeight();
 
     ImGui::DockSpaceOverViewport(); // Enable docking
-    if (!still_running(p->h)) {
+    const bool game_available = handle_still_valid(p->h);
+    const bool game_running = is_running();
+
+    if (!game_available) {
         update_process(p, false);
     }
-    bool game_available = still_running(p->h);
+
+    if (game_running && game_available) {
+        flush_to_pd(*p);
+    }
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
@@ -111,7 +118,6 @@ int ProgramUI(pd_meta* p)
                     }
                     if (ImGui::MenuItem("Skill File")) {
                         ID = load_attack_skill(*p, ID);
-                        write_gsdata_to_memory(*p);
                         ui_state.AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {
@@ -134,9 +140,6 @@ int ProgramUI(pd_meta* p)
                 }
                 if (ImGui::MenuItem("Save To File", "Shift + S")) {
                     ui_state.text_prompt = true;
-                }
-                if (ImGui::MenuItem("Save To Memory", "S")) {
-                    write_gsdata_to_memory(*p);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl + S")) {
                     skill_select();
@@ -173,7 +176,7 @@ int ProgramUI(pd_meta* p)
                 ImGui::EndMenu();
             }
             
-            if (!still_running(p->h)) {
+            if (!handle_still_valid(p->h)) {
                 ImGui::SameLine(viewport->Size.x - 300);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
             }
@@ -215,9 +218,6 @@ int ProgramUI(pd_meta* p)
         // Save
         else if (ImGui::IsKeyPressed(ImGuiKey_LeftShift, false) || ImGui::IsKeyPressed(ImGuiKey_RightShift, false)) {
             ui_state.text_prompt = true;
-        }
-        else {
-            write_gsdata_to_memory(*p);
         }
     }
     if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
@@ -349,8 +349,8 @@ int ProgramUI(pd_meta* p)
         ImGui::Begin("Skill Text Editor", &ui_state.text_edit);
 
         // Allow text input, limited to the size of the original text
-        ImGui::InputText("Skill Name", ui_state.current_name.data(), ui_state.current_name.length() + 1);
-        ImGui::InputText("Skill Description", ui_state.current_desc.data(), ui_state.current_desc.length() + 1);
+        ImGui::InputText("Skill Name", &ui_state.current_name);
+        ImGui::InputText("Skill Description", &ui_state.current_desc);
 
         static uint16_t text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID

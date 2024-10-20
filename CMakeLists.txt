@@ -11,7 +11,7 @@ include_directories(
 	"vendor/imGUI"
 	"vendor/lua"
 )
-add_subdirectory(src)
 add_subdirectory(vendor)
+add_subdirectory(src)
 
 target_link_libraries(skill_editor lua d3d9)

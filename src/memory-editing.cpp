@@ -2,6 +2,11 @@
 #include <shobjidl.h> 
 #include <tlhelp32.h>
 #include <psapi.h>
+#include <memoryapi.h>
+
+extern "C" {
+    #include <crc_32.h>
+}
 
 #include "memory-editing.h"
 #include "structs.h"
@@ -23,51 +28,21 @@ static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     return 0;
 }
 
-u32 is_running() {
-    return get_pid_by_name("PDUWP.exe");
-}
-
-bool can_read_memory(pd_meta p) {
-    if (!still_running(p.h)) {
-        return false;
-    }
-    unsigned char buf = 0;
-    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
-    DWORD error = GetLastError();
-    SetLastError(0);
-    return (error == 298) || (error == 0);
-}
-
-pd_meta get_process() {
-    pd_meta out = {0};
-    if (!is_running()) {
-        return out;
-    }
-    out.pid = get_pid_by_name("PDUWP.exe");
-
-    // Open game process
-    DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE;
-    out.h = OpenProcess(access, FALSE, out.pid);
-    if (out.h == INVALID_HANDLE_VALUE) {
-        return out;
-    }
-    printf("PDUWP handle 0x%p\n", out.h);
-
+uintptr_t remote_module_base_addr(HANDLE h) {
     HMODULE modules[1024] = {0};
     DWORD bytes_needed = 0;
 
-    // Get path to PDUWP.exe
+    // Get path to base module
     char base_exe_name[MAX_PATH] = {0};
     HMODULE base_exe_module = 0;
-    int size = sizeof(base_exe_name) / sizeof(*base_exe_name);
-    GetModuleFileNameEx(out.h, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
+    GetModuleFileNameEx(h, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
 
-    if (EnumProcessModules(out.h, modules, sizeof(modules), &bytes_needed)) {
+    if (EnumProcessModules(h, modules, sizeof(modules), &bytes_needed)) {
         for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
             char module_name[MAX_PATH] = {0};
 
-            if (GetModuleFileNameExA(out.h, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
-                // Check name against the base EXE name (PDUWP.exe)
+            if (GetModuleFileNameExA(h, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
+                // Check name against the base EXE name
                 if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
                     base_exe_module = modules[i];
                     break;
@@ -78,23 +53,87 @@ pd_meta get_process() {
 
     if (base_exe_module == INVALID_HANDLE_VALUE) {
         printf("Couldn't find PDUWP.exe base address.\n");
-        return out;
+        return 0;
     }
 
-    out.gstorage = (gsdata*)malloc(sizeof(*out.gstorage));
-    out.gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
+    return (uintptr_t)base_exe_module;
+}
 
-    ReadProcessMemory(out.h, (LPVOID)out.gstorage_addr, out.gstorage, sizeof(*out.gstorage), NULL);
+bool is_running() {
+    return get_pid_by_name("PDUWP.exe") != 0;
+}
+
+bool get_process(pd_meta* p) {
+    if (p->gstorage == NULL) {
+        p->gstorage = (gsdata*)VirtualAlloc(NULL, sizeof(*p->gstorage), MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE);
+    }
+
+    if (!is_running()) {
+        // If it's not running, our handles & PID are no longer valid
+        p->h = INVALID_HANDLE_VALUE;
+        p->pid = 0;
+        return false;
+    }
+    p->pid = get_pid_by_name("PDUWP.exe");
+
+    // Open game process
+    DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE;
+    p->h = OpenProcess(access, FALSE, p->pid);
+    if (p->h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    printf("PDUWP handle 0x%p\n", p->h);
+
+    const uintptr_t base_exe_module = remote_module_base_addr(p->h);
+    p->gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
+
+    ReadProcessMemory(p->h, (LPVOID)p->gstorage_addr, p->gstorage, sizeof(*p->gstorage), NULL);
+    ResetWriteWatch((void*)p->gstorage, sizeof(*p->gstorage));
     DWORD error = GetLastError();
     if (error != 0) {
         printf("Process Read Error Code: %ld\n", error);
         SetLastError(0);
+        return false;
     }
 
-    return out;
+    return p;
 }
 
-bool still_running(void* handle) {
+void flush_to_pd(pd_meta p) {
+    if (p.gstorage == NULL) {
+        printf("No data to write...\n");
+        return;
+    }
+
+    void* dirty_pages[100] = {0};
+    ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
+    DWORD page_size = 0;
+    GetWriteWatch(WRITE_WATCH_FLAG_RESET, p.gstorage, sizeof(*p.gstorage), dirty_pages, &address_count, &page_size);
+
+    if (address_count > 0) {
+        // Make sure the current version number doesn't affect the hash
+        p.gstorage->VersionNum = 0;
+
+        // Update version number
+        p.gstorage->VersionNum = crc32buf((char*)p.gstorage, sizeof(*p.gstorage));
+
+        // We have to update the first page manually here
+        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, NULL);
+
+        // Don't trigger the write watch again from editing version
+        ResetWriteWatch(p.gstorage, sizeof(*p.gstorage));
+    }
+
+    for (int i = 0; i < address_count; i++) {
+        const ptrdiff_t offset = (char*)dirty_pages[i] - (char*)p.gstorage;
+        WriteProcessMemory(p.h, (void*)(p.gstorage_addr + offset), dirty_pages[i], page_size, NULL);
+    }
+}
+
+bool handle_still_valid(void* handle) {
+    if (handle == INVALID_HANDLE_VALUE) {
+        return false;
+    }
     // If waiting on the process for 0ms times out, process is still running.
     // If it returns something else, the process was terminated.
     DWORD result = WaitForSingleObject(handle, 0);
@@ -112,7 +151,7 @@ void update_process(pd_meta* p, bool force) {
     // Don't bother updating if the game is still running
     // (meaning our handle & remote gsdata pointer are still good)
     // Caller can force an update (to refresh gsdata, for example)
-    if (!force && still_running(p->h)) {
+    if (!force && handle_still_valid(p->h)) {
         return;
     }
 
@@ -120,9 +159,16 @@ void update_process(pd_meta* p, bool force) {
     if (p->h != INVALID_HANDLE_VALUE && p->h != NULL) {
         CloseHandle(p->h);
     }
-    // TODO: This causes use-after-free crash when we close the game with a
-    // text edit window open. Make sure game is opened again before deleting
-    free(p->gstorage);
-    *p = get_process();
+    get_process(p);
 }
 
+bool can_read_memory(pd_meta p) {
+    if (!handle_still_valid(p.h)) {
+        return false;
+    }
+    unsigned int buf = 0;
+    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
+    DWORD error = GetLastError();
+    SetLastError(0);
+    return (error == 298) || (error == 0);
+}
