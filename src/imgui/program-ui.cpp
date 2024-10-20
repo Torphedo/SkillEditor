@@ -22,6 +22,7 @@ struct {
     bool text_prompt;
     bool limitless;
     bool decimal_id;
+    MemoryEditor hex_edit;
 
     // Name & description being edited in text edit box
     std::string current_name;
@@ -48,7 +49,6 @@ static const char* DocumentationProgramLabels[] = {
 
 void AtkSkillWindow(atkskill* skill);
 static void Markdown(const std::string& markdown_); // Markdown function prototype
-static MemoryEditor hex_edit;
 
 void Tooltip(const char* text) {
     if (ImGui::IsItemHovered()) {
@@ -101,7 +101,7 @@ int ProgramUI(pd_meta* p) {
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("New Skill Pack", "N")) {
+                if (ImGui::MenuItem("New Skill Pack", "Ctrl-N")) {
                     if (SUCCEEDED(file_multiple_select_dialog())) {
                         ui_state.NewSkillPack = true;
                     }
@@ -110,7 +110,7 @@ int ProgramUI(pd_meta* p) {
                     }
                 }
                 if (ImGui::BeginMenu("Open")) {
-                    if (ImGui::MenuItem("Skill (From Memory)")) {
+                    if (ImGui::MenuItem("Skill (From Memory)", "Ctrl-L")) {
                         if (game_available) {
                             ui_state.IDSelection = true;
                         }
@@ -204,22 +204,31 @@ int ProgramUI(pd_meta* p) {
 
     // ImGui::ShowDemoWindow();
 
+    const bool control = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+    const bool shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+
+    if (control && ImGui::IsKeyPressed(ImGuiKey_L)) {
+        if (game_available) {
+            ui_state.IDSelection = true;
+        }
+    }
     if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
         toggle_game_pause(*p);
     }
     // Save
     if (ImGui::IsKeyPressed(ImGuiKey_S)) {
         // Save As
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl, false) || ImGui::IsKeyPressed(ImGuiKey_RightCtrl, false)) {
-            skill_select();
-            ui_state.text_prompt = true;
+        if (control) {
+            if (skill_select()) {
+                ui_state.text_prompt = true;
+            }
         }
         // Save
-        else if (ImGui::IsKeyPressed(ImGuiKey_LeftShift, false) || ImGui::IsKeyPressed(ImGuiKey_RightShift, false)) {
+        else if (shift) {
             ui_state.text_prompt = true;
         }
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
+    if (control && ImGui::IsKeyPressed(ImGuiKey_N, false) && !ui_state.NewSkillPack) {
         if (SUCCEEDED(file_multiple_select_dialog())) {
             ui_state.NewSkillPack = true;
         }
@@ -250,7 +259,7 @@ int ProgramUI(pd_meta* p) {
     if (ui_state.IDSelection) {
         // Temporary storage to hold an ID before actually updating the selected ID
         static s32 temp_id = 0;
-        static bool hex = true;
+        static bool hex = false;
 
         ImGui::Begin("Input a skill ID: ");
         ImGui::Checkbox("Hexidecimal", &hex);
@@ -265,8 +274,8 @@ int ProgramUI(pd_meta* p) {
     }
 
     if (ui_state.HexEditor) {
-        hex_edit.ReadOnly = false;
-        hex_edit.DrawWindow("Hex Editor", &p->gstorage->skill_array[ID - 1], 144);
+        ui_state.hex_edit.OptShowAscii = false;
+        ui_state.hex_edit.DrawWindow("Hex Editor", &p->gstorage->skill_array[ID - 1], 144);
     }
 
     if (ui_state.AttackSkillEditor) {

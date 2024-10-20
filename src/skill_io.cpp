@@ -12,8 +12,9 @@ extern "C" {
 // Used to track the most recently saved attack skill filepath
 char* most_recent_filename = nullptr;
 
-void skill_select() {
+bool skill_select() {
     most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
+    return most_recent_filename != nullptr;
 }
 
 unsigned int load_attack_skill(pd_meta p, unsigned int current_id) {

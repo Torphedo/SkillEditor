@@ -1,6 +1,6 @@
 #pragma once
 
-void skill_select();
+bool skill_select();
 
 // Prompts the user for a skill file, then opens it and writes it to gsdata. Returns the ID of the loaded skill if successful, otherwise returns the ID that was given.
 unsigned int load_attack_skill(pd_meta p, unsigned int current_id);
