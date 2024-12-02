@@ -97,7 +97,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 // Main code
-int gui_main(pd_meta* p) {
+int gui_main() {
     // Create application window
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Skill Editor", nullptr };
@@ -160,6 +160,7 @@ int gui_main(pd_meta* p) {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
+    editor skill_editor;
     bool done = false;
     while (!done) {
         // Poll and handle messages (inputs, window resize, etc.)
@@ -201,7 +202,7 @@ int gui_main(pd_meta* p) {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        if (ProgramUI(p) != 0) {
+        if (skill_editor.draw() != 0) {
             break;
         }
 

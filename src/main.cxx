@@ -1,10 +1,8 @@
 #include <cstdio>
-
 #include <filesystem>
 
 #include "imgui/imgui_backend.hxx"
 #include "winAPI.hxx"
-#include "memory-editing.hxx"
 
 static const char ImGuiConfig[] = {
 #include "../res/imgui-config.txt"
@@ -23,13 +21,10 @@ int main() {
 
     init_winapi();
     printf("Looking for Phantom Dust...\n");
-    pd_meta p = {0};
-    get_process(&p);
 
     printf("Starting GUI.\n\n");
 
-    gui_main(&p); // Main UI loop
+    gui_main(); // Main UI loop
     CoUninitialize();
-    VirtualFree(p.gstorage, sizeof(*p.gstorage), MEM_RELEASE);
     return 0;
 }
