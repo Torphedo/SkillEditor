@@ -28,7 +28,7 @@ int main() {
 
     printf("Starting GUI.\n\n");
 
-    CreateUI(p); // Main UI loop
+    gui_main(&p); // Main UI loop
     CoUninitialize();
     VirtualFree(p.gstorage, sizeof(*p.gstorage), MEM_RELEASE);
     return 0;
