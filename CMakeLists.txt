@@ -9,9 +9,28 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(
 	"vendor"
 	"vendor/imGUI"
-	"vendor/lua"
 )
-add_subdirectory(vendor)
-add_subdirectory(src)
+add_library(imgui STATIC
+	vendor/imGUI/backends/imgui_impl_dx9.cpp
+	vendor/imGUI/backends/imgui_impl_win32.cpp
+	vendor/imGUI/imgui.cpp
+	vendor/imGUI/misc/cpp/imgui_stdlib.cpp
+	vendor/imGUI/imgui_demo.cpp
+	vendor/imGUI/imgui_draw.cpp
+	vendor/imGUI/imgui_tables.cpp
+	vendor/imGUI/imgui_widgets.cpp
+)
 
-target_link_libraries(skill_editor lua d3d9)
+add_executable(skill_editor
+	src/main.cpp
+	src/skill_io.cpp
+	src/winAPI.cpp
+	src/text.cpp
+	src/memory-editing.cpp
+
+	src/imgui/imgui_backend.cpp
+	src/imgui/program-ui.cpp
+	vendor/crc_32.c
+)
+
+target_link_libraries(skill_editor d3d9 imgui)

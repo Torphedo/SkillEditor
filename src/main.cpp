@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include <filesystem>
 
@@ -25,6 +25,8 @@ int main() {
     printf("Looking for Phantom Dust...\n");
     pd_meta p = {0};
     get_process(&p);
+
+    printf("Starting GUI.\n\n");
 
     CreateUI(p); // Main UI loop
     CoUninitialize();
