@@ -3,13 +3,12 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #include <imgui.h>
-#include "backends/imgui_impl_dx9.h"
-#include "backends/imgui_impl_win32.h"
+#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_win32.h>
 
 #include <d3d9.h>
-#include <tchar.h>
 
-#include "program-ui.hxx"
+#include "skill_editor.hxx"
 
 // Data
 static LPDIRECT3D9              g_pD3D = nullptr;

@@ -3,7 +3,7 @@
 
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
-#include "../memory-editing.hxx"
+#include "memory_editing.hxx"
 
 struct editor {
     pd_meta p = {};

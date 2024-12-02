@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <filesystem>
 
-#include "imgui/imgui_backend.hxx"
+#include "gui_loop.hxx"
 #include "winAPI.hxx"
 
 static const char ImGuiConfig[] = {

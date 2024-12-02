@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "winAPI.hxx"
-#include "memory-editing.hxx"
+#include "memory_editing.hxx"
 #include "text.hxx"
 
 extern "C" {

@@ -1,14 +1,14 @@
 #include <iostream>
 
 #include <imgui.h>
-#include <imgui_internal.h>
-#include <misc/cpp/imgui_stdlib.h>
+#include <imgui_internal.h> // For messing with the viewport for menu bar
+#include <imgui/misc/cpp/imgui_stdlib.h> // For std::string input fields
 #include <imgui_markdown.h>
 
-#include "../winAPI.hxx"
-#include "program-ui.hxx"
-#include "../skill_io.h"
-#include "../text.hxx"
+#include "winAPI.hxx"
+#include "skill_editor.hxx"
+#include "skill_io.h"
+#include "text.hxx"
 
 static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"

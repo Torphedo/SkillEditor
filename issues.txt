@@ -1,3 +1,5 @@
 - open by ID uses decimal IDs, forcing the user to manually convert from internal hex IDs
 - No searchable/scrollable list of skill names available
 - Byte limitations are annoying when data shifts around
+- Dash, Lift Up, Skywalk, etc. (any skill that moves you) will be extremely loud
+  with large movement values (needs in-editor warning)

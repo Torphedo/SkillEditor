@@ -26,10 +26,10 @@ add_executable(skill_editor
 	src/skill_io.cxx
 	src/winAPI.cxx
 	src/text.cxx
-	src/memory-editing.cxx
+	src/memory_editing.cxx
 
-	src/imgui/imgui_backend.cxx
-	src/imgui/program-ui.cxx
+	src/gui_loop.cxx
+	src/skill_editor.cxx
 	vendor/crc_32.c
 )
 
