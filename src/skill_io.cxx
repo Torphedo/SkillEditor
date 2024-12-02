@@ -1,9 +1,9 @@
 #include <filesystem>
 #include <stdio.h>
 
-#include "winAPI.h"
-#include "memory-editing.h"
-#include "text.h"
+#include "winAPI.hxx"
+#include "memory-editing.hxx"
+#include "text.hxx"
 
 extern "C" {
 #include <crc_32.h>

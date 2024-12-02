@@ -2,9 +2,9 @@
 
 #include <filesystem>
 
-#include "imgui/imgui_backend.h"
-#include "winAPI.h"
-#include "memory-editing.h"
+#include "imgui/imgui_backend.hxx"
+#include "winAPI.hxx"
+#include "memory-editing.hxx"
 
 static const char ImGuiConfig[] = {
 #include "../res/imgui-config.txt"

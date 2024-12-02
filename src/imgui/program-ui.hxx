@@ -1,4 +1,4 @@
 #pragma once
-#include "../memory-editing.h"
+#include "../memory-editing.hxx"
 
 int ProgramUI(pd_meta *p);

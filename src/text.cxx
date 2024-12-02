@@ -4,12 +4,12 @@
 extern "C" {
 #include "crc_32.h"
 }
-#include "memory-editing.h"
+#include "memory-editing.hxx"
 
-#include "types.h"
+#include "types.hxx"
 #include "structs.h"
-#include "text.h"
-#include "winAPI.h"
+#include "text.hxx"
+#include "winAPI.hxx"
 
 skill_text load_skill_text(pd_meta p, unsigned int id) {
     if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {

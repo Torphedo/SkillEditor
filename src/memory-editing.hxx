@@ -1,7 +1,13 @@
 #pragma once
 
-#include "types.h"
+#include "types.hxx"
 #include "structs.h"
+
+typedef struct {
+    const char* field_name;
+    const char* field_desc;
+    uint32_t field_size;
+}userlabel;
 
 typedef struct {
     void* h;

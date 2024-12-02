@@ -8,9 +8,9 @@ extern "C" {
     #include <crc_32.h>
 }
 
-#include "memory-editing.h"
+#include "memory-editing.hxx"
 #include "structs.h"
-#include "winAPI.h"
+#include "winAPI.hxx"
 
 static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     PROCESSENTRY32 pt;

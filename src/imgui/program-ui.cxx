@@ -6,11 +6,11 @@
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 
-#include "../winAPI.h"
-#include "program-ui.h"
+#include "../winAPI.hxx"
+#include "program-ui.hxx"
 #include "../skill_io.h"
-#include "../text.h"
-#include "../memory-editing.h"
+#include "../text.hxx"
+#include "../memory-editing.hxx"
 
 struct {
     bool NewSkillPack;

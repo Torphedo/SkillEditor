@@ -22,14 +22,14 @@ add_library(imgui STATIC
 )
 
 add_executable(skill_editor
-	src/main.cpp
-	src/skill_io.cpp
-	src/winAPI.cpp
-	src/text.cpp
-	src/memory-editing.cpp
+	src/main.cxx
+	src/skill_io.cxx
+	src/winAPI.cxx
+	src/text.cxx
+	src/memory-editing.cxx
 
-	src/imgui/imgui_backend.cpp
-	src/imgui/program-ui.cpp
+	src/imgui/imgui_backend.cxx
+	src/imgui/program-ui.cxx
 	vendor/crc_32.c
 )
 

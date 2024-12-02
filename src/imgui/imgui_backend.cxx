@@ -10,7 +10,7 @@
 #include <d3d9.h>
 #include <tchar.h>
 
-#include "program-ui.h"
+#include "program-ui.hxx"
 
 // Data
 static LPDIRECT3D9              g_pD3D = NULL;
