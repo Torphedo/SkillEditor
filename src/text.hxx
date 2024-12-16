@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "memory-editing.hxx"
+#include "memory_editing.hxx"
 
 typedef struct skill_text {
     std::string name;

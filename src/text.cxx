@@ -4,7 +4,7 @@
 extern "C" {
 #include "crc_32.h"
 }
-#include "memory-editing.hxx"
+#include "memory_editing.hxx"
 
 #include "types.hxx"
 #include "structs.h"
