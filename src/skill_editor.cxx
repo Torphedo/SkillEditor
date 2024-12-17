@@ -375,7 +375,7 @@ int editor::draw() {
     if (text_edit) {
         ImGui::Begin("Skill Text Editor", &text_edit);
 
-        // Allow text input, limited to the size of the original text
+        // The input field modifies a std::string, so there's no length limit.
         ImGui::InputText("Skill Name", &current_name);
         ImGui::InputText("Skill Description", &current_desc);
 

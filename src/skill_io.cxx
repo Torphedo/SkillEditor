@@ -67,8 +67,8 @@ void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
                         .desc_length = (uint16_t) (skill_text.desc.length() + 1)
                 };
                 fwrite(&text_meta, sizeof(skill_pack_v2_text), 1, skill_out);
-                fwrite(skill_text.name.c_str(), skill_text.name.length() + 1, 1, skill_out);
-                fwrite(skill_text.desc.c_str(), skill_text.desc.length() + 1, 1, skill_out);
+                fwrite(skill_text.name.data(), skill_text.name.length() + 1, 1, skill_out);
+                fwrite(skill_text.desc.data(), skill_text.desc.length() + 1, 1, skill_out);
             }
             fclose(skill_out);
 

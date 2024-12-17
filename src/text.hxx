@@ -3,12 +3,14 @@
 
 #include "memory_editing.hxx"
 
+// All the text associated with a skill. These are views into the real string
+// buffer, so copy them into a std::string if you need to change the size.
 typedef struct skill_text {
-    std::string name;
-    std::string desc;
+    std::string_view name;
+    std::string_view desc;
 }skill_text;
 
-// Reads and prints all skill names and descriptions to the console.
+// Finds the name/description of the provided skill text ID
 skill_text load_skill_text(pd_meta p, unsigned int id);
 
 // Writes skill text to memory

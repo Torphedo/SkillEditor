@@ -25,8 +25,8 @@ skill_text load_skill_text(pd_meta p, unsigned int id) {
 
     const text_ptrs* string_offset = &p.gstorage->textPtrs[id - 1];
 
-    const char* name = ((char*)&p.gstorage->textPtrs) + string_offset[0].name;
-    const char* desc = ((char*)&p.gstorage->textPtrs) + string_offset[0].desc;
+    const char* name = ((char*)string_offset) + string_offset->name;
+    const char* desc = ((char*)string_offset) + string_offset->desc;
 
     skill_text output = { name, desc };
 
