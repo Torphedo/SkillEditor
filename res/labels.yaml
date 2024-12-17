@@ -1,0 +1,180 @@
+- pos: 0x8
+  name: "Skill Text ID"
+  desc: "The skill ID from which to get the skill's name,\n description, etc."
+  type: U16
+- pos: 0xC
+  name: "Register ID"
+  desc: "The \"register\" / \"library\" of skills this skill\n will belong to."
+  type: U16
+- pos: 0xE
+  name: "Skill ID"
+  desc: "The skill's internal ID. This will determine what\n skill will be overwritten. \n(No relation to the IDs seen in-game)"
+  type: U16
+- pos: 0x10
+  name: "Rarity"
+  desc: "The skill's in-game rarity, displayed as stars.\n0 -> 1 star, 1 -> 2 stars, etc."
+  type: U16
+- pos: 0x14
+  name: "Sound File ID"
+  type: U16
+- pos: 0x16
+  name: "Capsule Type"
+  type: U16
+- pos: 0x1A
+  name: "School ID"
+  desc: "The skill's school. (Nature, Optical, Ki, etc.)"
+  type: U16
+- pos: 0x1C
+  name: "Animation Profile (Ground)"
+  desc: "This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground."
+  type: U16
+- pos: 0x1E
+  name: "Animation Profile (Air)"
+  desc: "This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air."
+  type: U16
+- pos: 0x20
+  name: "Multi Press 1"
+  type: U16
+- pos: 0x22
+  name: "Multi Press 2"
+  type: U16
+- pos: 0x24
+  name: "Double Skill 1"
+  type: U16
+- pos: 0x26
+  name: "Double Skill 2"
+  type: U16
+- pos: 0x2A
+  name: "After Hit SFX"
+  type: U16
+- pos: 0x2C
+  name: "Start Up SFX"
+  desc: "The sound effect ID to be played when the skill\n is winding up / charging."
+  type: U16
+- pos: 0x2E
+  name: "Collision SFX"
+  desc: "The sound effect ID to be played when the skill\n collides with something."
+  type: U16
+- pos: 0x30
+  name: "Aura Cost"
+  desc: "The amount of Aura the skill costs."
+  type: U16
+- pos: 0x32
+  name: "Cost Effect"
+  desc: "Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura"
+  type: U16
+- pos: 0x34
+  name: "Additional Aura Cost"
+  desc: "Adds to the base Aura cost."
+  type: U16
+- pos: 0x36
+  name: "Health Penalty"
+  desc: "The amount of health to be taken from the user\n when the skill is cast."
+  type: U16
+- pos: 0x38
+  name: "# of Uses"
+  desc: "How many times the skill can be used. Set this\n to 0 for infinite uses."
+  type: U16
+- pos: 0x4C
+  name: "Self Effect"
+  desc: "An effect to be applied to the user. Undocumented,\n needs more research."
+  type: U16
+- pos: 0x4E
+  name: "Button Restrictions"
+  type: U16
+- pos: 0x50
+  name: "Requirement Type"
+  desc: "The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level"
+  type: U16
+- pos: 0x52
+  name: "Requirement Amount"
+  desc: "The required amount of the type specified in\n the previous box"
+  type: U16
+- pos: 0x54
+  name: "Skill Use Restrictions"
+  desc: "Where the skill may be used (Ground, Air, Both)"
+  type: U16
+- pos: 0x56
+  name: "Skill Button Effect"
+  type: U16
+- pos: 0x5A
+  name: "Applied Status ID"
+  desc: "An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura"
+  type: U16
+- pos: 0x5C
+  name: "Restrictions"
+  type: U16
+- pos: 0x5E
+  name: "Strength Effect"
+  type: U16
+- pos: 0x60
+  name: "Damage"
+  type: U16
+- pos: 0x62
+  name: "Effect Duration / Misc. Effects"
+  type: U16
+- pos: 0x64
+  name: "Target Hand Data"
+  desc: "Goes with Hit Effect Skills"
+  type: U16
+- pos: 0x68
+  name: "Hit Effect Skills"
+  desc: "The effect to apply on hit (01 = Erase skill). Only used by vanilla on Lightning Sword."
+  type: U16
+- pos: 0x6A
+  name: "Increase Stat"
+  desc: "0x09 = Health, 0x0B = LVL. Increases a stat by the damage value"
+  type: U16
+- pos: 0x6C
+  name: "Status Enabler"
+  desc: "Status ID won't apply unless this is 0x2C"
+  type: U8
+- pos: 0x6D
+  name: "Status ID Duration"
+  type: U8
+- pos: 0x70
+  name: "Projectile Properties"
+  desc: "02 = Penetrate Defense"
+  type: U16
+- pos: 0x72
+  name: "Projectile ID"
+  desc: "See spreadsheet for details"
+  docs: "TODO: Fill in from spreadsheet"
+  type: U16
+- pos: 0x74
+  name: "\"Collision Skill ID\""
+  type: U16
+- pos: 0x76
+  name: "Homing Range 1st Hit"
+  type: U16
+- pos: 0x78
+  name: "Knockback Strength"
+  type: U16
+- pos: 0x7A
+  name: "Combo End"
+  type: U16
+- pos: 0x82
+  name: "Projectile Behaviour"
+  desc: "WARNING: The game will crash if this is over 0x14 (20)!"
+  type: U16
+- pos: 0x84
+  name: "Skill Duration"
+  type: U8
+- pos: 0x85
+  name: "Hitbox Size"
+  type: U8
+- pos: 0x86
+  name: "Expand Skill Width / Start Speed"
+  type: U16
+- pos: 0x88
+  name: "Animation Size / Acceleration"
+  type: U16
+- pos: 0x8A
+  name: "Projectile End Speed / Projectile Rain Count"
+  type: U16
+- pos: 0x8C
+  name: "Homing Strength / Accuracy"
+  type: U16
+- pos: 0x8E
+  name: "Animation Height"
+  type: U16

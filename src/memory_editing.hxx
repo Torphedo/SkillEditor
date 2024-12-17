@@ -4,12 +4,6 @@
 #include "structs.h"
 
 typedef struct {
-    const char* field_name;
-    const char* field_desc;
-    uint32_t field_size;
-}userlabel;
-
-typedef struct {
     void* h;
     uintptr_t gstorage_addr;
     gsdata* gstorage;

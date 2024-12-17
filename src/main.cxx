@@ -1,8 +1,13 @@
 #include <cstdio>
 #include <filesystem>
 
+#include "userlabels.hxx"
 #include "gui_loop.hxx"
 #include "winAPI.hxx"
+
+extern "C" {
+#include "file.h"
+}
 
 static const char ImGuiConfig[] = {
 #include "../res/imgui-config.txt"

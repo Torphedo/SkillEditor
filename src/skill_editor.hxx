@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 
+#include "userlabels.hxx"
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
 #include "memory_editing.hxx"
@@ -17,6 +18,9 @@ struct editor {
     bool text_prompt = false;
     bool limitless = false;
     bool decimal_id = false;
+
+    char* cfg_yaml = nullptr;
+    user_config custom_labels;
     MemoryEditor hex_edit;
     ImGui::MarkdownConfig mdConfig;
 

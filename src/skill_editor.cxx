@@ -1,3 +1,4 @@
+#include "skill_editor.hxx"
 #include <iostream>
 
 #include <imgui.h>
@@ -6,9 +7,12 @@
 #include <imgui_markdown.h>
 
 #include "winAPI.hxx"
-#include "skill_editor.hxx"
 #include "skill_io.h"
 #include "text.hxx"
+
+extern "C" {
+#include "file.h"
+}
 
 static const char* DocumentationAtkBody[50] = {
 #include "../res/AttackSkillBody.txt"
@@ -75,12 +79,20 @@ editor::editor() {
     mdConfig.headingFormats[2] = { nullptr, false };
     mdConfig.userData = nullptr;
 
+    // Load YAML config file
+    const char* cfg_path = "labels.yaml";
+    char* cfg_data = (char*)file_load(cfg_path);
+    if (cfg_data != nullptr) {
+        this->custom_labels = user_config(cfg_data);
+    }
+
     // Initialize PD metadata
     get_process(&p);
 }
 
 editor::~editor() {
     VirtualFree(p.gstorage, sizeof(*p.gstorage), MEM_RELEASE);
+    free(this->cfg_yaml);
 }
 
 int editor::draw() {
@@ -283,9 +295,12 @@ int editor::draw() {
     }
 
     if (AttackSkillEditor) {
-        // This window is way too long to inline here
+        // Render the editor w/ user-controlled labels
         atkskill* skill = &p.gstorage->skill_array[ID - 1];
-        AtkSkillWindow(skill);
+        if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
+            this->custom_labels.render_editor(skill);
+        }
+        ImGui::End();
     }
 
     if (Documentation) {
@@ -382,161 +397,4 @@ int editor::draw() {
         ImGui::End();
     }
     return 0;
-}
-
-void editor::AtkSkillWindow(atkskill* skill) {
-    if (!ImGui::Begin("Attack Skill Editor", &AttackSkillEditor)) {
-        ImGui::End();
-        return;
-    }
-
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
-    ImGui::AlignTextToFramePadding();
-
-    if (ImGui::BeginTable("split1", 2, ImGuiTableFlags_NoSavedSettings)) {
-
-        ImGui::TableNextColumn();
-        InputShort("Skill Text ID", &skill->SkillTextID, 1);
-        Tooltip("The skill ID from which to get the skill's name,\ndescription, etc.");
-        InputShort("Register ID", &skill->RegisterID, 1);
-        Tooltip("The \"register\" / \"library\" of skills this skill\nwill belong to.");
-        InputShort("Skill ID", &skill->SkillID, 1);
-        Tooltip("The skill's internal ID. This will determine what\nskill will be overwritten. This internal ID has no\nrelation to the IDs seen in-game.");
-
-        ImGui::SetNextItemWidth(200);
-        if (limitless) {
-            InputShort("Rarity", &skill->RarityStars, 1);
-        }
-        else {
-            ImGui::SliderShort("Rarity", &skill->RarityStars, 1, 5, nullptr, 0);
-        }
-        Tooltip("The skill's in-game rarity, displayed as stars.\n0 -> 1 star, 1 -> 2 stars, etc.");
-
-        InputShort("Sound File ID", &skill->SoundFileID, 1);
-        ImGui::TableNextColumn();
-
-        ImGui::SetNextItemWidth(200);
-        u16* capsule_type = &skill->CapsuleType;
-        if (limitless) {
-            InputShort("Capsule Type", capsule_type, 1);
-        }
-        else {
-            static const char *elems_names[7] = {"Aura", "Attack", "Defense", "Erase", "Special", "Status",
-                                                 "Environmental"};
-            if (*capsule_type > 6) {
-                ImGui::SliderShort("Capsule Type", (uint16_t *) capsule_type, 0, 32, nullptr, 0);
-            } else {
-                ImGui::SliderShort("Capsule Type", (uint16_t *) capsule_type, 0, 6, elems_names[*capsule_type], 0);
-            }
-        }
-
-        ImGui::TableNextColumn();
-
-        InputShort("School ID", &skill->SchoolID, 1);
-        Tooltip("The skill's school. (Nature, Optical, Ki, etc.)");
-        InputShort("Animation Profile (Ground)", &skill->AnimationProfileGround, 1);
-        Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground.");
-        InputShort("Animation Profile (Air)", &skill->AnimationProfileAir, 1);
-        Tooltip("This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air.");
-        InputShort("Multi Press 1", &skill->MultiPress1, 1);
-        ImGui::TableNextColumn();
-        InputShort("Multi Press 2", &skill->MultiPress2, 1);
-        ImGui::TableNextColumn();
-        InputShort("Double Skill 1", &skill->DoubleSkill1, 1);
-        ImGui::TableNextColumn();
-        InputShort("Double Skill 2", &skill->DoubleSkill2, 1);
-        ImGui::TableNextColumn();
-        InputShort("After Hit SFX", &skill->PostHitSFX, 1);
-        ImGui::TableNextColumn();
-        InputShort("Start Up SFX", &skill->StartUpSFX, 1);
-        Tooltip("The sound effect ID to be played when the skill\nis winding up / charging.");
-        InputShort("Collision SFX", &skill->CollisionSFX, 1);
-        Tooltip("The sound effect ID to be played when the skill\ncollides with something.");
-        InputShort("Aura Cost", &skill->Cost, 1);
-        Tooltip("The amount of Aura the skill costs.");
-        InputShort("Cost Effect", &skill->CostEffect, 1);
-        Tooltip("Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura");
-        InputShort("Additional Aura Cost", &skill->ExtraCost, 1);
-        Tooltip("Adds to the base Aura cost.");
-        InputShort("Health Penalty", &skill->HealthCost, 1);
-        Tooltip("The amount of health to be taken from the user\nwhen the skill is cast.");
-        InputShort("# of Uses", &skill->SkillUses, 1);
-        Tooltip("How many times the skill can be used. Set this\nto 0 for infinite uses.");
-        InputShort("Self Effect", &skill->SelfEffect, 1);
-        Tooltip("An effect to be applied to the user. Undocumented,\nneeds more research.");
-        InputShort("Button Restrictions", &skill->ButtonRestrictions, 1);
-        ImGui::TableNextColumn();
-        InputShort("Requirement Type", &skill->Requirements, 1);
-        Tooltip("The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level");
-        InputShort("Requirement Amount", &skill->ReqAmount, 1);
-        Tooltip("The required amount of the type specified in\nthe previous box");
-
-        ImGui::SetNextItemWidth(200);
-        if (limitless) {
-            InputU32("Skill Use Restrictions", (int*)&skill->GroundAirBoth, 1);
-        } else {
-            const char *items[] = {"Ground", "Air", "Both"};
-            ImGui::SliderInt("Skill Use Restrictions", (int *) &skill->GroundAirBoth, 0, 2,items[skill->GroundAirBoth % 2]);
-        }
-        Tooltip("Where the skill may be used.");
-
-        InputShort("Skill Button Effect", &skill->SkillButtonEffect, 1);
-        ImGui::TableNextColumn();
-        InputShort("Applied Status ID", &skill->AppliedStatusID, 1);
-        Tooltip("An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura");
-        InputShort("Restrictions", &skill->Restriction, 1);
-        ImGui::TableNextColumn();
-        InputShort("Strength Effect", &skill->StrengthEffect, 1);
-        ImGui::TableNextColumn();
-        InputShort("Damage", &skill->Damage, 1);
-        ImGui::TableNextColumn();
-        InputShort("Effect Duration / Misc. Effects", &skill->EffectDuration, 1);
-        ImGui::TableNextColumn();
-        InputShort("Target Hand Data", &skill->TargetHand, 1);
-        ImGui::TableNextColumn();
-        InputShort("Hit Effect Skills", &skill->HitEffectSkills, 1);
-        ImGui::TableNextColumn();
-        InputShort("Increase Stat", &skill->Increase, 1);
-        ImGui::TableNextColumn();
-        InputUInt8("Status Enabler", &skill->StatusEnabler);
-        ImGui::TableNextColumn();
-        InputUInt8("Status ID Duration", &skill->StatusDuration);
-        ImGui::TableNextColumn();
-        InputShort("Projectile Properties", &skill->ProjectileProperties, 1);
-        ImGui::TableNextColumn();
-        InputShort("Projectile ID", &skill->ProjectileID, 1);
-        ImGui::TableNextColumn();
-        InputShort("\"Collision Skill ID\"", &skill->CollisionSkillID, 1);
-        ImGui::TableNextColumn();
-        InputShort("Homing Range 1st Hit", &skill->HomingRangeFirstHit, 1);
-        ImGui::TableNextColumn();
-        InputShort("Knockback Strength", &skill->HomingRangeSecondHit, 1);
-        ImGui::TableNextColumn();
-        InputShort("Combo End", &skill->HomingRangeThirdHit, 1);
-        ImGui::TableNextColumn();
-        InputShort("Projectile Behaviour", &skill->ProjectileBehaviour, 1);
-        ImGui::TableNextColumn();
-        if (skill->ProjectileBehaviour > 20) {
-            // The game will crash if this is over 0x14
-            skill->ProjectileBehaviour = 20;
-        }
-        InputUInt8("Skill Duration", &skill->SkillDuration);
-        ImGui::TableNextColumn();
-        InputUInt8("Hitbox Size", &skill->hitbox_size);
-        ImGui::TableNextColumn();
-        InputShort("Expand Skill Width / Start Speed", &skill->ExpandSkillWidth, 1);
-        ImGui::TableNextColumn();
-        InputShort("Animation Size / Acceleration", &skill->AnimationSize, 1);
-        ImGui::TableNextColumn();
-        InputShort("Projectile End Speed", &skill->ProjectileSpeed, 1);
-        ImGui::TableNextColumn();
-        InputShort("Homing Strength / Accuracy", &skill->AccuracyID, 1);
-        ImGui::TableNextColumn();
-        InputShort("Animation Height", &skill->AnimationHeight, 1);
-
-        ImGui::EndTable();
-    }
-
-    ImGui::PopStyleVar();
-    ImGui::End();
 }

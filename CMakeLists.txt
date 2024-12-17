@@ -6,10 +6,14 @@ project(skill_editor
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(vendor/rapidyaml)
+
 include_directories(
 	"vendor"
 	"vendor/imGUI"
+	"vendor/rapidyaml"
 )
+
 add_library(imgui STATIC
 	vendor/imGUI/backends/imgui_impl_dx9.cpp
 	vendor/imGUI/backends/imgui_impl_win32.cpp
@@ -27,10 +31,12 @@ add_executable(skill_editor
 	src/winAPI.cxx
 	src/text.cxx
 	src/memory_editing.cxx
-
+	src/userlabels.cxx
 	src/gui_loop.cxx
 	src/skill_editor.cxx
+	src/file.c
+
 	vendor/crc_32.c
 )
 
-target_link_libraries(skill_editor d3d9 imgui)
+target_link_libraries(skill_editor d3d9 imgui ryml)
