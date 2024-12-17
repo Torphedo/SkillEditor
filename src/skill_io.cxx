@@ -20,9 +20,9 @@ bool skill_select() {
 unsigned int load_attack_skill(pd_meta p, unsigned int current_id) {
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
     if (most_recent_filename != nullptr) {
-        atkskill buffer = { 0 };
+        skill_t buffer = {0 };
         FILE* skill_file = fopen(most_recent_filename, "rb");
-        fread(&buffer, sizeof(atkskill), 1, skill_file);
+        fread(&buffer, sizeof(skill_t), 1, skill_file);
 
         p.gstorage->skill_array[buffer.SkillID - 1] = buffer;
         printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
@@ -59,14 +59,14 @@ void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
         }
         if (most_recent_filename != nullptr) { // Must be checked again in case user cancels selection
             FILE* skill_out = fopen(most_recent_filename, "wb");
-            fwrite(&p.gstorage->skill_array[id - 1], sizeof(atkskill), 1, skill_out);
+            fwrite(&p.gstorage->skill_array[id - 1], sizeof(skill_t), 1, skill_out);
             if (write_text) {
                 auto skill_text = load_skill_text(p, p.gstorage->skill_array[id - 1].SkillTextID + 1);
-                skill_pack_v2_text text_meta = {
+                pack2_text text_meta = {
                         .name_length = (uint16_t) (skill_text.name.length() + 1),
                         .desc_length = (uint16_t) (skill_text.desc.length() + 1)
                 };
-                fwrite(&text_meta, sizeof(skill_pack_v2_text), 1, skill_out);
+                fwrite(&text_meta, sizeof(text_meta), 1, skill_out);
                 fwrite(skill_text.name.data(), skill_text.name.length() + 1, 1, skill_out);
                 fwrite(skill_text.desc.data(), skill_text.desc.length() + 1, 1, skill_out);
             }
@@ -92,13 +92,13 @@ void save_skill_pack(const char* packname) {
             header.format_version = 2;
             memcpy(&header.name, packname, sizeof(header.name));
 
-            atkskill* skills = (atkskill*) malloc(sizeof(atkskill) * header.skill_count);
+            skill_t* skills = (skill_t*) malloc(sizeof(skill_t) * header.skill_count);
             pack2_text* text = (pack2_text*) malloc(sizeof(pack2_text) * header.skill_count);
             char** text_data = (char**) calloc(header.skill_count * 2, sizeof(char*));
             for (int i = 0; i < MultiSelectCount; i++) {
                     FILE* skill_in = fopen(multiselectpath[i].c_str(), "rb");
                     if (skill_in != nullptr) {
-                        fread(&skills[i], sizeof(atkskill), 1, skill_in);
+                        fread(&skills[i], sizeof(skill_t), 1, skill_in);
                         if (std::filesystem::file_size(multiselectpath[i]) > 144) {
                             has_text_data = true;
                             fread(&text[i], sizeof(pack2_text), 1, skill_in);
@@ -115,7 +115,7 @@ void save_skill_pack(const char* packname) {
 
             if (!has_text_data) { header.format_version = 1; }
             fwrite(&header, sizeof(pack_header1), 1, skill_pack_out);
-            fwrite(skills, sizeof(atkskill), header.skill_count, skill_pack_out);
+            fwrite(skills, sizeof(skill_t), header.skill_count, skill_pack_out);
 
             if (has_text_data) {
                 fwrite(text, sizeof(pack2_text), header.skill_count, skill_pack_out);

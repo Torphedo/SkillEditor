@@ -20,9 +20,9 @@ struct userlabel {
 };
 
 struct user_config {
-    userlabel labels[sizeof(atkskill)] = {};
+    userlabel labels[sizeof(skill_t)] = {};
 
     user_config() = default;
     user_config(char* yaml_data);
-    void render_editor(atkskill* skill);
+    void render_editor(skill_t* skill);
 };

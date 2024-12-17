@@ -104,8 +104,8 @@ void install_mod(pd_meta p) {
         }
         fread(&header, sizeof(pack_header1), 1, skill_pack);
 
-        atkskill* skills = new atkskill[header.skill_count];
-        fread(skills, sizeof(atkskill), header.skill_count, skill_pack);
+        skill_t* skills = new skill_t[header.skill_count];
+        fread(skills, sizeof(skill_t), header.skill_count, skill_pack);
         for (int i = 0; i < header.skill_count; i++) {
             p.gstorage->skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
         }

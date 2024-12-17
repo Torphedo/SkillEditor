@@ -31,5 +31,5 @@ struct editor {
     editor();
     ~editor();
     int draw();
-    void AtkSkillWindow(atkskill* skill);
+    void AtkSkillWindow(skill_t* skill);
 };

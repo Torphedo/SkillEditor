@@ -82,7 +82,7 @@ user_config::user_config(char* yaml) {
     }
 }
 
-void user_config::render_editor(atkskill* skill) {
+void user_config::render_editor(skill_t* skill) {
     u8* buf = (u8*) skill;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
     ImGui::AlignTextToFramePadding();

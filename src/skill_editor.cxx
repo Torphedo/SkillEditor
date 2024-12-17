@@ -296,7 +296,7 @@ int editor::draw() {
 
     if (AttackSkillEditor) {
         // Render the editor w/ user-controlled labels
-        atkskill* skill = &p.gstorage->skill_array[ID - 1];
+        skill_t* skill = &p.gstorage->skill_array[ID - 1];
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
             this->custom_labels.render_editor(skill);
         }
