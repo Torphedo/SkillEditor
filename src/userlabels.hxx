@@ -14,6 +14,7 @@ struct userlabel {
     s64 limit_low = 0;
     s64 limit_high = 0;
     ImGuiDataType type = ImGuiDataType_S8;
+    bool slider = false;
 
     // A label only "exists" if it was parsed in from the config file.
     bool exists = false;
@@ -25,5 +26,5 @@ struct user_config {
 
     user_config() = default;
     user_config(char* yaml_data);
-    void render_editor(skill_t* skill);
+    void render_editor(skill_t* skill, bool limitless);
 };

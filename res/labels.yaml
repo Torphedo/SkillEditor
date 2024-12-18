@@ -15,7 +15,10 @@
 - pos: 0x10
   name: "Rarity"
   desc: "The in-game rarity, displayed as stars"
-  docs: "The skill's rarity. Represented in-game by a star rating in the arsenal editor. Usually 1 more stars than the value (0 -> 1 star, 1 -> 2 stars, etc.)"
+  docs: "The skill's rarity. Represented in-game by a star rating in the arsenal editor. Usually 1 more stars than the value (0 -> 1 star, 1 -> 2 stars, etc). Values higher than 5 result in 5 star outlines (instead of solid stars)"
+  limit_low: 0
+  limit_high: 5
+  slider: true
   type: U16
 - pos: 0x14
   name: "Sound File ID"
@@ -23,12 +26,14 @@
   type: U16
 - pos: 0x16
   name: "Capsule Type"
-  docs: "Determines what type the skill is, which controls the skill's color. This also changes how the rest of the skill data is interpreted by the game. The types are: \n\n0 = Aura\n1 = Attack\n2 = Defense\n3 = Erase\n4 = Environmental\n5 = Status\n6 = Special"
+  docs: "Determines what type the skill is, which controls the skill's color. This also changes how the rest of the skill data is interpreted by the game. Values not listed here still seem to work and produce other random colors, but that might be more of a bug than a feature. The types are: \n\n0 = Aura\n1 = Attack\n2 = Defense\n3 = Erase\n4 = Environmental\n5 = Status\n6 = Special"
   type: U16
 - pos: 0x1A
   name: "School ID"
   desc: "The skill's school. (Nature, Optical, Ki, etc.)"
   docs: "The skill's school. Values higher than 5 will cut off the skill info panel, or display garbage data.\n\n0 = Aura\n1 = Psycho\n2 = Optical\n3 = Nature\n4 = Ki\n5 = Faith"
+  limit_high: 5
+  slider: true
   type: U16
 - pos: 0x1C
   name: "Animation Profile (Ground)"

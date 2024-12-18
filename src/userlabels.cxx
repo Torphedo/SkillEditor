@@ -72,6 +72,7 @@ user_config::user_config(char* yaml) {
             this->labels[pos].type = get_type(label_node["type"].val());
         }
 
+        // Deserialize non-string fields
         if (label_node.has_child("limit_low")) {
             label_node["limit_low"] >> this->labels[pos].limit_low;
         }
@@ -79,10 +80,14 @@ user_config::user_config(char* yaml) {
         if (label_node.has_child("limit_high")) {
             label_node["limit_high"] >> this->labels[pos].limit_high;
         }
+
+        if (label_node.has_child("slider")) {
+            label_node["slider"] >> this->labels[pos].slider;
+        }
     }
 }
 
-void user_config::render_editor(skill_t* skill) {
+void user_config::render_editor(skill_t* skill, bool limitless) {
     u8* buf = (u8*) skill;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
     ImGui::AlignTextToFramePadding();
@@ -98,13 +103,18 @@ void user_config::render_editor(skill_t* skill) {
             // Creates 2-column view
             ImGui::TableNextColumn();
 
-            const u8 step = 1;
-            const u8 fast_step = 5;
             char label_buf[2048] = {0};
             snprintf(label_buf, sizeof(label_buf), "%.*s", (int) label.name.len, label.name.str);
             // We make the input boxes narrow to make sure the text doesn't get cut off
             ImGui::SetNextItemWidth(200);
-            ImGui::InputScalar(label_buf, label.type, &buf[i], &step);
+
+
+            if (label.limit_low != label.limit_high && label.slider && !limitless) {
+                ImGui::SliderScalar(label_buf, label.type, &buf[i], &label.limit_low, &label.limit_high);
+            } else {
+                const s64 step = 1;
+                ImGui::InputScalar(label_buf, label.type, &buf[i], &step);
+            }
 
             if (ImGui::IsItemHovered() && label.desc.len > 0) {
                 ImGui::SetTooltip("%.*s", (int) label.desc.len, label.desc.str);

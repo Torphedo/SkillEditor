@@ -29,31 +29,6 @@ void Tooltip(const char* text) {
     ImGui::TableNextColumn();
 }
 
-// ImGui didn't have pre-made functions for short
-// or uint8 input boxes, so I made my own.
-
-void InputShort(const char* label, void* p_data, unsigned short step) {
-    ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_U16, p_data, &step);
-}
-
-void InputU32(const char* label, void* p_data, unsigned short step) {
-    ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_U32, p_data, &step);
-}
-
-void InputUInt8(const char* label, void* p_data) {
-    static constexpr int step = 1;
-    ImGui::SetNextItemWidth(200);
-    ImGui::InputScalar(label, ImGuiDataType_U8, p_data, &step);
-}
-
-namespace ImGui {
-    bool SliderShort(const char* label, uint16_t* v, uint16_t v_min, uint16_t v_max, const char* format, ImGuiSliderFlags flags) {
-        return SliderScalar(label, ImGuiDataType_U16, v, &v_min, &v_max, format, flags);
-    }
-}
-
 // Markdown setup stuff
 void LinkCallback(ImGui::MarkdownLinkCallbackData data_) {
     std::string url(data_.link, data_.linkLength);
@@ -179,7 +154,7 @@ int editor::draw() {
                 if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4")) {
                     toggle_game_pause(p);
                 }
-                ImGui::Checkbox("Input Box Limits", &limitless);
+                ImGui::Checkbox("Remove Input Box Limits", &limitless);
                 ImGui::EndMenu();
             }
             
@@ -290,7 +265,7 @@ int editor::draw() {
         // Render the editor w/ user-controlled labels
         skill_t* skill = &p.gstorage->skill_array[ID - 1];
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
-            this->custom_labels.render_editor(skill);
+            this->custom_labels.render_editor(skill, limitless);
         }
         ImGui::End();
     }
