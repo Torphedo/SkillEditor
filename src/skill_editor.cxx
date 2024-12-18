@@ -337,6 +337,34 @@ int editor::draw() {
                 md.append(docs_view);
                 ImGui::Markdown(md.c_str(), md.length(), mdConfig);
 
+                if (selected_node.has_child("conditions")) {
+                    std::string conditions = "# Conditions\n All of these conditions must be met for this to be shown in the editor:\n\n";
+                    for (ryml::ConstNodeRef cond : selected_node["conditions"]) {
+                        const c4::basic_substring comparison = cond["comparison"].val();
+                        const c4::basic_substring val = cond["val"].val();
+                        const c4::basic_substring pos_str = cond["pos"].val();
+                        u8 pos = 0;
+                        cond["pos"]  >> pos;
+
+                        const c4::basic_substring target_name = custom_labels.labels[pos].name;
+
+                        // All of this gives a string that looks something like:
+                        // "Skill ID" [pos 0xE] == 400
+                        conditions += "\"";
+                        conditions += std::string_view(target_name.str, target_name.len);
+                        conditions += "\" [pos ";
+                        conditions += std::string_view(pos_str.str, pos_str.len);
+                        conditions += "] ";
+
+                        conditions += std::string_view(comparison.str, comparison.len);
+                        conditions += " ";
+                        conditions += std::string_view(val.str, val.len);
+                        conditions += '\n';
+                    }
+
+                    ImGui::Markdown(conditions.c_str(), conditions.length(), mdConfig);
+                }
+
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
