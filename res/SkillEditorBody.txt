@@ -127,6 +127,9 @@ R"(
 Labels can also have **conditions**, which let you turn labels on and off
 depending on the values of other data in the skill. You can have as many
 conditions as you want, and your label will only appear if all of them are true.
+All the conditions you add will automatically be shown at the bottom of the
+documentation for that label.
+
 Here are the fields of a condition (all required):
 
 - pos

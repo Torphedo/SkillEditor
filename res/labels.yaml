@@ -1,12 +1,16 @@
 - pos: 0x5E
   name: "Conditional label test!"
-  desc: "You can ignore this entry, it's just an example of how to write a conditional label in the config file. It'll only activate if the skill ID is 400."
+  desc: "You can ignore this entry, it's just an example of how to write a conditional label in the config file."
   conditions:
     - pos: 0xE
-      comparison: "=="
+      comparison: ">"
       val: 400
-      comment1: "This will replace the Strength Effect label (@ 0x5E) when the Skill ID (@ 0xE) is 400."
-      comment2: "This is just an example, I put it outside the normal ID range so it won't affect normal use."
+    - pos: 0x10
+      comparison: "<"
+      val: 3
+      comment1: "This will replace the Strength Effect label (@ 0x5E) when the Skill ID (@ 0xE) is over 400"
+      comment2: "and the rarity (@ 0x10) is less than 3."
+      comment3: "This is just an example, I put it outside the normal ID range so it won't affect normal use."
   type: U16
 
 - pos: 0x8
