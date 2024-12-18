@@ -245,7 +245,7 @@ int editor::draw() {
         static bool hex = false;
 
         ImGui::Begin("Input a skill ID: ");
-        ImGui::Checkbox("Hexidecimal", &hex);
+        ImGui::Checkbox("Hexadecimal", &hex);
         ImGui::InputInt("ID", &temp_id, 1, 1, ImGuiInputTextFlags_CharsHexadecimal * hex);
         if (ImGui::Button("Open")) {
             ID = temp_id;
@@ -261,9 +261,17 @@ int editor::draw() {
         hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
     }
 
+    skill_t* skill = &p.gstorage->skill_array[ID - 1];
+    static u16 skill_id_cache = this->ID;
+    if (skill_id_cache != this->ID) {
+        // The skill ID has changed since last frame, so we need to update the
+        // labels.
+        this->custom_labels.update_unconditional_labels();
+        this->custom_labels.update_conditional_labels(*skill);
+    }
+
     if (AttackSkillEditor) {
         // Render the editor w/ user-controlled labels
-        skill_t* skill = &p.gstorage->skill_array[ID - 1];
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
             this->custom_labels.render_editor(skill, limitless);
         }
@@ -379,7 +387,7 @@ int editor::draw() {
         ImGui::InputText("Skill Name", &current_name);
         ImGui::InputText("Skill Description", &current_desc);
 
-        static uint16_t text_id = 0;
+        static u16 text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
         text_id = p.gstorage->skill_array[ID - 1].SkillTextID + 1;
 

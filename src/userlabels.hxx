@@ -4,6 +4,15 @@
 #include <ryml.hpp>
 #include <imgui.h>
 
+typedef enum : u8 {
+    EQUAL,
+    LESS_THAN,
+    LESS_THAN_OR_EQUAL,
+    GREATER_THAN,
+    GREATER_THAN_OR_EQUAL,
+    COMPARISON_INVALID,
+}compare_t;
+
 struct userlabel {
     // You can only print these with the "%.*s" specifier
     c4::basic_substring<const char> name;
@@ -26,5 +35,7 @@ struct user_config {
 
     user_config() = default;
     user_config(char* yaml_data);
+    void update_unconditional_labels();
+    void update_conditional_labels(skill_t skill);
     void render_editor(skill_t* skill, bool limitless);
 };

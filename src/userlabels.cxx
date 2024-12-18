@@ -31,60 +31,226 @@ ImGuiDataType get_type(c4::basic_substring<const char> type_str) {
     }
 }
 
+userlabel parse_label(ryml::ConstNodeRef label_node, u8& pos) {
+    userlabel out = {};
+
+    const bool unusable = !label_node.has_child("pos") || !label_node.has_child("type");
+    if (unusable) {
+        // Try to find out the name for error reporting
+        c4::basic_substring name = "[name missing]";
+        if (label_node.has_child("name")) {
+            name = label_node["name"].val();
+        }
+
+        // If there's no position, we don't know where it's supposed to go.
+        // If there's no type, we don't know how to interpret the data.
+        printf("I don't know what to do with your label \"%.*s\", because it's missing a position or data type.\n", (int)name.len, name.str);
+        return out;
+    }
+
+    // The label is usable!
+    label_node["pos"] >> pos;
+
+    // Try to parse all fields
+    if (label_node.has_child("name")) {
+        out.name = label_node["name"].val();
+        // The label is only suitable to display if it has a name
+        out.exists = true;
+    }
+    else if (label_node.num_children() > 2) {
+        // Not having a name isn't necessarily an error, you might want to have
+        // a hidden "label" that only sets a field's data type so it can be
+        // checked by a conditional label. But if there's extra data attached,
+        // the missing name is probably a mistake.
+
+        // We print the original string used for the position, so it looks
+        // exactly like what the user wrote (whether hexadecimal or decimal format)
+        const c4::basic_substring pos_str = label_node["pos"].val();
+        printf("It seems like you wanted to use a label with position %.*s, but I can't display it because it has no name.\n", (int)pos_str.len, pos_str.str);
+    }
+
+    if (label_node.has_child("desc")) {
+        out.desc = label_node["desc"].val();
+    }
+
+    if (label_node.has_child("docs")) {
+        out.docs = label_node["docs"].val();
+    }
+
+    if (label_node.has_child("type")) {
+        // Convert type string to usable ImGui value
+        out.type = get_type(label_node["type"].val());
+    }
+
+    // Deserialize non-string fields
+    if (label_node.has_child("limit_low")) {
+        label_node["limit_low"] >> out.limit_low;
+    }
+
+    if (label_node.has_child("limit_high")) {
+        label_node["limit_high"] >> out.limit_high;
+    }
+
+    if (label_node.has_child("slider")) {
+        label_node["slider"] >> out.slider;
+    }
+
+    return out;
+}
+
+void user_config::update_unconditional_labels() {
+    for (ryml::ConstNodeRef label_node : tree.rootref()) {
+        u8 pos = 0;
+        const userlabel label = parse_label(label_node, pos);
+        if (!label.exists) {
+            // Some parsing error (probably missing position/type), skip it.
+            continue;
+        }
+        if (label_node.has_child("conditions")) {
+            if (label_node["conditions"].num_children() > 0) {
+                // This label depends on the value(s) of some other label(s),
+                // which might not have been parsed yet. We can't know how to
+                // interpret the value until we parse its data type from a
+                // label, so we skip the conditional label in this pass.
+                continue;
+            }
+        }
+
+        // The label is valid, save it to the table
+        this->labels[pos] = label;
+    }
+}
+
+compare_t parse_comparison(c4::basic_substring<const char> str) {
+    if (str == "==") {
+        return EQUAL;
+    }
+    else if (str == "<") {
+        return LESS_THAN;
+    }
+    else if (str == "<=") {
+        return LESS_THAN_OR_EQUAL;
+    }
+    else if (str == ">") {
+        return GREATER_THAN;
+    }
+    else if (str == ">=") {
+        return GREATER_THAN_OR_EQUAL;
+    } else {
+        return COMPARISON_INVALID;
+    }
+}
+
+bool do_comparison(const void* comp_target, ImGuiDataType target_type, s64 val, compare_t comparison) {
+    s64 compare_to = 0;
+
+    switch (target_type) {
+        case ImGuiDataType_U8:
+            compare_to = *((u8*)comp_target);
+            break;
+        case ImGuiDataType_S8:
+            compare_to = *((s8*)comp_target);
+            break;
+        case ImGuiDataType_U16:
+            compare_to = *((u16*)comp_target);
+            break;
+        case ImGuiDataType_S16:
+            compare_to = *((s16*)comp_target);
+            break;
+        case ImGuiDataType_U32:
+            compare_to = *((u32*)comp_target);
+            break;
+        case ImGuiDataType_S32:
+            compare_to = *((s32*)comp_target);
+            break;
+        case ImGuiDataType_U64:
+            // Numbers >UINT64_MAX might go negative here...
+            compare_to = *((u64*)comp_target);
+            break;
+        case ImGuiDataType_S64:
+            compare_to = *((s64*)comp_target);
+            break;
+        default:
+            printf("Unsupported data type %d!\n", target_type);
+            return false;
+    }
+
+    switch (comparison) {
+        case EQUAL:
+            return compare_to == val;
+        case LESS_THAN:
+            return compare_to < val;
+        case LESS_THAN_OR_EQUAL:
+            return compare_to <= val;
+        case GREATER_THAN:
+            return compare_to > val;
+        case GREATER_THAN_OR_EQUAL:
+            return compare_to >= val;
+        default:
+            printf("Invalid comparison type!\n");
+            return false;
+    }
+}
+
+void user_config::update_conditional_labels(skill_t skill) {
+    for (ryml::ConstNodeRef label_node : tree.rootref()) {
+        u8 label_pos = 0;
+        const userlabel label = parse_label(label_node, label_pos);
+        if (!label.exists) {
+            // Some parsing error (probably missing position/type), skip it.
+            continue;
+        }
+        if (!label_node.has_child("conditions")) {
+            // We're only parsing conditional labels in this pass.
+            continue;
+        }
+
+        bool conditions_passed = true;
+        ryml::ConstNodeRef all_conditions = label_node["conditions"];
+        for (u32 i = 0; i < all_conditions.num_children(); i++) {
+            const ryml::ConstNodeRef cond = all_conditions.child(i);
+            const bool unusable = !cond.has_child("pos") || !cond.has_child("val") || !cond.has_child("comparison");
+            if (unusable) {
+                printf("I can't make sense of condition #%d for your label \"%.*s\", because it's missing a position, value, or comparison type. The label won't be used.\n", i, (int)label.name.len, label.name.str);
+                conditions_passed = false;
+                break;
+            }
+
+            // From here on we know all the fields are valid
+            s64 val = 0;
+            u8 pos = 0;
+            const compare_t comparison = parse_comparison(cond["comparison"].val());
+
+            // Deserialize our values
+            cond["val"] >> val;
+            cond["pos"] >> pos;
+
+            // Interpret the data at [pos] as the appropriate data type
+
+            // Find position & type of the data
+            const void* comp_target = (void*)(((u8*)&skill) + pos);
+            const ImGuiDataType target_type = this->labels[pos].type;
+
+            // Doing completely generic comparisons has a lot of cases to cover,
+            // so that's its own function.
+            const bool success = do_comparison(comp_target, target_type, val, comparison);
+
+            // All conditions must pass for the label to be used
+            conditions_passed &= success;
+        }
+
+        if (conditions_passed) {
+            this->labels[label_pos] = label;
+        }
+    }
+}
+
 user_config::user_config(char* yaml) {
     // ryml needs a substring wrapper object to work with the text.
     c4::basic_substring<char> yaml_substr = c4::basic_substring(yaml, strlen(yaml));
     tree = ryml::parse_in_place(yaml_substr);
 
-    // Loop over all labels
-    for (ryml::ConstNodeRef label_node : tree.rootref()) {
-        // Parse into label structure
-        if (!label_node.has_child("pos")) {
-            // If there's no position, we don't know where it's supposed to go.
-            const char* name = "[name missing]";
-            if (label_node.has_child("name")) {
-                name = label_node["name"].val().str;
-            }
-            printf("Label \"%s\" is missing a position, it can't be loaded!\n", name);
-            continue;
-        }
-
-        // The label is parsable!
-        u8 pos = 0;
-        label_node["pos"] >> pos;
-        this->labels[pos].exists = true;
-
-        // Try to parse all fields
-        if (label_node.has_child("name")) {
-            this->labels[pos].name = label_node["name"].val();
-        }
-
-        if (label_node.has_child("desc")) {
-            this->labels[pos].desc = label_node["desc"].val();
-        }
-
-        if (label_node.has_child("docs")) {
-            this->labels[pos].docs = label_node["docs"].val();
-        }
-
-        if (label_node.has_child("type")) {
-            // Convert type string to usable ImGui value
-            this->labels[pos].type = get_type(label_node["type"].val());
-        }
-
-        // Deserialize non-string fields
-        if (label_node.has_child("limit_low")) {
-            label_node["limit_low"] >> this->labels[pos].limit_low;
-        }
-
-        if (label_node.has_child("limit_high")) {
-            label_node["limit_high"] >> this->labels[pos].limit_high;
-        }
-
-        if (label_node.has_child("slider")) {
-            label_node["slider"] >> this->labels[pos].slider;
-        }
-    }
+    this->update_unconditional_labels();
 }
 
 void user_config::render_editor(skill_t* skill, bool limitless) {
