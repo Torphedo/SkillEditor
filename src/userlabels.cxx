@@ -34,7 +34,7 @@ ImGuiDataType get_type(c4::basic_substring<const char> type_str) {
 user_config::user_config(char* yaml) {
     // ryml needs a substring wrapper object to work with the text.
     c4::basic_substring<char> yaml_substr = c4::basic_substring(yaml, strlen(yaml));
-    const ryml::Tree tree = ryml::parse_in_place(yaml_substr);
+    tree = ryml::parse_in_place(yaml_substr);
 
     // Loop over all labels
     for (ryml::ConstNodeRef label_node : tree.rootref()) {

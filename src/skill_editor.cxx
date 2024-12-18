@@ -14,14 +14,6 @@ extern "C" {
 #include "file.h"
 }
 
-static const char* DocumentationAtkBody[50] = {
-#include "../res/AttackSkillBody.txt"
-};
-
-static const char* DocumentationAtkLabels[50] = {
-#include "../res/AttackSkillLabels.txt"
-};
-
 static const char* DocumentationProgramBody[] = {
 #include "../res/SkillEditorBody.txt"
 };
@@ -309,12 +301,22 @@ int editor::draw() {
 
         if (ImGui::BeginTabBar("DocTabs")) {
             if (ImGui::BeginTabItem("Attack Skills")) {
-                static uint16_t select_idx = 0;
+                static ryml::ConstNodeRef selected_node = nullptr;
                 ImGui::BeginChild("left pane", ImVec2(200, 0), true);
-                for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationAtkLabels); i++) {
+                for (ryml::ConstNodeRef label_node : custom_labels.tree.rootref()) {
                     // Selectable object for every string in the array
-                    if (ImGui::Selectable(DocumentationAtkLabels[i])) {
-                        select_idx = i;
+                    if (!label_node.has_child("name")) {
+                        // Nothing to render if there's no name...
+                        continue;
+                    }
+
+                    // We need to make a null-terminated std::string because
+                    // ImGui::Selectable doesn't understand the string container
+                    // used by ryml.
+                    const c4::basic_substring name_substr = label_node["name"].val();
+                    const std::string name = std::string(name_substr.data(), name_substr.size());
+                    if (ImGui::Selectable(name.data()) || selected_node.invalid()) {
+                        selected_node = label_node;
                     }
                 }
                 ImGui::EndChild();
@@ -322,10 +324,33 @@ int editor::draw() {
                 ImGui::SameLine();
 
                 ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
-                // Renders the item name as an H1, then the description on a new line.
+
+                // The YAML might be missing a field, so we have placeholders
+                std::string_view name_view = "[Missing name]";
+                std::string_view docs_view = "[Missing docs]";
+
+                // Trying to get a field that doesn't exist will crash
+                // We have to convert to the stdlib equivalent of C4's substring
+                // type, because you can only append the stdlib version to a std::string.
+                if (selected_node.has_child("name")) {
+                    const c4::basic_substring temp = selected_node["name"].val();
+                    name_view = std::string_view(temp.data(), temp.size());
+                }
+                if (selected_node.has_child("docs")) {
+                    const c4::basic_substring temp = selected_node["docs"].val();
+                    docs_view = std::string_view(temp.data(), temp.size());
+                } else if (selected_node.has_child("desc")) {
+                    // Docs are missing, use the description as a backup
+                    const c4::basic_substring temp = selected_node["desc"].val();
+                    docs_view = std::string_view(temp.data(), temp.size());
+                }
+
+                // Renders the item name as an H1, then the description on a new
+                // line. For some reason this can't all happen in 1 declaration.
                 std::string md = "# ";
-                md += DocumentationAtkLabels[select_idx];
-                md += DocumentationAtkBody[select_idx];
+                md.append(name_view);
+                md += '\n';
+                md.append(docs_view);
                 ImGui::Markdown(md.c_str(), md.length(), mdConfig);
 
                 ImGui::EndChild();

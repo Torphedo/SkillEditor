@@ -1,6 +1,7 @@
 - pos: 0x8
   name: "Skill Text ID"
   desc: "The skill ID from which to get the skill's name,\n description, etc."
+  docs: "The ID of the text that will be used for the skill. This is generally 1 less than the skill ID. The Skill Text ID controls both the name and description."
   type: U16
 - pos: 0xC
   name: "Register ID"
@@ -8,29 +9,36 @@
   type: U16
 - pos: 0xE
   name: "Skill ID"
-  desc: "The skill's internal ID. This will determine what\n skill will be overwritten. \n(No relation to the IDs seen in-game)"
+  desc: "The skill's internal ID, unrelated to the IDs seen in-game"
+  docs: "The skill's internal ID. Skill Editor uses this parameter to determine which skill to overwrite in memory. (If set to 32, it will overwrite skill #32 in memory). Completely different than the skill IDs seen in-game."
   type: U16
 - pos: 0x10
   name: "Rarity"
-  desc: "The skill's in-game rarity, displayed as stars.\n0 -> 1 star, 1 -> 2 stars, etc."
+  desc: "The in-game rarity, displayed as stars"
+  docs: "The skill's rarity. Represented in-game by a star rating in the arsenal editor. Usually 1 more stars than the value (0 -> 1 star, 1 -> 2 stars, etc.)"
   type: U16
 - pos: 0x14
   name: "Sound File ID"
+  docs: "Determines what sound file will be used. Needs more research / documentation."
   type: U16
 - pos: 0x16
   name: "Capsule Type"
+  docs: "Determines what type the skill is, which controls the skill's color. This also changes how the rest of the skill data is interpreted by the game. The types are: \n\n0 = Aura\n1 = Attack\n2 = Defense\n3 = Erase\n4 = Environmental\n5 = Status\n6 = Special"
   type: U16
 - pos: 0x1A
   name: "School ID"
   desc: "The skill's school. (Nature, Optical, Ki, etc.)"
+  docs: "The skill's school. Values higher than 5 will cut off the skill info panel, or display garbage data.\n\n0 = Aura\n1 = Psycho\n2 = Optical\n3 = Nature\n4 = Ki\n5 = Faith"
   type: U16
 - pos: 0x1C
   name: "Animation Profile (Ground)"
   desc: "This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast on the ground."
+  docs: "This ID selects which animation will be used. This determines the skeletal animation (how the character moves) and shader animation (particle effects used when firing) are used. It also determines how many projectiles are fired in non-melee attacks. The Ground animation profile is used when using the skill on the ground, and the Air profile is used when using it in the air."
   type: U16
 - pos: 0x1E
   name: "Animation Profile (Air)"
   desc: "This controls the player's skeletal animation, the number\nof projectiles fired, particle effects used, and much more.\nThis profile is used when the skill is cast in the air."
+  docs: "This ID selects which animation will be used. This determines the skeletal animation (how the character moves) and shader animation (particle effects used when firing) are used. It also determines how many projectiles are fired in non-melee attacks. The Ground animation profile is used when using the skill on the ground, and the Air profile is used when using it in the air."
   type: U16
 - pos: 0x20
   name: "Multi Press 1"
@@ -61,11 +69,13 @@
   type: U16
 - pos: 0x32
   name: "Cost Effect"
-  desc: "Additional special costs.\n0 = None\n1 = Reset Aura\n2 = Require Max Aura"
+  desc: "Extra special costs to use the skill"
+  docs: "Applies an extra cost for using the skill. \n\n0 = None\n1 = Reset Aura\n2 = Require Max Aura"
   type: U16
 - pos: 0x34
   name: "Additional Aura Cost"
   desc: "Adds to the base Aura cost."
+  docs: "This value is added to the Aura Cost. Why not just increase the base Aura Cost instead? We don't know."
   type: U16
 - pos: 0x36
   name: "Health Penalty"
@@ -81,14 +91,16 @@
   type: U16
 - pos: 0x4E
   name: "Button Restrictions"
+  docs: "Applies restrictions to the skill after use *(check)*. Needs more research.\n\n0 = None\n1 = Can't use skill\n2 = Cut Audio Short\n3 = Cickable with error sound, can't use skill"
   type: U16
 - pos: 0x50
   name: "Requirement Type"
-  desc: "The skill's type of special requirement.\n0 = None\n1 = Health\n5 = Skills Left in Deck\n7 = Aura\n9 = Level"
+  desc: "Extra requirements to use the skill (see docs)"
+  docs: "Specifies special requirements needed to cast the skill. This only determines what type of requirement it will be, the \"Requirement Amount\" sets how many are needed (e.g. to require at least 15 health, this is set to 1 and the next parameter is set to 15). \n\n0 = None\n1 = Health\n5 = Number of skills left in your arsenal\n7 = Aura (Add more detail here)\n9 = Aura Level (Add more detail here)"
   type: U16
 - pos: 0x52
   name: "Requirement Amount"
-  desc: "The required amount of the type specified in\n the previous box"
+  desc: "The amount of the type specified in \"Requirement Type\" needed to use the skill"
   type: U16
 - pos: 0x54
   name: "Skill Use Restrictions"
@@ -96,34 +108,43 @@
   type: U16
 - pos: 0x56
   name: "Skill Button Effect"
+  docs: "I don't understand this parameter yet, the information and parameter name are from Nuion's [Attack Skill spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg).\n\n0 = Normal\n1 = Retainable\n2 = Lock Skill (orb)"
   type: U16
 - pos: 0x5A
   name: "Applied Status ID"
-  desc: "An effect to be applied to the target.\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode\n6 = Paralysis\n7 = Frozen\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura"
+  desc: "Apply a status effect to the target (see docs)"
+  docs: "Determines a status effect to be applied to the target. This entry has some extra details from in-game testing.\n\n0 = None\n1 = Aura Drain\n2 = Aura Level Decrease\n3 = Aura Drain\n4 = Aura Level Decrease\n5 = Explode (made my skill an enviromental, used \"0C 01\" on Status Enabler)\n6 = Paralysis (made my skill repeat the previous used one used \"0C 01\" on Status Enabler)\n7 = Frozen (made my skill crash the game, used \"0C 01\" on Status Enabler)\n8 = Poison\n9 = Death\n10 = Freeze Same Button\n11 = Absorb Aura"
   type: U16
 - pos: 0x5C
   name: "Restrictions"
+  docs: "I don't understand this parameter yet, the information and parameter name are from Nuion's\n[Attack Skill template spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg).\n\n0 = Normal\n1 = X Health Left to use\n5 = X Cards Left to use\n7 = Need Max Aura to use\n9 = Need X Aura Level"
   type: U16
 - pos: 0x5E
   name: "Strength Effect"
+  docs: "I don't understand this parameter yet, the information and parameter name are from Nuion's\n[Attack Skill template spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg).\n\n0 = Normal\n21 = Damage based on destructible\n28 = Random Damage\n24 = Dmg of unassigned buttons"
   type: U16
 - pos: 0x60
   name: "Damage"
+  desc: "How much damage to deal to the target"
   type: U16
 - pos: 0x62
   name: "Effect Duration / Misc. Effects"
+  docs: "This parameter needs more research. Usually this controls effect duration, but apparently under specific circumstances it will increase the attack damage on every consecutive hit.\n\n0 = Infinite duration (use this if your skill doesnt have a duration)\n4 = 34 seconds\n1800 *(check)* = 1 minute"
   type: U16
 - pos: 0x64
-  name: "Target Hand Data"
+  name: "Target Hand Filter"
   desc: "Goes with Hit Effect Skills"
+  docs: "Checks what types of skills are in the target's hand. This is generally used to erase skills from the target's hand.\n\n1 = Attack skills\n2 = Defense skills"
   type: U16
 - pos: 0x68
-  name: "Hit Effect Skills"
-  desc: "The effect to apply on hit (01 = Erase skill). Only used by vanilla on Lightning Sword."
+  name: "Target Hand Effect"
+  desc: "Effects skills in the target's hand, selected by \"Target Hand Filter\". Only used by vanilla on Lightning Sword."
+  docs: "Determines how the target's hand will be affected when hit by this skill. The targeted skills are the conditions checked by \"Target Hand Filter\".\n\n0 = Nothing\n1 = Erase Targeted Skills"
   type: U16
 - pos: 0x6A
   name: "Increase Stat"
-  desc: "0x09 = Health, 0x0B = LVL. Increases a stat by the damage value"
+  desc: "Increases an attribute of the user by the damage value (see docs)."
+  docs: "Increases an attribute of the user by the damage value (e.g. if set to increase health, with damage set to 2, it will heal the user by 2HP).\n\n9 = Health\n11 = Level"
   type: U16
 - pos: 0x6C
   name: "Status Enabler"
@@ -131,50 +152,64 @@
   type: U8
 - pos: 0x6D
   name: "Status ID Duration"
+  docs: "Determines the duration of the status applied to the target. This is probably measured in seconds. *(check)*"
   type: U8
 - pos: 0x70
   name: "Projectile Properties"
-  desc: "02 = Penetrate Defense"
+  desc: "Determines how the projectile interacts with obstacles and defense skills."
+  docs: "Determines how the projectile interacts with obstacles and defense skills. This parameter needs much more research.\n\n2 = Penetrate Defense skills"
   type: U16
 - pos: 0x72
   name: "Projectile ID"
   desc: "See spreadsheet for details"
-  docs: "TODO: Fill in from spreadsheet"
+  docs: "Determines what type of projectile will be used. Further documentation for this parameter seems to be missing."
   type: U16
 - pos: 0x74
   name: "\"Collision Skill ID\""
+  docs: "Unknown, name comes from blasianblazy"
   type: U16
 - pos: 0x76
   name: "Homing Range 1st Hit"
+  docs: "Undocumented, apparently has something to do with the first hit in a combo."
   type: U16
 - pos: 0x78
   name: "Knockback Strength"
+  docs: "Determines how much the target will stagger or be knocked back when hit. If set to 0, the target's movement won't be affected at all."
   type: U16
 - pos: 0x7A
   name: "Combo End"
+  docs: "This field changes meaning depending on other skill data. Sometimes it determines projectile range, and sometimes controls how the end of a combo works. If set to 0 and affecting projectile range, the projectile will have infinite range."
   type: U16
 - pos: 0x82
   name: "Projectile Behaviour"
   desc: "WARNING: The game will crash if this is over 0x14 (20)!"
+  docs: "This has also been labelled as \"Downed Hit Animation\", and changes meaning depending on other skill data. Under some circumstances, it will crash if over 0x14. Seems to determine the projectile's movement / behaviour.\n\n0 = Medium range, moves forward\n1 = Infinite range, moves backwards\n2 = Disappears instantly, then snaps to target. Maybe meelee?\n3 Disappears instantly, but doesn't snap to target\n4 = After a short delay it will instantly hit the target. If there is no target, it will go under the floor.\n5 = Crawler, medium range. No homing.\n6 = Rotate projectile 45 degrees (no homing). ARC\n7 = Medium range, no aim\n8 = Mine Placement. This will never actually go off.\n9 = Mine Explosion, instantly explodes when used\n10 = Stuck under player's feet in the ground. When the ground is destroyed, it disappears.\n11 = Picks up object, telekenesis\n12 = Attaches projectile to hand\n13 = Short Range Collision*(?)* Damage\n14 = Short Range Underground\n15 = Medium Range, placed on ground\n16 = All Range Hole\n17 = Medium Range Ricochet\n18 = Medium Range ??\n19 = Medium Range ??\n20 = Infinite Tracking"
   type: U16
 - pos: 0x84
   name: "Skill Duration"
+  docs: "I don't fully understand this parameter yet, you can find more info on Nuion's\n[Attack Skill template spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg). The skill duration and hit range parameters are both single bytes, which are merged into 1 parameter on the spreadsheet."
   type: U8
 - pos: 0x85
   name: "Hitbox Size"
+  docs: "I don't fully understand this parameter yet, you can find more info on Nuion's\n[Attack Skill template spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg). The skill duration and hit range parameters are both single bytes, which are merged into 1 parameter on the spreadsheet."
   type: U8
 - pos: 0x86
   name: "Expand Skill Width / Start Speed"
+  docs: "The speed at which the projectile moves when first fired. It has 2 names because it changes meaning depending on other skill data."
   type: U16
 - pos: 0x88
   name: "Animation Size / Acceleration"
+  docs: "How quickly the projectile accelerates to reach its end speed. It has 2 names because it changes meaning depending on other skill data."
   type: U16
 - pos: 0x8A
   name: "Projectile End Speed / Projectile Rain Count"
+  docs: "The speed at which the projectile stops accelerating, or how much rain it produces. Changes meaning depending on other skill data."
   type: U16
 - pos: 0x8C
   name: "Homing Strength / Accuracy"
+  docs: "On a scale of 0 - 100: How strongly the projectile tracks its target."
   type: U16
 - pos: 0x8E
   name: "Animation Height"
+  docs: "For rain skills, sets the height at which the rain starts."
   type: U16

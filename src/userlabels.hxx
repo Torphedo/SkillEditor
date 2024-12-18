@@ -21,6 +21,7 @@ struct userlabel {
 
 struct user_config {
     userlabel labels[sizeof(skill_t)] = {};
+    ryml::Tree tree;
 
     user_config() = default;
     user_config(char* yaml_data);
