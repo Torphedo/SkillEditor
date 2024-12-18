@@ -1,3 +1,14 @@
+- pos: 0x5E
+  name: "Conditional label test!"
+  desc: "You can ignore this entry, it's just an example of how to write a conditional label in the config file. It'll only activate if the skill ID is 400."
+  conditions:
+    - pos: 0xE
+      comparison: "=="
+      val: 400
+      comment1: "This will replace the Strength Effect label (@ 0x5E) when the Skill ID (@ 0xE) is 400."
+      comment2: "This is just an example, I put it outside the normal ID range so it won't affect normal use."
+  type: U16
+
 - pos: 0x8
   name: "Skill Text ID"
   desc: "The skill ID from which to get the skill's name,\n description, etc."
@@ -15,7 +26,7 @@
 - pos: 0x10
   name: "Rarity"
   desc: "The in-game rarity, displayed as stars"
-  docs: "The skill's rarity. Represented in-game by a star rating in the arsenal editor. Usually 1 more stars than the value (0 -> 1 star, 1 -> 2 stars, etc). Values higher than 5 result in 5 star outlines (instead of solid stars)"
+  docs: "The skill's rarity. Shown in-game by a star rating in the arsenal editor. There's 1 more star than the value (0 -> 1 star, 1 -> 2 stars, etc). Values higher than 5 result in 5 star outlines (instead of solid stars)"
   limit_low: 0
   limit_high: 5
   slider: true
@@ -90,6 +101,10 @@
   name: "# of Uses"
   desc: "How many times the skill can be used. Set this\n to 0 for infinite uses."
   type: U16
+  comment: "Everything after this point can change meaning depending on other skill data."
+
+
+
 - pos: 0x4C
   name: "Self Effect"
   desc: "An effect to be applied to the user. Undocumented,\n needs more research."
