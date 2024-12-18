@@ -1,4 +1,190 @@
-"\nSkill Editor will automatically connect to Phantom Dust as quickly as it can. Sometimes the editor will connect to the game faster than the fraction of a second it takes for the skill data to be loaded. If you reboot the game or open it after the editor, you may have to click \"Refresh process\" once to get the skill data to load. You may also have to click the reload button in the text editor after a refresh. For more information, read the Syncing page.",
-"\nBy design, the editor feels like it edits the game state directly. In reality, Skill Editor maintains its own complete copy of all skill data, which is automatically sent to the game within 1 frame of it changing (as fast as the UI reflects it). Usually the game never changes data, so the two are always in sync. But sometimes (usually after reboots), the game's data will change and make the editor out of sync. The editor automatically tries to resync when it sees a game reboot, but if that doesn't work, you can manually trigger one with the \"Refresh process\" button.",
-"\nTo distribute one or more skills in a single file, click `File > New Skill Pack` (or press `N`) and select all the skill files you want to include.\nThe name you enter will be saved inside the file, but won't be visible to people who install it (for now). Once you enter a name, hit save and choose a location to save the file.",
-"\nThe Text Editor can be accessed from `Window > Text Edit`. Here, you can edit the name and description of the currently selected skill. There is no limitation on the length of the name, aside from whether it'll run off the end of the box in-game. When you save a skill or combine saved skills into a pack, the current name and description are also saved."
+R"(
+Skill Editor will automatically connect to Phantom Dust as quickly as it can.
+Sometimes the editor will connect to the game faster than the fraction of a
+second it takes for the skill data to be loaded. If you reboot the game or open
+it after the editor, you may have to click "Refresh process" once to get the
+skill data to load. You may also have to click the reload button in the text
+editor after a refresh. For more information, read the Syncing page.
+)",
+
+R"(
+By design, the editor feels like it edits the game state directly. In reality,
+Skill Editor maintains its own complete copy of all skill data, which is
+automatically sent to the game within 1 frame of it changing (as fast as the UI
+reflects it). Usually the game never changes data, so the two are always in
+sync. But sometimes (usually after reboots), the game's data will change and
+make the editor go out of sync. The editor automatically tries to re-sync when
+it sees a game reboot, but if that doesn't work, you can manually trigger one
+with the "Refresh process" button.
+)",
+
+R"(
+To distribute one or more skills in a single file, click `File > New Skill Pack`
+(or press `N`) and select all the skill files you want to include.
+
+The name you enter will be saved inside the file, but won't be visible to people
+who install it (for now). Once you enter a name, hit save and choose a location
+to save the file.
+)",
+
+R"(
+The Text Editor can be accessed from `Window > Text Edit`. Here, you can edit
+the name and description of the currently selected skill. There is no limitation
+on the length of the name, aside from whether it'll run off the end of the box
+in-game. When you save a skill or combine saved skills into a pack, the current
+name and description are also saved.
+)",
+
+R"(
+Skill Editor lets you edit all the named boxes you see in the main editor
+window. These are called **labels**, and are essentially just names attached to
+1 or 2 bytes seen in the Hex Editor window to make them seem more friendly. Each
+label has a name that you see next to the box, a description you see when you
+hover over it, and documentation displayed in the other tab of this window.
+
+These labels are all stored in a "labels.yaml" file in the same folder as
+"skill_editor.exe". When you edit the YAML file, the labels will update the next
+time you run Skill Editor.
+)",
+
+R"(
+Custom labels can have a few properties in the YAML file:
+
+- pos
+    The offset of the data in the skill. This is the position of the first byte
+    the label applies to in the Hex Editor window.
+- type
+    The data type to interpret the labelled data as. This determines the
+    number of bytes that a label edits, and whether it allows negative numbers.
+    A prefix of "U" means unsigned (positive numbers only), and a prefix of "S"
+    means signed (allows negative numbers). The number in the data type is the
+    number of bits it takes up (so U16 is 2 bytes, because 16 / 8 = 2). These
+    are the supported data types:
+
+    - U8
+    - S8
+    - U16
+    - S16
+    - U32
+    - S32
+    - U64
+    - S64
+
+    Unsigned types support values from 0 to 2^n, where n is the number of bits.
+    Signed types support values from -(2^n)/2 to (2^n)/2 (the same number of
+    possible values, but half as many positive ones).
+
+- name
+    The human-readable name you see next to the box in the main editor window.
+
+- desc
+    The description you see when you hover over that box.
+
+- docs
+    A documentation entry is made for each label. This field is the body for
+    that documentation entry (most Markdown syntax is supported, you probably
+    know it from using GitHub or Discord).
+
+    If you don't add a docs field, the editor will use the description instead.
+    If you want the documentation to be empty for some reason, make it an empty
+    string.
+
+- slider
+    Controls whether this label should be a slider (true/false). You need to
+    specify an upper and lower limit (that aren't the same) for it to appear.
+
+    All sliders will be disabled if you enable the "Remove Input Box Limits"
+    option, and you can always Control-click to write any value you want.
+
+- limit_low
+    The lower limit for a slider.
+
+- limit_high
+    The upper limit for a slider.
+
+Any field name not listed above is ignored, so you can use them for comments. I
+like to use "comment: ". Any field you don't specify defaults to something
+reasonable like 0, an empty string, or "[docs missing]" (whatever the
+reasonable default would be). But if you don't specify at least a position and
+type, the label won't load and there'll be an error message in the console.
+
+Here's a bit of example YAML that demonstrates the syntax:
+
+- pos: 0x10
+  name: "Rarity"
+  desc: "The in-game rarity, displayed as stars"
+  docs: "The skill's rarity. Shown in-game by a star rating in the arsenal editor. There's 1 more star than the value (0 -> 1 star, 1 -> 2 stars, etc). Values higher than 5 result in 5 star outlines"
+  limit_low: 0
+  limit_high: 5
+  comment: "This lets you edit the 2 bytes at 0x10 and 0x11 using a slider from 0 to 5."
+  slider: true
+  type: U16
+
+
+)",
+
+R"(
+Labels can also have **conditions**, which let you turn labels on and off
+depending on the values of other data in the skill. You can have as many
+conditions as you want, and your label will only appear if all of them are true.
+Here are the fields of a condition (all required):
+
+- pos
+    The offset of the data you want to check. It'll be interpreted as whatever
+    data type you set for that position in another label. If you didn't set a
+    data type for that position, it'll be interpreted as a signed byte (S8).
+
+    If the data you want to check is also conditional, you should add an
+    unconditional label with only a position and data type. Otherwise, it might
+    be interpreted as an S8 even if all of your conditional labels for that
+    position are something like U16.
+
+- val
+    The value to compare against the data at the specified position.
+
+- comparison
+    The comparison to make between your value and the data in the skill. These
+    are the possible comparisons:
+
+    - "=="
+    - "<"
+    - "<="
+    - ">"
+    - ">="
+
+    The skill data is always on the left hand side, and your value is on the
+    right. So if you have this YAML:
+
+    conditions:
+      - pos: 0xE
+        comparison: ">"
+        val: 10
+
+    Your label will only activate when the skill ID (position 0xE) is greater
+    than 10. Unless you had an unconditional label like this somewhere, that
+    skill ID would be interpreted as an S8, and not support IDs above 127:
+
+    - pos: 0xE
+      name: "Skill ID"
+      type: U16
+
+
+    Here's the formatting for multiple conditions:
+
+    - pos: 0x5E
+      name: "Conditional label test!"
+      conditions:
+        - pos: 0xE
+          comparison: ">="
+          comment: "You can have comments here, too!"
+          val: 50
+        - pos: 0x10
+          comparison: "<"
+          val: 3
+      comment1: "This will only activate when the skill ID (pos 0x5E) is at least 50, and"
+      comment2: "the rarity (pos 0x10) is less than 3."
+      type: U16
+
+    It doesn't matter where the conditions are relative to the name/type/desc,
+    all that matters is that they're indented and below the "conditions: " part.
+)",

@@ -1,4 +1,7 @@
 "Connecting to the game",
 "Syncing",
 "Skill Packs",
-"Text Editing"
+"Text Editing",
+"Custom Labels",
+"Writing Custom Labels (Unconditional)",
+"Writing Custom Labels (Conditional)",
