@@ -1,38 +1,50 @@
-"[Window][Documentation]\n"
-"Pos=866,25\n"
-"Size=1054,745\n"
-"Collapsed=0\n"
-"DockId=0x00000005,0\n"
-"\n"
-"[Window][Attack Skill Editor]\n"
-"Pos=0,25\n"
-"Size=864,744\n"
-"Collapsed=0\n"
-"DockId=0x00000003,0\n"
-"\n"
-"[Window][Hex Editor]\n"
-"Pos=0,771\n"
-"Size=864,246\n"
-"Collapsed=0\n"
-"DockId=0x00000004,0\n"
-"\n"
-"[Window][Input a skill ID: ]\n"
-"Pos=-48,-48\n"
-"Size=234,95\n"
-"Collapsed=0\n"
-"\n"
-"[Window][Skill Text Editor]\n"
-"Pos=864,772\n"
-"Size=1054,245\n"
-"Collapsed=0\n"
-"DockId=0x00000006,0\n"
-"\n"
-"[Docking][Data]\n"
-"DockSpace     ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,48 Size=1920,992 Split=X\n"
-"  DockNode    ID=0x00000001 Parent=0x8B93E3BD SizeRef=864,695 Split=Y Selected=0xCB5C3808\n"
-"    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=864,744 Selected=0xCB5C3808\n"
-"    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=864,246 Selected=0x68F00410\n"
-"  DockNode    ID=0x00000002 Parent=0x8B93E3BD SizeRef=341,695 Split=Y Selected=0x63A53D31\n"
-"    DockNode  ID=0x00000005 Parent=0x00000002 SizeRef=1054,745 CentralNode=1 Selected=0x63A53D31\n"
-"    DockNode  ID=0x00000006 Parent=0x00000002 SizeRef=1054,245 Selected=0x1647FEA9\n"
-"\n"
+R"(
+[Window][WindowOverViewport_11111111]
+Pos=0,29
+Size=1258,715
+Collapsed=0
+
+[Window][Debug##Default]
+Pos=60,60
+Size=400,400
+Collapsed=0
+
+[Window][MenuBar]
+Pos=0,0
+Size=1258,29
+Collapsed=0
+
+[Window][Hex Editor]
+Pos=0,446
+Size=629,298
+Collapsed=0
+DockId=0x00000004,0
+
+[Window][Skill Editor]
+Pos=0,29
+Size=629,415
+Collapsed=0
+DockId=0x00000003,0
+
+[Window][Documentation]
+Pos=631,29
+Size=627,570
+Collapsed=0
+DockId=0x00000005,0
+
+[Window][Skill Text Editor]
+Pos=631,601
+Size=627,143
+Collapsed=0
+DockId=0x00000006,0
+
+[Docking][Data]
+DockSpace     ID=0x7C6B3D9B Window=0xA87D555D Pos=111,174 Size=1258,715 Split=X
+  DockNode    ID=0x00000001 Parent=0x7C6B3D9B SizeRef=629,715 Split=Y Selected=0xF04BECCC
+    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=629,415 CentralNode=1 Selected=0xF04BECCC
+    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=629,298 Selected=0x68F00410
+  DockNode    ID=0x00000002 Parent=0x7C6B3D9B SizeRef=627,715 Split=Y Selected=0x63A53D31
+    DockNode  ID=0x00000005 Parent=0x00000002 SizeRef=627,570 Selected=0x63A53D31
+    DockNode  ID=0x00000006 Parent=0x00000002 SizeRef=627,143 Selected=0x1647FEA9
+
+)"

@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <filesystem>
 
-#include "userlabels.hxx"
 #include "gui_loop.hxx"
 #include "winAPI.hxx"
 
