@@ -99,18 +99,20 @@ bool get_process(pd_meta* p) {
     return p;
 }
 
-void flush_to_pd(pd_meta p) {
-    if (p.gstorage == NULL) {
+bool flush_to_pd(pd_meta p) {
+    if (p.gstorage == nullptr) {
         printf("No data to write...\n");
-        return;
+        return false;
     }
 
-    void* dirty_pages[100] = {0};
+    void* dirty_pages[100] = {};
     ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
     DWORD page_size = 0;
     GetWriteWatch(WRITE_WATCH_FLAG_RESET, p.gstorage, sizeof(*p.gstorage), dirty_pages, &address_count, &page_size);
 
-    if (address_count > 0) {
+    // If there's at least 1 page that changed, we need to copy some data
+    const bool need_write = address_count > 0;
+    if (need_write) {
         // Make sure the current version number doesn't affect the hash
         p.gstorage->VersionNum = 0;
 
@@ -118,7 +120,7 @@ void flush_to_pd(pd_meta p) {
         p.gstorage->VersionNum = crc32buf((char*)p.gstorage, sizeof(*p.gstorage));
 
         // We have to update the first page manually here
-        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, NULL);
+        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, nullptr);
 
         // Don't trigger the write watch again from editing version
         ResetWriteWatch(p.gstorage, sizeof(*p.gstorage));
@@ -128,6 +130,8 @@ void flush_to_pd(pd_meta p) {
         const ptrdiff_t offset = (char*)dirty_pages[i] - (char*)p.gstorage;
         WriteProcessMemory(p.h, (void*)(p.gstorage_addr + offset), dirty_pages[i], page_size, NULL);
     }
+
+    return need_write;
 }
 
 bool handle_still_valid(void* handle) {

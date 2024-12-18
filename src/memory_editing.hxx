@@ -16,7 +16,10 @@ bool get_process(pd_meta* p);
 // Refresh all process information as needed, including gsdata. Otherwise, nothing.
 void update_process(pd_meta* p, bool force);
 
-void flush_to_pd(pd_meta p);
+// If anything changed in gstorage since the last time this was called, all
+// pages that changed are copied into the game process.
+// @return Whether data changed and a copy was needed
+bool flush_to_pd(pd_meta p);
 
 bool handle_still_valid(void* handle);
 

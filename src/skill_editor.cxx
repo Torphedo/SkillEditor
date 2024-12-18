@@ -62,6 +62,10 @@ editor::~editor() {
     free(this->cfg_yaml);
 }
 
+skill_t* editor::cur_skill() {
+    return &p.gstorage->skill_array[ID - 1];
+}
+
 int editor::draw() {
     if (ID == 0) {
         ID++;
@@ -78,7 +82,24 @@ int editor::draw() {
     }
 
     if (game_running && game_available) {
-        flush_to_pd(p);
+        static u16 skill_id_cache = this->ID;
+        const bool skill_id_changed = skill_id_cache != this->ID;
+        const bool gstorage_changed = flush_to_pd(p);
+
+        if (skill_id_changed) {
+            // Reset saved ID
+            skill_id_cache = this->ID;
+        }
+
+        if (gstorage_changed || skill_id_changed) {
+            // The skill labels might be out of date. This is a little
+            // trigger-happy, but it's not super expensive to update all our
+            // labels. Better to be a little slow and always correct than super
+            // fast and out of sync.
+            printf("Updating labels!\n");
+            this->custom_labels.update_unconditional_labels();
+            this->custom_labels.update_conditional_labels(*(this->cur_skill()));
+        }
     }
 
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
@@ -260,21 +281,10 @@ int editor::draw() {
         hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
     }
 
-    skill_t* skill = &p.gstorage->skill_array[ID - 1];
-    static u16 skill_id_cache = this->ID;
-    if (skill_id_cache != this->ID) {
-        // The skill ID has changed since last frame, so we need to update the
-        // labels.
-        this->custom_labels.update_unconditional_labels();
-        this->custom_labels.update_conditional_labels(*skill);
-        // Reset saved ID
-        skill_id_cache = this->ID;
-    }
-
     if (AttackSkillEditor) {
         // Render the editor w/ user-controlled labels
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
-            this->custom_labels.render_editor(skill, limitless);
+            this->custom_labels.render_editor(this->cur_skill(), limitless);
         }
         ImGui::End();
     }
