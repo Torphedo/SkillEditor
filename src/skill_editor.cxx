@@ -242,11 +242,10 @@ int editor::draw() {
     if (IDSelection) {
         // Temporary storage to hold an ID before actually updating the selected ID
         static s32 temp_id = 0;
-        static bool hex = false;
 
-        ImGui::Begin("Input a skill ID: ");
-        ImGui::Checkbox("Hexadecimal", &hex);
-        ImGui::InputInt("ID", &temp_id, 1, 1, ImGuiInputTextFlags_CharsHexadecimal * hex);
+        ImGui::Begin("Input a skill ID: ", &IDSelection);
+        ImGui::Checkbox("Hexadecimal", &hexadecimal_ids);
+        ImGui::InputInt("ID", &temp_id, 1, 1, ImGuiInputTextFlags_CharsHexadecimal * hexadecimal_ids);
         if (ImGui::Button("Open")) {
             ID = temp_id;
             printf("Loaded skill with ID %d\n", ID);
@@ -268,6 +267,8 @@ int editor::draw() {
         // labels.
         this->custom_labels.update_unconditional_labels();
         this->custom_labels.update_conditional_labels(*skill);
+        // Reset saved ID
+        skill_id_cache = this->ID;
     }
 
     if (AttackSkillEditor) {
@@ -285,7 +286,7 @@ int editor::draw() {
         if (ImGui::BeginTabBar("DocTabs")) {
             if (ImGui::BeginTabItem("Attack Skills")) {
                 static ryml::ConstNodeRef selected_node = nullptr;
-                ImGui::BeginChild("left pane", ImVec2(200, 0), true);
+                ImGui::BeginChild("left pane", ImVec2(300, 0), true);
                 for (ryml::ConstNodeRef label_node : custom_labels.tree.rootref()) {
                     // Selectable object for every string in the array
                     if (!label_node.has_child("name")) {
@@ -342,7 +343,7 @@ int editor::draw() {
 
             if (ImGui::BeginTabItem("Skill Editor")) {
                 static uint16_t select_idx = 0;
-                ImGui::BeginChild("left pane", ImVec2(200, 0), true);
+                ImGui::BeginChild("left pane", ImVec2(350, 0), true);
                 for (unsigned short i = 0; i < (unsigned short)IM_ARRAYSIZE(DocumentationProgramLabels); i++) {
                     // Selectable object for every string in the array
                     if (ImGui::Selectable(DocumentationProgramLabels[i])) {
@@ -353,7 +354,7 @@ int editor::draw() {
 
                 ImGui::SameLine();
 
-                ImGui::BeginChild("Doc Text", ImVec2(600, 0), false);
+                ImGui::BeginChild("Doc Text", ImVec2(800, 0), false);
                 // Renders the item name as an H1, then the description on a new line.
                 std::string md = "# ";
                 md += DocumentationProgramLabels[select_idx];
