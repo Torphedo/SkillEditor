@@ -121,7 +121,7 @@ int editor::draw() {
                         }
                     }
                     if (ImGui::MenuItem("Skill File")) {
-                        ID = load_attack_skill(p, ID);
+                        ID = load_skill(p, ID);
                         AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {

@@ -8,7 +8,7 @@
 
 #include <common/crc32.h>
 
-// Used to track the most recently saved attack skill filepath
+// Used to track the most recently saved skill filepath
 char* most_recent_filename = nullptr;
 
 bool skill_select() {
@@ -16,37 +16,36 @@ bool skill_select() {
     return most_recent_filename != nullptr;
 }
 
-unsigned int load_attack_skill(pd_meta p, unsigned int current_id) {
+unsigned int load_skill(pd_meta p, unsigned int current_id) {
     most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
-    if (most_recent_filename != nullptr) {
-        skill_t buffer = {0 };
-        FILE* skill_file = fopen(most_recent_filename, "rb");
-        fread(&buffer, sizeof(skill_t), 1, skill_file);
-
-        p.gstorage->skill_array[buffer.SkillID - 1] = buffer;
-        printf("Imported attack skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
-        if (std::filesystem::file_size(most_recent_filename) > 144) {
-            pack2_text text_meta = {0};
-            fread(&text_meta, sizeof(pack2_text), 1, skill_file);
-
-            skill_text original_text = load_skill_text(p, buffer.SkillTextID + 1);
-            if (original_text.name.length() <= text_meta.name_length) {
-                int text_id = buffer.SkillTextID + 1;
-                char* name = (char*) malloc(text_meta.name_length);
-                char* desc = (char*) malloc(text_meta.desc_length);
-                fread(name, text_meta.name_length, 1, skill_file);
-                fread(desc, text_meta.desc_length, 1, skill_file);
-                save_skill_text(p, {name, desc}, buffer.SkillTextID + 1);
-                free(name);
-                free(desc);
-            }
-        }
-        fclose(skill_file);
-        return buffer.SkillID;
-    }
-    else {
+    if (most_recent_filename == nullptr) {
         return current_id;
     }
+
+    skill_t buffer = {0};
+    FILE* skill_file = fopen(most_recent_filename, "rb");
+    fread(&buffer, sizeof(skill_t), 1, skill_file);
+
+    p.gstorage->skill_array[buffer.SkillID - 1] = buffer;
+    printf("Imported skill with ID %d from %s\n", buffer.SkillID, most_recent_filename);
+    if (std::filesystem::file_size(most_recent_filename) > 144) {
+        pack2_text text_meta = {0};
+        fread(&text_meta, sizeof(pack2_text), 1, skill_file);
+
+        skill_text original_text = load_skill_text(p, buffer.SkillTextID + 1);
+        if (original_text.name.length() <= text_meta.name_length) {
+            int text_id = buffer.SkillTextID + 1;
+            char* name = (char*) malloc(text_meta.name_length);
+            char* desc = (char*) malloc(text_meta.desc_length);
+            fread(name, text_meta.name_length, 1, skill_file);
+            fread(desc, text_meta.desc_length, 1, skill_file);
+            save_skill_text(p, {name, desc}, buffer.SkillTextID + 1);
+            free(name);
+            free(desc);
+        }
+    }
+    fclose(skill_file);
+    return buffer.SkillID;
 }
 
 // Writes the currently open skill to disk.
@@ -71,7 +70,7 @@ void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
             }
             fclose(skill_out);
 
-            printf("Saved attack skill to %s\n", most_recent_filename);
+            printf("Saved skill to %s\n", most_recent_filename);
         }
     }
     else {
