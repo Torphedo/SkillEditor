@@ -1,13 +1,12 @@
 #include <filesystem>
-#include <stdio.h>
+#include <cstdio>
 
 #include "winAPI.hxx"
 #include "remote_pd.hxx"
 #include "text.hxx"
+#include "mods.hxx"
 
-extern "C" {
-#include <crc_32.h>
-}
+#include <common/crc32.h>
 
 // Used to track the most recently saved attack skill filepath
 char* most_recent_filename = nullptr;

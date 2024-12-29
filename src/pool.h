@@ -5,7 +5,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "types.hxx"
+#include <common/int.h>
 
 /// @brief An automatically expanding dynamic buffer
 typedef struct {

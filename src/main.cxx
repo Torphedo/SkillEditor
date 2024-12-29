@@ -4,8 +4,6 @@
 #include "gui_loop.hxx"
 #include "winAPI.hxx"
 
-#include <common/file.h>
-
 static const char ImGuiConfig[] = {
 #include "../res/imgui-config.txt"
 };

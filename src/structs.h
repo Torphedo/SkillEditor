@@ -1,23 +1,5 @@
 #pragma once
-
-#include "types.hxx"
-
-// =============================================================================
-// Custom Skill Editor formats for skill packs
-
-// Original format, skill data only
-typedef struct {
-    char name[32];
-    u16 format_version; // 1
-    u16 skill_count;
-    u8 pad[12];
-}pack_header1;
-
-// Skill pack v2 format, has skill and text data
-typedef struct {
-    u16 name_length; // Should be calculated with strlen()
-    u16 desc_length;
-}pack2_text;
+#include <common/int.h>
 
 // =============================================================================
 // Official PD structures, all field names unofficial.
@@ -45,6 +27,9 @@ enum {
 };
 
 typedef struct {
+    // This could be made a big array of 0x90 bytes, but the ID & text ID are
+    // needed all over the place.
+
     u8 data1[0x8];
     // SkillTextID offset = 0x8
     u16 SkillTextID;

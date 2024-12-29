@@ -3,9 +3,7 @@
 #include <psapi.h>
 #include <memoryapi.h>
 
-extern "C" {
-    #include <crc_32.h>
-}
+#include <common/crc32.h>
 
 #include "remote_pd.hxx"
 #include "structs.h"
@@ -120,7 +118,7 @@ bool flush_to_pd(pd_meta p) {
         p.gstorage->VersionNum = 0;
 
         // Update version number
-        p.gstorage->VersionNum = crc32buf((char*)p.gstorage, sizeof(*p.gstorage));
+        p.gstorage->VersionNum = crc32buf((u8*)p.gstorage, sizeof(*p.gstorage));
 
         // We have to update the first page manually here
         WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, nullptr);

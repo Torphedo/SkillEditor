@@ -1,8 +1,9 @@
 #pragma once
-#include "types.hxx"
-#include "structs.h"
 #include <ryml.hpp>
 #include <imgui.h>
+
+#include <common/int.h>
+#include "structs.h"
 
 typedef enum : u8 {
     EQUAL,

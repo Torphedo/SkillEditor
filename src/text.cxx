@@ -1,15 +1,11 @@
 #include <cstring>
 #include <windows.h>
 
-extern "C" {
-#include "crc_32.h"
-}
-#include "remote_pd.hxx"
+#include <common/int.h>
 
-#include "types.hxx"
+#include "remote_pd.hxx"
 #include "structs.h"
 #include "text.hxx"
-#include "winAPI.hxx"
 
 skill_text load_skill_text(pd_meta p, unsigned int id) {
     if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {

@@ -37,8 +37,6 @@ add_executable(skill_editor
 	src/gui_loop.cxx
 	src/skill_editor.cxx
 	src/pool.c
-
-	vendor/crc_32.c
 )
 
 target_link_libraries(skill_editor d3d9 imgui ryml bobtail)

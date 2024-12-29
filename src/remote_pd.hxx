@@ -1,6 +1,8 @@
 #pragma once
+/// @file remote_pd.hxx
+/// Functions for syncing state with Phantom Dust.
 
-#include "types.hxx"
+#include <common/int.h>
 #include "structs.h"
 
 #define WIN32_LEAN_AND_MEAN
