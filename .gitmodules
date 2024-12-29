@@ -5,3 +5,6 @@
 [submodule "vendor/rapidyaml"]
 	path = vendor/rapidyaml
 	url = https://github.com/biojppm/rapidyaml
+[submodule "vendor/bobtail"]
+	path = vendor/bobtail
+	url = https://github.com/Torphedo/bobtail

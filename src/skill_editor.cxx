@@ -1,5 +1,3 @@
-#include <shellapi.h>
-
 #include <imgui.h>
 #include <imgui_internal.h> // For messing with the viewport for menu bar
 #include <imgui/misc/cpp/imgui_stdlib.h> // For std::string input fields
@@ -10,7 +8,13 @@
 #include "skill_io.h"
 #include "text.hxx"
 
-#include "file.h"
+#include <common/file.h>
+
+// I'd normally keep this near the top, but c4 and windows.h are mortal enemies.
+// c4 always has to be included first, and it comes in via skill_editor.hxx.
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <shellapi.h>
 
 static const char* DocumentationProgramBody[] = {
 #include "../res/SkillEditorBody.txt"

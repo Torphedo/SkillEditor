@@ -7,11 +7,13 @@ project(skill_editor
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(vendor/rapidyaml)
+add_subdirectory(vendor/bobtail)
 
 include_directories(
 	"vendor"
 	"vendor/imgui"
 	"vendor/rapidyaml"
+	"vendor/bobtail"
 )
 
 add_library(imgui STATIC
@@ -34,9 +36,9 @@ add_executable(skill_editor
 	src/userlabels.cxx
 	src/gui_loop.cxx
 	src/skill_editor.cxx
-	src/file.c
+	src/pool.c
 
 	vendor/crc_32.c
 )
 
-target_link_libraries(skill_editor d3d9 imgui ryml)
+target_link_libraries(skill_editor d3d9 imgui ryml bobtail)
