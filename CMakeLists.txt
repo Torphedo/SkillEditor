@@ -10,19 +10,19 @@ add_subdirectory(vendor/rapidyaml)
 
 include_directories(
 	"vendor"
-	"vendor/imGUI"
+	"vendor/imgui"
 	"vendor/rapidyaml"
 )
 
 add_library(imgui STATIC
-	vendor/imGUI/backends/imgui_impl_dx9.cpp
-	vendor/imGUI/backends/imgui_impl_win32.cpp
-	vendor/imGUI/imgui.cpp
-	vendor/imGUI/misc/cpp/imgui_stdlib.cpp
-	vendor/imGUI/imgui_demo.cpp
-	vendor/imGUI/imgui_draw.cpp
-	vendor/imGUI/imgui_tables.cpp
-	vendor/imGUI/imgui_widgets.cpp
+	vendor/imgui/backends/imgui_impl_dx9.cpp
+	vendor/imgui/backends/imgui_impl_win32.cpp
+	vendor/imgui/imgui.cpp
+	vendor/imgui/misc/cpp/imgui_stdlib.cpp
+	vendor/imgui/imgui_demo.cpp
+	vendor/imgui/imgui_draw.cpp
+	vendor/imgui/imgui_tables.cpp
+	vendor/imgui/imgui_widgets.cpp
 )
 
 add_executable(skill_editor

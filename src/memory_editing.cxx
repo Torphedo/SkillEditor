@@ -1,5 +1,4 @@
-#include <Windows.h>
-#include <shobjidl.h> 
+#include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
 #include <memoryapi.h>
@@ -134,20 +133,21 @@ bool flush_to_pd(pd_meta p) {
     return need_write;
 }
 
-bool handle_still_valid(void* handle) {
-    if (handle == INVALID_HANDLE_VALUE) {
+bool handle_still_valid(HANDLE h) {
+    if (h == INVALID_HANDLE_VALUE) {
         return false;
     }
+
     // If waiting on the process for 0ms times out, process is still running.
     // If it returns something else, the process was terminated.
-    DWORD result = WaitForSingleObject(handle, 0);
+    DWORD result = WaitForSingleObject(h, 0);
+    /*
     if (result == WAIT_FAILED) {
-        /*
-            DWORD err = GetLastError();
-            printf("Process check failed with code %ld\n", err);
-        */
+        DWORD err = GetLastError();
+        printf("Process check failed with code %ld\n", err);
         SetLastError(0);
     }
+    */
     return (result == WAIT_TIMEOUT);
 }
 
@@ -159,10 +159,12 @@ void update_process(pd_meta* p, bool force) {
         return;
     }
 
-    // Update everything
     if (p->h != INVALID_HANDLE_VALUE && p->h != NULL) {
+        // Clean up our old handle before we open a new one
         CloseHandle(p->h);
     }
+
+    // Update everything
     get_process(p);
 }
 
@@ -170,9 +172,11 @@ bool can_read_memory(pd_meta p) {
     if (!handle_still_valid(p.h)) {
         return false;
     }
+
+    // Try to read memory
     unsigned int buf = 0;
-    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
-    DWORD error = GetLastError();
+    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, nullptr);
+    const DWORD error = GetLastError();
     SetLastError(0);
     return (error == 298) || (error == 0);
 }

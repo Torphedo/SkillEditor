@@ -3,8 +3,11 @@
 #include "types.hxx"
 #include "structs.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 typedef struct {
-    void* h;
+    HANDLE h;
     uintptr_t gstorage_addr;
     gsdata* gstorage;
     u32 pid;
@@ -21,7 +24,7 @@ void update_process(pd_meta* p, bool force);
 // @return Whether data changed and a copy was needed
 bool flush_to_pd(pd_meta p);
 
-bool handle_still_valid(void* handle);
+bool handle_still_valid(HANDLE h);
 
 bool is_running();
 

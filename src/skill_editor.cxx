@@ -1,18 +1,16 @@
-#include "skill_editor.hxx"
-#include <iostream>
+#include <shellapi.h>
 
 #include <imgui.h>
 #include <imgui_internal.h> // For messing with the viewport for menu bar
 #include <imgui/misc/cpp/imgui_stdlib.h> // For std::string input fields
 #include <imgui_markdown.h>
 
+#include "skill_editor.hxx"
 #include "winAPI.hxx"
 #include "skill_io.h"
 #include "text.hxx"
 
-extern "C" {
 #include "file.h"
-}
 
 static const char* DocumentationProgramBody[] = {
 #include "../res/SkillEditorBody.txt"
@@ -96,7 +94,6 @@ int editor::draw() {
             // trigger-happy, but it's not super expensive to update all our
             // labels. Better to be a little slow and always correct than super
             // fast and out of sync.
-            printf("Updating labels!\n");
             this->custom_labels.update_unconditional_labels();
             this->custom_labels.update_conditional_labels(*(this->cur_skill()));
         }
@@ -124,19 +121,18 @@ int editor::draw() {
                         AttackSkillEditor = true; // Open the Attack Skill Editor window
                     }
                     if (ImGui::MenuItem("Install Skill Pack")) {
-                        if (game_available) {
-                            if (SUCCEEDED(file_multiple_select_dialog())) { // Open a multiple file open dialog
+                        if (!game_available) {
+                            printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
+                        } else {
+                            // Open a multiple file open dialog
+                            if (!SUCCEEDED(file_multiple_select_dialog())) {
+                                printf("File selection canceled.\n");
+                            } else {
                                 install_mod(p);
                                 for (int i = 0; i < MultiSelectCount; i++) {
-                                    std::cout << "Installed skill pack " << multiselectpath[i] << ".\n";
+                                    printf("Installed skill pack %s.\n", multiselectpath[i].c_str());
                                 }
                             }
-                            else {
-                                printf("File selection canceled.\n");
-                            }
-                        }
-                        else {
-                            printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
                         }
                     }
                     ImGui::EndMenu();
@@ -156,16 +152,12 @@ int editor::draw() {
             }
             if (ImGui::BeginMenu("Window")) {
                 ImGui::MenuItem("Attack Skill Editor", nullptr, &AttackSkillEditor);
-                if (ImGui::MenuItem("Skill Hex Editor")) {
-                    if (game_available) {
-                        HexEditor = !HexEditor;
-                    }
-                }
+                ImGui::MenuItem("Skill Hex Editor", nullptr, &HexEditor);
                 ImGui::MenuItem("Documentation", nullptr, &Documentation);
                 if (ImGui::MenuItem("Text Edit", nullptr, &text_edit)) {
                     update_process(&p, false); // Refresh skill data address & game handle
 
-                    skill_text text = load_skill_text(p, ID);
+                    const skill_text text = load_skill_text(p, ID);
                     current_name = text.name;
                     current_desc = text.desc;
                 }

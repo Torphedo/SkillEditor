@@ -1,5 +1,8 @@
-#ifndef FILE_H
-#define FILE_H
+#pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// @file file.h
 /// @brief Utilities for dealing with the filesystem
 
@@ -45,4 +48,6 @@ static inline u32 magic(char a, char b, char c, char d) {
 /// Same as @ref magic(), but can be used at compile time (good for enums)
 #define MAGIC(a, b, c, d) ((u32)a | ((u32)b << 8) | ((u32)c << 16) | ((u32)d << 24))
 
-#endif // #ifndef FILE_H
+#ifdef __cplusplus
+}
+#endif
