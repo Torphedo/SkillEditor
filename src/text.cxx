@@ -29,8 +29,8 @@ skill_text load_skill_text(pd_meta p, unsigned int id) {
     return output;
 }
 
-void shift_textbuf(pd_meta p, char* offender, u32 new_len, u32 offender_id, bool is_name) {
-    const s32 diff = new_len - (strlen(offender) + 1);
+void shift_textbuf(pd_meta p, char* offender, s32 new_len, u32 offender_id, bool is_name) {
+    const s64 diff = new_len - (s64)(strlen(offender) + 1);
     if (diff <= 0 || offender < (char*)p.gstorage) {
         return;
     }
@@ -40,7 +40,7 @@ void shift_textbuf(pd_meta p, char* offender, u32 new_len, u32 offender_id, bool
     memmove(target + diff, target, remaining_space);
     memset(target, 0, diff); // Clear the new space
 
-    for (int i = offender_id + 1; i < ARRAYSIZE(p.gstorage->textPtrs); i++) {
+    for (u32 i = offender_id + 1; i < ARRAYSIZE(p.gstorage->textPtrs); i++) {
         text_ptrs* offsets = &p.gstorage->textPtrs[i];
         offsets->name += diff;
         offsets->desc += diff;
@@ -69,15 +69,15 @@ bool save_skill_text(pd_meta p, skill_text text, unsigned int id) {
     // Shorthands for the new text
     const char* new_name = text.name.data();
     const char* new_desc = text.desc.data();
-    const u32 name_size = strlen(new_name) + 1;
-    const u32 desc_size = strlen(new_desc) + 1;
+    const s32 name_size = text.name.length() + 1;
+    const s32 desc_size = text.name.length() + 1;
 
-    char* name = ((char*)&p.gstorage->textPtrs) + string_offset->name;
+    char* name = (char*)string_offset + string_offset->name;
     shift_textbuf(p, name, name_size, id - 1, true);
 
     // IMPORTANT: This must come after the above shift_textbuf call. If the name
     // string changes size, the description offset will be different.
-    char* desc = ((char*)&p.gstorage->textPtrs) + string_offset->desc;
+    char* desc = (char*)string_offset + string_offset->desc;
     shift_textbuf(p, desc, desc_size, id - 1, false);
 
     // Apply text changes to the string pool
