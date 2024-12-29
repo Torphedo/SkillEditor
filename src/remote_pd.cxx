@@ -7,7 +7,7 @@ extern "C" {
     #include <crc_32.h>
 }
 
-#include "memory_editing.hxx"
+#include "remote_pd.hxx"
 #include "structs.h"
 #include "winAPI.hxx"
 
@@ -63,17 +63,17 @@ bool is_running() {
 }
 
 bool get_process(pd_meta* p) {
-    if (p->gstorage == NULL) {
-        p->gstorage = (gsdata*)VirtualAlloc(NULL, sizeof(*p->gstorage), MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE);
+    if (p->gstorage == nullptr) {
+        DWORD alloc_type = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
+        p->gstorage = (gsdata*)VirtualAlloc(nullptr, sizeof(*p->gstorage), alloc_type, PAGE_READWRITE);
     }
 
-    if (!is_running()) {
-        // If it's not running, our handles & PID are no longer valid
+    p->pid = get_pid_by_name("PDUWP.exe");
+    if (p->pid == 0) {
+        // The game isn't running, any handles we had are now invalid.
         p->h = INVALID_HANDLE_VALUE;
-        p->pid = 0;
         return false;
     }
-    p->pid = get_pid_by_name("PDUWP.exe");
 
     // Open game process
     DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE;
@@ -104,6 +104,10 @@ bool flush_to_pd(pd_meta p) {
         return false;
     }
 
+    // The data we work with is ~274KiB, and getting pointers to 100 dirty pages
+    // allows for 400KiB of watched data to change without missing anything. We
+    // can probbaly write a loop to sync an unlimited amount of data between
+    // processes, but this is fine for our use case.
     void* dirty_pages[100] = {};
     ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
     DWORD page_size = 0;
@@ -179,4 +183,14 @@ bool can_read_memory(pd_meta p) {
     const DWORD error = GetLastError();
     SetLastError(0);
     return (error == 298) || (error == 0);
+}
+
+void toggle_game_pause(pd_meta p) {
+    static bool GamePaused = false;
+    if (GamePaused) {
+        DebugActiveProcessStop(p.pid);
+    } else {
+        DebugActiveProcess(p.pid);
+    }
+    GamePaused = !GamePaused;
 }

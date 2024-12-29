@@ -33,3 +33,6 @@ bool can_read_memory(pd_meta p);
 
 // Loads gsdata from memory into addressable structs.
 bool load_skill_data(pd_meta p);
+
+// Toggles whether the game is currently frozen by Skill Editor
+void toggle_game_pause(pd_meta p);

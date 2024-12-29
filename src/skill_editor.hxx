@@ -4,7 +4,7 @@
 #include "userlabels.hxx"
 #include <imgui_hex_editor.h>
 #include <imgui_markdown.h>
-#include "memory_editing.hxx"
+#include "remote_pd.hxx"
 
 struct editor {
     pd_meta p = {};

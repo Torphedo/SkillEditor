@@ -29,10 +29,10 @@ add_library(imgui STATIC
 
 add_executable(skill_editor
 	src/main.cxx
-	src/skill_io.cxx
+	src/mods.cxx
 	src/winAPI.cxx
 	src/text.cxx
-	src/memory_editing.cxx
+	src/remote_pd.cxx
 	src/userlabels.cxx
 	src/gui_loop.cxx
 	src/skill_editor.cxx

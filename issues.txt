@@ -3,3 +3,4 @@
 - Byte limitations are annoying when data shifts around
 - Dash, Lift Up, Skywalk, etc. (any skill that moves you) will be extremely loud
   with large movement values (needs in-editor warning)
+- Closing Skill Editor while it's frozen via debugging will close the game too

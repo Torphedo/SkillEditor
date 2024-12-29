@@ -5,7 +5,7 @@
 
 #include "skill_editor.hxx"
 #include "winAPI.hxx"
-#include "skill_io.h"
+#include "mods.hxx"
 #include "text.hxx"
 
 #include <common/file.h>
