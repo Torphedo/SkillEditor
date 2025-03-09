@@ -179,7 +179,7 @@ void save_skill_pack() {
             fread(entries, sizeof(*entries), header.skill_count, skill_file);
 
             // Text data takes up the remainder of the file:
-            const u32 text_size = file_size(multiselectpath[i].data() - sizeof(header) - sizeof(*entries) * header.skill_count);
+            const u32 text_size = file_size(multiselectpath[i].data()) - sizeof(header) - sizeof(*entries) * header.skill_count;
 
             // Allocate space, then just copy the skill text directly into our pool.
             const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
@@ -225,7 +225,7 @@ void save_skill_pack() {
     }
 
     // Save all the text data at once
-    fwrite((void*)pool.data, pool.alloc_size, 1, skill_pack_out);
+    fwrite((void*)pool.data, pool.pos, 1, skill_pack_out);
     pool_close(&pool);
 
     fclose(skill_pack_out);
