@@ -107,18 +107,19 @@ int editor::draw() {
     const bool shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
 
     bool new_skill_pack = control && ImGui::IsKeyPressed(ImGuiKey_N, false);
+    bool load_from_mem = control && ImGui::IsKeyPressed(ImGuiKey_L, false);
+    bool save_as = control && shift && ImGui::IsKeyPressed(ImGuiKey_S, false);
+    bool save_normal = control && ImGui::IsKeyPressed(ImGuiKey_S, false);
+    bool toggle_freeze_game = ImGui::IsKeyPressed(ImGuiKey_F4, false);
+
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("New Skill Pack", "Ctrl-N")) {
-                    new_skill_pack = true;
-                }
+                new_skill_pack |= ImGui::MenuItem("New Skill Pack", "Ctrl-N");
+
                 if (ImGui::BeginMenu("Open")) {
-                    if (ImGui::MenuItem("Skill (From Memory)", "Ctrl-L")) {
-                        if (game_available) {
-                            IDSelection = true;
-                        }
-                    }
+                    load_from_mem |= ImGui::MenuItem("Skill (From Memory)", "Ctrl-L");
+
                     if (ImGui::MenuItem("Skill File or Pack")) {
                         if (!game_available) {
                             printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
@@ -136,13 +137,8 @@ int editor::draw() {
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Save To File", "Shift + S")) {
-                    text_prompt = true;
-                }
-                if (ImGui::MenuItem("Save As", "Ctrl + S")) {
-                    skill_select();
-                    text_prompt = true;
-                }
+                save_normal |= ImGui::MenuItem("Save To File", "Shift + S");
+                save_as |= ImGui::MenuItem("Save As", "Ctrl + S");
 
                 if (ImGui::MenuItem("Exit", "Alt + F4")) {
                     return 1;
@@ -163,9 +159,7 @@ int editor::draw() {
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Options")) {
-                if (ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4")) {
-                    toggle_game_pause(p);
-                }
+                toggle_freeze_game |= ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4");
                 ImGui::Checkbox("Remove Input Box Limits", &limitless);
                 ImGui::EndMenu();
             }
@@ -206,26 +200,22 @@ int editor::draw() {
         }
     }
 
-    if (control && ImGui::IsKeyPressed(ImGuiKey_L)) {
+    if (load_from_mem) {
         if (game_available) {
             IDSelection = true;
         }
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_F4)) {
+
+    if (toggle_freeze_game) {
         toggle_game_pause(p);
     }
-    // Save
-    if (ImGui::IsKeyPressed(ImGuiKey_S)) {
-        // Save As
-        if (control) {
-            if (skill_select()) {
-                text_prompt = true;
-            }
+
+    // Saving
+    if (save_normal || save_as) {
+        if (save_as) {
+            skill_select();
         }
-        // Save
-        else if (shift) {
-            text_prompt = true;
-        }
+        text_prompt = true;
     }
 
     if (text_prompt) {
