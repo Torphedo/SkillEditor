@@ -51,7 +51,10 @@ editor::editor() {
     // Load YAML config file
     const char* cfg_path = "labels.yaml";
     char* cfg_data = (char*)file_load(cfg_path);
-    if (cfg_data != nullptr) {
+    if (cfg_data == nullptr) {
+        // Pause so the user can see the error message
+        system("pause");
+    } else {
         this->custom_labels = user_config(cfg_data);
     }
 
