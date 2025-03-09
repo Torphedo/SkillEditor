@@ -65,7 +65,7 @@ void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
     // Use empty strings if told not to save text
     skill_text text = {"", ""};
     if (write_text) {
-        text = get_skill_text(p, skill.SkillTextID + 1);
+        text = get_skill_text(p, skill.SkillTextID);
     }
     save_skill_data(most_recent_filename, skill, text.name.data(), text.desc.data(), index);
 
