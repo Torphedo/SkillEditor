@@ -14,7 +14,7 @@
 char* most_recent_filename = nullptr;
 
 bool skill_select() {
-    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" }, L".skill");
+    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.sp3;" }, L".sp3");
     return most_recent_filename != nullptr;
 }
 
@@ -53,7 +53,7 @@ void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
     }
 
     if (most_recent_filename == nullptr) {
-        most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
+        most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.sp3;" });
         if (most_recent_filename == nullptr) { // Must be checked again in case user cancels selection
             return;
         }
