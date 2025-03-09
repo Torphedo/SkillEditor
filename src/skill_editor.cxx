@@ -222,25 +222,18 @@ int editor::draw() {
     }
 
     if (text_prompt) {
-        // Stupid and convoluted. If we don't use OpenPopup(), it will create it with the default
-        // frame ("Debug" label). But it breaks if called from a menu item, so we need this.
-        ImGui::OpenPopup("save_text_prompt");
-    }
-
-    if (ImGui::BeginPopup("save_text_prompt")) {
-        ImGui::Text("Save text to the skill file?");
-        if (ImGui::Button("No")) {
-            save_skill_to_file(p, ID, false);
-            text_prompt = false;
-            ImGui::CloseCurrentPopup();
-        }
+        ImGui::Begin("Save text to the skill file?");
+        const bool no = ImGui::Button("No");
         ImGui::SameLine();
-        if (ImGui::Button("Yes")) {
-            save_skill_to_file(p, ID, true);
+        const bool yes = ImGui::Button("Yes");
+
+        // Proceed if either is pressed, but only save text if they said yes
+        if (yes || no) {
+            save_skill_to_file(p, ID, yes);
             text_prompt = false;
-            ImGui::CloseCurrentPopup();
         }
-        ImGui::EndPopup();
+        ImGui::End();
+
     }
 
     if (IDSelection) {
