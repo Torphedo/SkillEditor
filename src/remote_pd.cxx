@@ -62,8 +62,9 @@ bool is_running() {
 
 bool get_process(pd_meta* p) {
     if (p->gstorage == nullptr) {
-        DWORD alloc_type = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
-        p->gstorage = (gsdata*)VirtualAlloc(nullptr, sizeof(*p->gstorage), alloc_type, PAGE_READWRITE);
+        // There's no existing gsdata buffer, we need to allocate it
+        DWORD alloc_flags = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
+        p->gstorage = (gsdata*)VirtualAlloc(nullptr, sizeof(*p->gstorage), alloc_flags, PAGE_READWRITE);
     }
 
     p->pid = get_pid_by_name("PDUWP.exe");

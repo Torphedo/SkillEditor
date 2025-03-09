@@ -55,8 +55,8 @@ void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
 // @return The loaded skill data.
 skill_t packv3_load_entry(const char* filename, pool_t* pool) {
     skill_t skill = {0};
-    char* name = "";
-    char* desc = "";
+    char* name = nullptr;
+    char* desc = nullptr;
     FILE* f = fopen(filename, "rb");
     if (f == nullptr) {
         printf("Failed to open skill file \"%s\"\n", filename);
@@ -196,7 +196,7 @@ unsigned int load_skill(pd_meta p, unsigned int current_id) {
     }
     printf("v3 skill loading is unimplemented, sorry.\n");
 
-    fclose(skill_file)
+    fclose(skill_file);
     return current_id;
 }
 
