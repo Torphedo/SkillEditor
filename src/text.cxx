@@ -7,7 +7,7 @@
 #include "structs.h"
 #include "text.hxx"
 
-skill_text load_skill_text(pd_meta p, unsigned int id) {
+skill_text get_skill_text(pd_meta p, unsigned int id) {
     if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {
         return {"", ""};
     }
@@ -70,7 +70,7 @@ bool save_skill_text(pd_meta p, skill_text text, unsigned int id) {
     const char* new_name = text.name.data();
     const char* new_desc = text.desc.data();
     const s32 name_size = text.name.length() + 1;
-    const s32 desc_size = text.name.length() + 1;
+    const s32 desc_size = text.desc.length() + 1;
 
     char* name = (char*)string_offset + string_offset->name;
     shift_textbuf(p, name, name_size, id - 1, true);

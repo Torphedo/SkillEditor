@@ -21,97 +21,57 @@ bool skill_select() {
 // Save functions don't need to deal with backwards compatibility and will
 // change between versions
 
-// Writes the currently open skill to disk.
-void save_skill_to_file(pd_meta p, unsigned int id, bool write_text) {
-    // Check that we actually have data to write and a place to write it to
-    if (p.gstorage->skill_array[id - 1].SkillID != 0) {
-        if (most_recent_filename == nullptr) {
-            most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
-        }
-        if (most_recent_filename != nullptr) { // Must be checked again in case user cancels selection
-            FILE* skill_out = fopen(most_recent_filename, "wb");
-            fwrite(&p.gstorage->skill_array[id - 1], sizeof(skill_t), 1, skill_out);
-            if (write_text) {
-                auto skill_text = load_skill_text(p, p.gstorage->skill_array[id - 1].SkillTextID + 1);
-                pack2_text text_meta = {
-                        .name_length = (uint16_t) (skill_text.name.length() + 1),
-                        .desc_length = (uint16_t) (skill_text.desc.length() + 1)
-                };
-                fwrite(&text_meta, sizeof(text_meta), 1, skill_out);
-                fwrite(skill_text.name.data(), skill_text.name.length() + 1, 1, skill_out);
-                fwrite(skill_text.desc.data(), skill_text.desc.length() + 1, 1, skill_out);
-            }
-            fclose(skill_out);
+void save_skill_data(const char* path, skill_t skill, const char* name, const char* desc, u16 idx) {
+    const packv3_header header = packv3_header(1);
 
-            printf("Saved skill to %s\n", most_recent_filename);
-        }
-    }
-    else {
-        printf("Invalid skill ID.\n");
-    }
-}
+    const packv3_entry entry = {
+        skill,
+        idx,
+        0,
+        (u16)(strlen(name) + 1),
+    };
 
-// Load a skill file, adding its text to the given text pool if needed.
-// @return The loaded skill data.
-skill_t packv3_load_entry(const char* filename, pool_t* pool) {
-    skill_t skill = {0};
-    char* name = nullptr;
-    char* desc = nullptr;
-    FILE* f = fopen(filename, "rb");
-    if (f == nullptr) {
-        printf("Failed to open skill file \"%s\"\n", filename);
-        return skill;
-    }
-
-    // Load the data & text in a backwards-compatible way
-    load_skill_data_v1_v2(f, &skill, &name, &desc);
-
-    // Add to pool and free buffers
-    pool_push(pool, name, strlen(name), 0);
-    pool_push(pool, desc, strlen(desc), 0);
-    free(name);
-    free(desc);
-
+    // Save skill file
+    FILE* f = fopen(path, "rb");
+    fwrite(&header, sizeof(header), 1, f);
+    fwrite(&entry, sizeof(entry), 1, f);
+    fwrite(name, strlen(name) + 1, 1, f);
+    fwrite(desc, strlen(desc) + 1, 1, f);
     fclose(f);
-    return skill;
 }
 
-void save_skill_pack(const char* packname) {
-    // I believe we leak memory here, but it crashes if I free it for some reason...
-    char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.sp3;" }, L".sp3");
-    if (out_filepath == nullptr) {
-        // No filepath?
-        printf("No filepath given, pack save cancelled.\n");
-        return;
-    }
-    FILE* skill_pack_out = fopen(out_filepath, "wb");
-    if (skill_pack_out == nullptr) {
-        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_filepath);
+// Writes the currently open skill to disk.
+void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
+    // Check that we actually have data to write and a place to write it to
+    if (id == 0) {
+        printf("Skill ID was 0, skipping.\n");
         return;
     }
 
-    packv3_header header = {PACKV3_MAGIC};
-    header.skill_count = MultiSelectCount;
-    header.format_version = 3;
-
-    pool_t pool = pool_open(MultiSelectCount * 0x20);
-    for (u32 i = 0; i < MultiSelectCount; i++) {
-
+    if (most_recent_filename == nullptr) {
+        most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
+        if (most_recent_filename == nullptr) { // Must be checked again in case user cancels selection
+            return;
+        }
     }
 
-    fclose(skill_pack_out);
-    printf("Saved skill pack to %s\n", out_filepath);
-}
+    // Save the skill
+    const u16 index = id - 1;
+    const skill_t skill = p.gstorage->skill_array[index];
+    const skill_text text = get_skill_text(p, skill.SkillTextID + 1);
+    save_skill_data(most_recent_filename, skill, text.name.data(), text.desc.data(), index);
 
-// Skill loading functions, which have to maintain backwards compatibility
+    printf("Saved skill to %s\n", most_recent_filename);
+}
 
 /// @brief Determine if some data loaded from disk is a v3 skill pack
 /// @param Pointer to the first byte of data [should have at least 4 readable bytes]
 bool is_v3_pack(void* data) {
     return *((u32*)data) == PACKV3_MAGIC;
 }
+// Skill loading functions, which have to maintain backwards compatibility
 
-void load_skill_data_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out) {
+void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out) {
     fread(skill_out, sizeof(*skill_out), 1, skill_file);
 
     // Find filesize using stdio then reset pos to where it was
@@ -142,18 +102,18 @@ void load_skill_data_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out
 // v1 is a flat 0x90 byte file as used in the game.
 // v2 files can contain text data, but skills without text data will just be a
 // regular v1 file.
-unsigned int load_skill_v1_v2(pd_meta p, FILE* skill_file) {
+unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     skill_t skill = {};
     char* name = nullptr;
     char* desc = nullptr;
-    load_skill_data_v1_v2(skill_file, &skill, &name, &desc);
+    load_skill_v1_v2(skill_file, &skill, &name, &desc);
 
     // Load skill data
     p.gstorage->skill_array[skill.SkillID - 1] = skill;
 
     if (name != nullptr || desc != nullptr) {
         const s32 text_id = skill.SkillTextID + 1;
-        skill_text original_text = load_skill_text(p, text_id);
+        skill_text original_text = get_skill_text(p, text_id);
 
         // Use the new text if present
         if (name != nullptr) {
@@ -172,44 +132,105 @@ unsigned int load_skill_v1_v2(pd_meta p, FILE* skill_file) {
     return skill.SkillID;
 }
 
-unsigned int load_skill(pd_meta p, unsigned int current_id) {
-    most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.skill;" });
-    if (most_recent_filename == nullptr) {
-        return current_id;
+void save_skill_pack(const char* packname) {
+    // I believe we leak memory here, but it crashes if I free it for some reason...
+    char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.sp3;" }, L".sp3");
+    if (out_filepath == nullptr) {
+        // No filepath?
+        printf("No filepath given, pack save cancelled.\n");
+        return;
+    }
+    FILE* skill_pack_out = fopen(out_filepath, "wb");
+    if (skill_pack_out == nullptr) {
+        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_filepath);
+        return;
     }
 
+    const packv3_header header_out = packv3_header(MultiSelectCount);
+    fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
 
-    FILE* skill_file = fopen(most_recent_filename, "rb");
-    if (skill_file == nullptr) {
-        printf("Unable to open skill file \"%s\"\n", most_recent_filename);
-        return current_id;
+    pool_t pool = pool_open(MultiSelectCount * 0x20); // Just an initial size
+    // Text pool comes after header and skill entries
+    for (u32 i = 0; i < MultiSelectCount; i++) {
+        FILE* skill_file = fopen(multiselectpath[i].data(), "rb");
+        // Read just enough data to find out if this is a v3 skill pack
+        packv3_header header;
+        fread(&header, sizeof(header), 1, skill_file);
+        fseek(skill_file, 0, SEEK_SET); // Reset pos
+
+        // V3 packs should have all their skills included
+        if (is_v3_pack(&header.magic)) {
+            packv3_entry* entries = (packv3_entry*)calloc(header.skill_count, sizeof(packv3_entry));
+
+            if (entries == nullptr) {
+                printf("Failed to allocate for skill data from \"%s\"", multiselectpath[i].data());
+                free(entries);
+                continue;
+            }
+
+            // Load all skill entries at once
+            fread(entries, sizeof(*entries), header.skill_count, skill_file);
+
+            // Text data takes up the remainder of the file:
+            const u32 text_size = file_size(multiselectpath[i].data() - sizeof(header) - sizeof(*entries) * header.skill_count);
+
+            // Allocate space, then just copy the skill text directly into our pool.
+            const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
+            fread(pool_getdata(pool, offset), text_size, 1, skill_file);
+
+            // Adjust text offsets in each entries to match their final location
+            for (u32 i = 0; i < header.skill_count; i++) {
+                entries[i].name_offset += offset;
+                entries[i].desc_offset += offset;
+            }
+
+            // Native format, just copy the entries over
+            fwrite(entries, sizeof(*entries), header.skill_count, skill_pack_out);
+
+            // Cleanup
+            free(entries);
+        } else {
+            // V1 or V2 file
+            // Save the skill & text in the new format
+            packv3_entry entry;
+            char* name = nullptr;
+            char* desc = nullptr;
+            if (!is_v3_pack((void*)&magic)) {
+                // It's an old file, use backwards compatible loading
+                load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
+                entry.idx = entry.skill.SkillID;
+            }
+
+            // Copy text data to the pool
+            entry.name_offset = pool_push(&pool, name, strlen(name) + 1, 0);
+            entry.desc_offset = pool_push(&pool, name, strlen(name) + 1, 0);
+
+            // Save entry
+            fwrite(&entry, sizeof(entry), 1, skill_pack_out);
+
+            free(name);
+            free(desc);
+        }
     }
 
-    // Read just enough data to find out if this is a v3 skill pack
-    u32 magic = 0;
-    fread(&magic, sizeof(magic), 1, skill_file);
-    fseek(skill_file, 0, SEEK_SET);
+    // Save all the text data at once
+    fwrite((void*)pool.data, pool.alloc_size, 1, skill_pack_out);
+    pool_close(&pool);
 
-    if (!is_v3_pack((void*)&magic)) {
-        // It's an old file, use backwards compatible loading
-        return load_skill_v1_v2(p, skill_file);
-    }
-    printf("v3 skill loading is unimplemented, sorry.\n");
-
-    fclose(skill_file);
-    return current_id;
+    fclose(skill_pack_out);
+    printf("Saved skill pack to %s\n", out_filepath);
 }
 
 bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     pack_header1 header = {0};
     fread(&header, sizeof(header), 1, skill_pack);
 
-    skill_t* skills = (skill_t*)calloc(1, header.skill_count);
+    skill_t* skills = (skill_t*)calloc(header.skill_count, sizeof(*skills));
     fread(skills, sizeof(*skills), header.skill_count, skill_pack);
     for (int i = 0; i < header.skill_count; i++) {
         p.gstorage->skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
     }
-    pack2_text* text_meta = (pack2_text*) calloc(1, sizeof(pack2_text) * header.skill_count);
+    pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(pack2_text));
     if (text_meta == nullptr) {
         // TODO: Just read in a loop so this can't happen
         printf("Failed to allocate for text metadata!\n");
@@ -217,15 +238,15 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     }
 
     // Read text metadata
-    fread(text_meta, sizeof(pack2_text), header.skill_count, skill_pack);
+    fread(text_meta, sizeof(*text_meta), header.skill_count, skill_pack);
 
     if (header.format_version == 2) {
         for (uint16_t i = 0; i < header.skill_count; i++) {
             const s32 text_id = skills[i].SkillTextID + 1;
 
             // Load the new text data
-            char* name = (char*)calloc(1, text_meta[i].name_length);
-            char* desc = (char*)calloc(1, text_meta[i].desc_length);
+            char* name = (char*)calloc(1, text_meta[i].name_length + 1);
+            char* desc = (char*)calloc(1, text_meta[i].desc_length + 1);
             fread(name, text_meta[i].name_length, 1, skill_pack);
             fread(desc, text_meta[i].desc_length, 1, skill_pack);
 
@@ -243,12 +264,13 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
 }
 
 bool install_skill_pack(pd_meta p, const char* path) {
-    packv3_header header = {};
     FILE* skill_pack = fopen(path, "rb");
     if (skill_pack == nullptr) {
         printf("Failed to open %s\n", path);
         return false;
     }
+
+    packv3_header header;
     fread(&header, sizeof(header), 1, skill_pack);
 
     // Compatibility checks
@@ -305,7 +327,8 @@ void install_mod(pd_meta p) {
         return;
     }
 
-    for (int n = 0; n < MultiSelectCount; n++) {
-        install_skill_pack(p, multiselectpath[n].c_str());
+    for (int i = 0; i < MultiSelectCount; i++) {
+        install_skill_pack(p, multiselectpath[i].c_str());
+        printf("Installed skill pack %s.\n", multiselectpath[i].c_str());
     }
 }

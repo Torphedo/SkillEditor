@@ -120,11 +120,7 @@ int editor::draw() {
                             IDSelection = true;
                         }
                     }
-                    if (ImGui::MenuItem("Skill File")) {
-                        ID = load_skill(p, ID);
-                        AttackSkillEditor = true; // Open the Attack Skill Editor window
-                    }
-                    if (ImGui::MenuItem("Install Skill Pack")) {
+                    if (ImGui::MenuItem("Skill File or Pack")) {
                         if (!game_available) {
                             printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
                         } else {
@@ -133,11 +129,11 @@ int editor::draw() {
                                 printf("File selection canceled.\n");
                             } else {
                                 install_mod(p);
-                                for (int i = 0; i < MultiSelectCount; i++) {
-                                    printf("Installed skill pack %s.\n", multiselectpath[i].c_str());
-                                }
+                                AttackSkillEditor = true; // Open the Attack Skill Editor window
                             }
                         }
+                    }
+                    if (ImGui::MenuItem("Install Skill Pack")) {
                     }
                     ImGui::EndMenu();
                 }
@@ -161,7 +157,7 @@ int editor::draw() {
                 if (ImGui::MenuItem("Text Edit", nullptr, &text_edit)) {
                     update_process(&p, false); // Refresh skill data address & game handle
 
-                    const skill_text text = load_skill_text(p, ID);
+                    const skill_text text = get_skill_text(p, ID);
                     current_name = text.name;
                     current_desc = text.desc;
                 }
@@ -427,7 +423,7 @@ int editor::draw() {
         text_id = p.gstorage->skill_array[ID - 1].SkillTextID + 1;
 
         if (ImGui::Button("Reload") || cache != text_id) {
-            skill_text text = load_skill_text(p, text_id);
+            skill_text text = get_skill_text(p, text_id);
             current_name = text.name;
             current_desc = text.desc;
         }

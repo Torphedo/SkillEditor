@@ -16,6 +16,7 @@ typedef struct {
     u16 skill_count;
     u8 pad[12];
 }pack_header1;
+const u32 s = sizeof(pack_header1);
 
 // Skill pack v2 format, has skill and text data
 typedef struct {
@@ -49,18 +50,23 @@ typedef struct {
     u16 desc_offset;
 }packv3_entry;
 
-typedef struct packv3_header_s {
+struct packv3_header {
     // Makes the file easy to identify as v3 in a hex editor
-    packv3_magic magic;
+    packv3_magic magic = PACKV3_MAGIC;
 
     // Format version & skill count are @ 0x20 in other versions, so we add
     // padding to match that.
-    u8 pad[32 - sizeof(packv3_magic)];
+    u8 pad[0x20 - sizeof(packv3_magic)] = {0};
 
-    u16 format_version; // 3
-    u16 skill_count;
-    u8 pad2[12];
-}packv3_header;
+    u16 format_version = 3;
+    u16 skill_count = 0;
+    u8 pad2[12] = {0};
+
+    packv3_header() = default;
+    packv3_header(u16 skill_count) {
+        this->skill_count = skill_count;
+    }
+};
 // Header sizes should match
 static_assert(sizeof(pack_header1) == sizeof(packv3_header));
 // This might show up as an error in your editor, but it's valid and compiles.
@@ -74,13 +80,13 @@ bool skill_select();
 
 /// Prompts the user for a skill file, then opens it and writes it to gsdata.
 /// @return the ID of the loaded skill if successful, otherwise returns the ID that was given.
-unsigned int load_skill(pd_meta p, unsigned int current_id);
+unsigned int install_skill(pd_meta p, unsigned int current_id);
 
-void load_skill_data_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out);
+void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out);
 
 // Prompts the user for a filepath if they haven't entered one yet, then writes
 // the specified skill (by ID) to disk and updates the version number and PD's gsdata.
-void save_skill_to_file(pd_meta p, unsigned int id, bool write_text);
+void save_skill_to_file(pd_meta p, s16 id, bool write_text);
 void save_skill_pack(const char* packname);
 
 // Installs a skill pack into the game's memory.

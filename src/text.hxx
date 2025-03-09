@@ -11,7 +11,7 @@ typedef struct skill_text {
 }skill_text;
 
 // Finds the name/description of the provided skill text ID
-skill_text load_skill_text(pd_meta p, unsigned int id);
+skill_text get_skill_text(pd_meta p, unsigned int id);
 
 // Writes skill text to memory
 bool save_skill_text(pd_meta p, skill_text text, unsigned int id);
