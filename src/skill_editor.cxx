@@ -397,7 +397,7 @@ int editor::draw() {
 
         static u16 text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
-        text_id = p.gstorage->skill_array[ID - 1].SkillTextID + 1;
+        text_id = p.gstorage->skill_array[ID - 1].SkillTextID;
 
         if (ImGui::Button("Reload") || cache != text_id) {
             skill_text text = get_skill_text(p, text_id);

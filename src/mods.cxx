@@ -32,7 +32,11 @@ void save_skill_data(const char* path, skill_t skill, const char* name, const ch
     };
 
     // Save skill file
-    FILE* f = fopen(path, "rb");
+    FILE* f = fopen(path, "wb");
+    if (f == nullptr) {
+        printf("Failed to open file \"%s\"\n", path);
+        return;
+    }
     fwrite(&header, sizeof(header), 1, f);
     fwrite(&entry, sizeof(entry), 1, f);
     fwrite(name, strlen(name) + 1, 1, f);
@@ -58,7 +62,11 @@ void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
     // Save the skill
     const u16 index = id - 1;
     const skill_t skill = p.gstorage->skill_array[index];
-    const skill_text text = get_skill_text(p, skill.SkillTextID + 1);
+    // Use empty strings if told not to save text
+    skill_text text = {"", ""};
+    if (write_text) {
+        text = get_skill_text(p, skill.SkillTextID + 1);
+    }
     save_skill_data(most_recent_filename, skill, text.name.data(), text.desc.data(), index);
 
     printf("Saved skill to %s\n", most_recent_filename);
@@ -112,7 +120,7 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     p.gstorage->skill_array[skill.SkillID - 1] = skill;
 
     if (name != nullptr || desc != nullptr) {
-        const s32 text_id = skill.SkillTextID + 1;
+        const s32 text_id = skill.SkillTextID;
         skill_text original_text = get_skill_text(p, text_id);
 
         // Use the new text if present
@@ -245,8 +253,6 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
 
     if (header.format_version == 2) {
         for (uint16_t i = 0; i < header.skill_count; i++) {
-            const s32 text_id = skills[i].SkillTextID + 1;
-
             // Load the new text data
             char* name = (char*)calloc(1, text_meta[i].name_length + 1);
             char* desc = (char*)calloc(1, text_meta[i].desc_length + 1);
@@ -254,7 +260,7 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
             fread(desc, text_meta[i].desc_length, 1, skill_pack);
 
             // This can handle changing lengths of the strings, so no length check is needed.
-            save_skill_text(p, {name, desc}, text_id);
+            save_skill_text(p, {name, desc}, skills[i].SkillTextID);
             free(name);
             free(desc);
         }
@@ -319,7 +325,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
         // Copy the skill into gstorage
         p.gstorage->skill_array[entry.idx] = entry.skill;
 
-        if (entry.name_offset == entry.desc_offset) {
+        if (entry.desc_offset - entry.name_offset <= 1) {
             // This indicates the name is empty, so we'll assume the skill is
             // meant to use the original text and leave it alone.
             // If someone really wants an empty name, a space will bypass this.

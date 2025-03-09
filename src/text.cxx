@@ -19,7 +19,7 @@ skill_text get_skill_text(pd_meta p, unsigned int id) {
         return {"", ""};
     }
 
-    const text_ptrs* string_offset = &p.gstorage->textPtrs[id - 1];
+    const text_ptrs* string_offset = &p.gstorage->textPtrs[id];
 
     const char* name = ((char*)string_offset) + string_offset->name;
     const char* desc = ((char*)string_offset) + string_offset->desc;
@@ -64,7 +64,8 @@ bool save_skill_text(pd_meta p, skill_text text, unsigned int id) {
     }
 
     // Get offset data
-    const text_ptrs* string_offset = &p.gstorage->textPtrs[id - 1];
+    const u16 index = id;
+    const text_ptrs* string_offset = &p.gstorage->textPtrs[index];
 
     // Shorthands for the new text
     const char* new_name = text.name.data();
@@ -73,12 +74,12 @@ bool save_skill_text(pd_meta p, skill_text text, unsigned int id) {
     const s32 desc_size = text.desc.length() + 1;
 
     char* name = (char*)string_offset + string_offset->name;
-    shift_textbuf(p, name, name_size, id - 1, true);
+    shift_textbuf(p, name, name_size, index, true);
 
     // IMPORTANT: This must come after the above shift_textbuf call. If the name
     // string changes size, the description offset will be different.
     char* desc = (char*)string_offset + string_offset->desc;
-    shift_textbuf(p, desc, desc_size, id - 1, false);
+    shift_textbuf(p, desc, desc_size, index, false);
 
     // Apply text changes to the string pool
     memcpy((void*)name, new_name, name_size);
