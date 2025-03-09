@@ -87,7 +87,7 @@ void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, cha
 // Prompts the user for a filepath if they haven't entered one yet, then writes
 // the specified skill (by ID) to disk and updates the version number and PD's gsdata.
 void save_skill_to_file(pd_meta p, s16 id, bool write_text);
-void save_skill_pack(const char* packname);
+void save_skill_pack();
 
 // Installs a skill pack into the game's memory.
 void install_mod(pd_meta p);

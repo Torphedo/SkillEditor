@@ -132,7 +132,7 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     return skill.SkillID;
 }
 
-void save_skill_pack(const char* packname) {
+void save_skill_pack() {
     // I believe we leak memory here, but it crashes if I free it for some reason...
     char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.sp3;" }, L".sp3");
     if (out_filepath == nullptr) {
@@ -156,7 +156,6 @@ void save_skill_pack(const char* packname) {
         // Read just enough data to find out if this is a v3 skill pack
         packv3_header header;
         fread(&header, sizeof(header), 1, skill_file);
-        fseek(skill_file, 0, SEEK_SET); // Reset pos
 
         // V3 packs should have all their skills included
         if (is_v3_pack(&header.magic)) {
@@ -192,7 +191,7 @@ void save_skill_pack(const char* packname) {
         } else {
             // V1 or V2 file
             // Save the skill & text in the new format
-            packv3_entry entry;
+            packv3_entry entry = {0};
             char* name = nullptr;
             char* desc = nullptr;
             if (!is_v3_pack((void*)&magic)) {
@@ -202,8 +201,12 @@ void save_skill_pack(const char* packname) {
             }
 
             // Copy text data to the pool
-            entry.name_offset = pool_push(&pool, name, strlen(name) + 1, 0);
-            entry.desc_offset = pool_push(&pool, name, strlen(name) + 1, 0);
+            if (name != nullptr) {
+                entry.name_offset = pool_push(&pool, name, strlen(name) + 1, 0);
+            }
+            if (desc != nullptr) {
+                entry.desc_offset = pool_push(&pool, desc, strlen(desc) + 1, 0);
+            }
 
             // Save entry
             fwrite(&entry, sizeof(entry), 1, skill_pack_out);
@@ -290,7 +293,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
     }
 
     // Load the pack's string pool. This makes things easy on our end and lets us load everything in one pass.
-    const u64 pool_offset = sizeof(packv3_header) + (header.skill_count * sizeof(packv3_entry));
+    const s32 pool_offset = sizeof(packv3_header) + (header.skill_count * sizeof(packv3_entry));
     // If the size ends up negative, MAX() will keep it positive
     const s64 pool_size = MAX(1, (s64)file_size(path) - pool_offset);
     pool_t pool = pool_open(pool_size);
@@ -300,9 +303,12 @@ bool install_skill_pack(pd_meta p, const char* path) {
         return false;
     }
 
-    // Read the text data
+    // Jump to the text data and read it
+    fseek(skill_pack, pool_offset, SEEK_SET);
     fread((void*)pool.data, pool_size, 1, skill_pack);
     pool.pos = pool_size;
+    // Jump back to where we were
+    fseek(skill_pack, sizeof(header), SEEK_SET);
 
     // Looks like this is a good pack file we can understand, time to install it
     for (u32 i = 0; i < header.skill_count; i++) {
@@ -313,9 +319,16 @@ bool install_skill_pack(pd_meta p, const char* path) {
         // Copy the skill into gstorage
         p.gstorage->skill_array[entry.idx] = entry.skill;
 
-        const char* name = (char*)pool_getdata(pool, entry.name_offset);
-        const char* desc = (char*)pool_getdata(pool, entry.desc_offset);
-        save_skill_text(p, {name, desc}, entry.skill.SkillTextID);
+        if (entry.name_offset == entry.desc_offset) {
+            // This indicates the name is empty, so we'll assume the skill is
+            // meant to use the original text and leave it alone.
+            // If someone really wants an empty name, a space will bypass this.
+            continue;
+        } else {
+            const char* name = (char*)pool_getdata(pool, entry.name_offset);
+            const char* desc = (char*)pool_getdata(pool, entry.desc_offset);
+            save_skill_text(p, {name, desc}, entry.skill.SkillTextID);
+        }
     }
 
     fclose(skill_pack);

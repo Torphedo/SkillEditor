@@ -103,16 +103,15 @@ int editor::draw() {
         }
     }
 
+    const bool control = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+    const bool shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+
+    bool new_skill_pack = control && ImGui::IsKeyPressed(ImGuiKey_N, false);
     if (ImGui::BeginViewportSideBar("MenuBar", viewport, ImGuiDir_Up, height, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("New Skill Pack", "Ctrl-N")) {
-                    if (SUCCEEDED(file_multiple_select_dialog())) {
-                        NewSkillPack = true;
-                    }
-                    else {
-                        printf("Skill selection canceled.\n");
-                    }
+                    new_skill_pack = true;
                 }
                 if (ImGui::BeginMenu("Open")) {
                     if (ImGui::MenuItem("Skill (From Memory)", "Ctrl-L")) {
@@ -199,9 +198,13 @@ int editor::draw() {
     }
 
     // ImGui::ShowDemoWindow();
-
-    const bool control = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
-    const bool shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+    if (new_skill_pack) {
+        if (SUCCEEDED(file_multiple_select_dialog())) {
+            save_skill_pack();
+        } else {
+            printf("Skill selection canceled.\n");
+        }
+    }
 
     if (control && ImGui::IsKeyPressed(ImGuiKey_L)) {
         if (game_available) {
@@ -222,11 +225,6 @@ int editor::draw() {
         // Save
         else if (shift) {
             text_prompt = true;
-        }
-    }
-    if (control && ImGui::IsKeyPressed(ImGuiKey_N, false) && !NewSkillPack) {
-        if (SUCCEEDED(file_multiple_select_dialog())) {
-            NewSkillPack = true;
         }
     }
 
@@ -399,17 +397,6 @@ int editor::draw() {
         ImGui::End();
     }
 
-
-    if (NewSkillPack) {
-        static char packname_internal[32] = {0}; // Mod name that will be stored in the binary
-        ImGui::Begin("Enter a name for your skill pack: ");
-        ImGui::InputText("Skill Pack Name", packname_internal, 32);
-        if (ImGui::Button("Save")) {
-            save_skill_pack(packname_internal);
-            NewSkillPack = false;
-        }
-        ImGui::End();
-    }
 
     if (text_edit) {
         ImGui::Begin("Skill Text Editor", &text_edit);
