@@ -108,6 +108,7 @@ int editor::draw() {
 
     bool new_skill_pack = control && ImGui::IsKeyPressed(ImGuiKey_N, false);
     bool load_from_mem = control && ImGui::IsKeyPressed(ImGuiKey_L, false);
+    bool load_from_disk = control && shift && ImGui::IsKeyPressed(ImGuiKey_L, false);
     bool save_as = control && shift && ImGui::IsKeyPressed(ImGuiKey_S, false);
     bool save_normal = control && ImGui::IsKeyPressed(ImGuiKey_S, false);
     bool toggle_freeze_game = ImGui::IsKeyPressed(ImGuiKey_F4, false);
@@ -119,22 +120,7 @@ int editor::draw() {
 
                 if (ImGui::BeginMenu("Open")) {
                     load_from_mem |= ImGui::MenuItem("Skill (From Memory)", "Ctrl-L");
-
-                    if (ImGui::MenuItem("Skill File or Pack")) {
-                        if (!game_available) {
-                            printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
-                        } else {
-                            // Open a multiple file open dialog
-                            if (!SUCCEEDED(file_multiple_select_dialog())) {
-                                printf("File selection canceled.\n");
-                            } else {
-                                install_mod(p);
-                                AttackSkillEditor = true; // Open the Attack Skill Editor window
-                            }
-                        }
-                    }
-                    if (ImGui::MenuItem("Install Skill Pack")) {
-                    }
+                    load_from_disk |= ImGui::MenuItem("Skill (From file)", "Ctrl-Shift-L");
                     ImGui::EndMenu();
                 }
                 save_normal |= ImGui::MenuItem("Save To File", "Shift + S");
@@ -200,7 +186,20 @@ int editor::draw() {
         }
     }
 
-    if (load_from_mem) {
+    if (load_from_disk) {
+        if (!game_available) {
+            printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
+        } else {
+            // Open a multiple file open dialog
+            if (!SUCCEEDED(file_multiple_select_dialog())) {
+                printf("File selection canceled.\n");
+            } else {
+                install_mod(p);
+                AttackSkillEditor = true; // Open the Attack Skill Editor window
+            }
+        }
+    }
+    else if (load_from_mem) {
         if (game_available) {
             IDSelection = true;
         }
@@ -211,11 +210,12 @@ int editor::draw() {
     }
 
     // Saving
-    if (save_normal || save_as) {
-        if (save_as) {
-            skill_select();
-        }
-        text_prompt = true;
+    if (save_as) {
+        // Only open prompt if a file was chosen
+        text_prompt = skill_select();
+    }
+    else if (save_normal) {
+       text_prompt = true;
     }
 
     if (text_prompt) {
