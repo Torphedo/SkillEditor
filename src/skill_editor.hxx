@@ -8,19 +8,8 @@
 
 struct editor {
     pd_meta p = {};
+
     u16 ID = 1;
-    bool NewSkillPack = false;
-    bool AttackSkillEditor = true;
-    bool Documentation = true;
-    bool IDSelection = false;
-    bool text_edit = true;
-    bool text_prompt = false;
-
-    // Whether to remove all limits on input fields
-    bool limitless = false;
-
-    // Whether to display IDs in ID selection window in hex format
-    bool hexadecimal_ids = false;
 
     char* cfg_yaml = nullptr;
     user_config custom_labels;
