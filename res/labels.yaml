@@ -43,6 +43,10 @@
   name: "Capsule Type"
   docs: "Determines what type the skill is, which controls the skill's color. This also changes how the rest of the skill data is interpreted by the game. Values not listed here still seem to work and produce other random colors, but that might be more of a bug than a feature. The types are: \n\n0 = Aura\n1 = Attack\n2 = Defense\n3 = Erase\n4 = Environmental\n5 = Status\n6 = Special"
   type: U16
+- pos: 0x18
+  name: "Unknown 1"
+  docs: "This field's purpose is unknown. It might even be unused."
+  type: U16
 - pos: 0x1A
   name: "School ID"
   desc: "The skill's school. (Nature, Optical, Ki, etc.)"
@@ -117,6 +121,7 @@
   name: "Button Restrictions"
   docs: "Applies restrictions to the skill after use *(check)*. Needs more research.\n\n0 = None\n1 = Can't use skill\n2 = Cut Audio Short\n3 = Cickable with error sound, can't use skill"
   type: U16
+  
 - pos: 0x50
   name: "Requirement Type"
   desc: "Extra requirements to use the skill (see docs)"
@@ -134,6 +139,10 @@
   name: "Skill Button Effect"
   docs: "I don't understand this parameter yet, the information and parameter name are from Nuion's [Attack Skill spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg).\n\n0 = Normal\n1 = Retainable\n2 = Lock Skill (orb)"
   type: U16
+- pos: 0x58
+  name: "Unknown 2"
+  docs: "This field's purpose is unknown. It might even be unused."
+  type: U16
 - pos: 0x5A
   name: "Applied Status ID"
   desc: "Apply a status effect to the target (see docs)"
@@ -147,6 +156,7 @@
   name: "Strength Effect"
   docs: "I don't understand this parameter yet, the information and parameter name are from Nuion's\n[Attack Skill template spreadsheet](https://docs.google.com/spreadsheets/d/1zGqdi0Oeq14YHuMItYi2Qwhj4RhWZxho4hT7MLqRKCg).\n\n0 = Normal\n21 = Damage based on destructible\n28 = Random Damage\n24 = Dmg of unassigned buttons"
   type: U16
+  
 - pos: 0x60
   name: "Damage"
   desc: "How much damage to deal to the target"
@@ -157,7 +167,7 @@
   type: U16
 - pos: 0x64
   name: "Target Hand Filter"
-  desc: "Goes with Hit Effect Skills"
+  desc: "Goes with Target Hand Effect"
   docs: "Checks what types of skills are in the target's hand. This is generally used to erase skills from the target's hand.\n\n1 = Attack skills\n2 = Defense skills"
   type: U16
 - pos: 0x68
@@ -178,6 +188,11 @@
   name: "Status ID Duration"
   docs: "Determines the duration of the status applied to the target. This is probably measured in seconds. *(check)*"
   type: U8
+- pos: 0x6E
+  name: "Unknown 3"
+  docs: "This field's purpose is unknown. It might even be unused."
+  type: U16
+  
 - pos: 0x70
   name: "Projectile Properties"
   desc: "Determines how the projectile interacts with obstacles and defense skills."
@@ -203,6 +218,19 @@
 - pos: 0x7A
   name: "Combo End"
   docs: "This field changes meaning depending on other skill data. Sometimes it determines projectile range, and sometimes controls how the end of a combo works. If set to 0 and affecting projectile range, the projectile will have infinite range."
+  type: U16
+- pos: 0x7C
+  name: "Unknown 4"
+  docs: "This field's purpose is unknown. It might even be unused."
+  type: U16
+- pos: 0x7E
+  name: "Unknown 5"
+  docs: "This field's purpose is unknown. It might even be unused."
+  type: U16
+  
+- pos: 0x80
+  name: "Unknown 6"
+  docs: "This field's purpose is unknown. It might even be unused."
   type: U16
 - pos: 0x82
   name: "Projectile Behaviour"
