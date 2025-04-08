@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <ryml.hpp>
 #include <imgui.h>
 
@@ -36,7 +37,10 @@ struct user_config {
 
     user_config() = default;
     user_config(char* yaml_data);
+
     void update_unconditional_labels();
     void update_conditional_labels(skill_t skill);
-    void render_editor(skill_t* skill, bool limitless);
+    std::optional<u32> render_editor(skill_t* skill, bool limitless);
 };
+
+userlabel parse_label(ryml::ConstNodeRef label_node, u8& pos);

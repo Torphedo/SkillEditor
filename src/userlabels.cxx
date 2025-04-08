@@ -1,3 +1,4 @@
+#include <optional>
 #include "userlabels.hxx"
 
 ImGuiDataType get_type(c4::basic_substring<const char> type_str) {
@@ -253,11 +254,12 @@ user_config::user_config(char* yaml) {
     this->update_unconditional_labels();
 }
 
-void user_config::render_editor(skill_t* skill, bool limitless) {
+std::optional<u32> user_config::render_editor(skill_t* skill, bool limitless) {
     u8* buf = (u8*) skill;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
     ImGui::AlignTextToFramePadding();
 
+    std::optional<u32> selected_item;
     if (ImGui::BeginTable("split1", 2, ImGuiTableFlags_NoSavedSettings)) {
         for (size_t i = 0; i < IM_ARRAYSIZE(this->labels); i++) {
             const userlabel label = this->labels[i];
@@ -285,10 +287,23 @@ void user_config::render_editor(skill_t* skill, bool limitless) {
             if (ImGui::IsItemHovered() && label.desc.len > 0) {
                 ImGui::SetTooltip("%.*s", (int) label.desc.len, label.desc.str);
             }
+
+            char popup_id[0x20] = {0};
+            sprintf(popup_id, "%lld", i);
+            if (ImGui::BeginPopupContextItem(popup_id)) {
+                bool selected = false;
+                ImGui::MenuItem("Open documentation", "", &selected);
+                if (selected) {
+                    selected_item = (u32)i;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
         }
 
         ImGui::EndTable();
     }
-
     ImGui::PopStyleVar();
+
+    return selected_item;
 }

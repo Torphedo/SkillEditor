@@ -24,6 +24,8 @@ struct editor {
 
     char* cfg_yaml = nullptr;
     user_config custom_labels;
+    ryml::ConstNodeRef selected_node = nullptr;
+
     MemoryEditor hex_edit;
     ImGui::MarkdownConfig mdConfig;
 

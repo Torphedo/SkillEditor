@@ -260,7 +260,19 @@ int editor::draw() {
     if (AttackSkillEditor) {
         // Render the editor w/ user-controlled labels
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
-            this->custom_labels.render_editor(this->cur_skill(), limitless);
+            std::optional<u32> selected_item = this->custom_labels.render_editor(this->cur_skill(), limitless);
+            if (selected_item.has_value()) {
+                Documentation = true;
+                for (ryml::ConstNodeRef label_node : custom_labels.tree.rootref()) {
+                    if (!label_node.has_child("name")) {
+                        continue;
+                    }
+
+                    if (label_node["name"].val() == custom_labels.labels[selected_item.value()].name) {
+                        selected_node = label_node;
+                    }
+                }
+            }
         }
         ImGui::End();
     }
@@ -271,7 +283,6 @@ int editor::draw() {
 
         if (ImGui::BeginTabBar("DocTabs")) {
             if (ImGui::BeginTabItem("Attack Skills")) {
-                static ryml::ConstNodeRef selected_node = nullptr;
                 ImGui::BeginChild("left pane", ImVec2(300, 0), true);
                 for (ryml::ConstNodeRef label_node : custom_labels.tree.rootref()) {
                     // Selectable object for every string in the array
@@ -350,6 +361,14 @@ int editor::draw() {
 
                     ImGui::Markdown(conditions.c_str(), conditions.length(), mdConfig);
                 }
+
+                u8 pos = 0;
+                const userlabel parsed_label = parse_label(selected_node, pos);
+                char data_info[0x40] = {0};
+                const ImGuiDataTypeInfo* type_info = ImGui::DataTypeGetInfo(parsed_label.type);
+                snprintf(data_info, sizeof(data_info) - 1, "\nType: %s (%llu bytes) @ offset 0x%X\n", type_info->Name, type_info->Size, pos);
+
+                ImGui::Markdown(data_info, strlen(data_info), mdConfig);
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
