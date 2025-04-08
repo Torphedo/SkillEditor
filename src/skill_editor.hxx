@@ -10,7 +10,6 @@ struct editor {
     pd_meta p = {};
     u16 ID = 1;
     bool NewSkillPack = false;
-    bool HexEditor = true;
     bool AttackSkillEditor = true;
     bool Documentation = true;
     bool IDSelection = false;

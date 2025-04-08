@@ -136,7 +136,7 @@ int editor::draw() {
             }
             if (ImGui::BeginMenu("Window")) {
                 ImGui::MenuItem("Attack Skill Editor", nullptr, &AttackSkillEditor);
-                ImGui::MenuItem("Skill Hex Editor", nullptr, &HexEditor);
+                ImGui::MenuItem("Skill Hex Editor", nullptr, &hex_edit.Open);
                 ImGui::MenuItem("Documentation", nullptr, &Documentation);
                 if (ImGui::MenuItem("Text Edit", nullptr, &text_edit)) {
                     update_process(&p, false); // Refresh skill data address & game handle
@@ -252,7 +252,7 @@ int editor::draw() {
         ImGui::End();
     }
 
-    if (HexEditor) {
+    if (hex_edit.Open) {
         hex_edit.OptShowAscii = false;
         hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
     }
