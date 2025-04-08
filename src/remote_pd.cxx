@@ -4,6 +4,7 @@
 #include <memoryapi.h>
 
 #include <common/crc32.h>
+#include <common/logging.h>
 
 #include "remote_pd.hxx"
 #include "structs.h"
@@ -60,6 +61,17 @@ bool is_running() {
     return get_pid_by_name("PDUWP.exe") != 0;
 }
 
+void win32_print_error_msg(DWORD err_code) {
+    const char* msg = nullptr;
+    DWORD format_result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 0, err_code, 0, (LPTSTR)&msg, 1, nullptr);
+
+    printf("\"%s\"", (msg == nullptr) ? "[message missing]" : msg);
+
+    if (format_result != 0) {
+        LocalFree((void*)msg);
+    }
+}
+
 bool get_process(pd_meta* p) {
     if (p->gstorage == nullptr) {
         // There's no existing gsdata buffer, we need to allocate it
@@ -85,12 +97,26 @@ bool get_process(pd_meta* p) {
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
     p->gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
 
-    ReadProcessMemory(p->h, (LPVOID)p->gstorage_addr, p->gstorage, sizeof(*p->gstorage), NULL);
-    ResetWriteWatch((void*)p->gstorage, sizeof(*p->gstorage));
-    DWORD error = GetLastError();
-    if (error != 0) {
-        printf("Process Read Error Code: %ld\n", error);
-        SetLastError(0);
+    const u32 requested_size = sizeof(*p->gstorage);
+    SIZE_T actual_read = 0;
+    bool result = ReadProcessMemory(p->h, (LPVOID)p->gstorage_addr, p->gstorage, requested_size, &actual_read);
+    ResetWriteWatch((void*)p->gstorage, requested_size);
+    if (!result) {
+        const DWORD err_code = GetLastError();
+        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld)\n", err_code);
+        LOG_MSG(info, "Windows says ");
+        win32_print_error_msg(err_code);
+        printf("\n");
+
+        bool valid = handle_still_valid(p->h);
+        const char* valid_msg = valid ? "still valid" : "no longer valid";
+        const float ratio = ((float)actual_read / requested_size) * 100;
+        LOG_MSG(debug, "Debug info: Request is for handle 0x%x (which is %s). We wanted 0x%x bytes, and got 0x%x bytes (%.0f%%).\n", p->h, valid_msg, requested_size, actual_read, ratio);
+
+        if (err_code != 0) {
+            SetLastError(0);
+        }
+
         return false;
     }
 
