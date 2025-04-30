@@ -9,6 +9,7 @@
 
 #include <common/crc32.h>
 #include <common/file.h>
+#include <common/logging.h>
 
 // Used to track the most recently saved skill filepath
 char* most_recent_filename = nullptr;
@@ -161,6 +162,11 @@ void save_skill_pack() {
     // Text pool comes after header and skill entries
     for (u32 i = 0; i < MultiSelectCount; i++) {
         FILE* skill_file = fopen(multiselectpath[i].data(), "rb");
+        if (skill_file == nullptr) {
+            LOG_MSG(error, "Failed to open input file \"%s\"\n");
+            continue;
+        }
+
         // Read just enough data to find out if this is a v3 skill pack
         packv3_header header;
         fread(&header, sizeof(header), 1, skill_file);
@@ -204,8 +210,9 @@ void save_skill_pack() {
             char* desc = nullptr;
             if (!is_v3_pack((void*)&magic)) {
                 // It's an old file, use backwards compatible loading
+                fseek(skill_file, 0, SEEK_SET);
                 load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
-                entry.idx = entry.skill.SkillID;
+                entry.idx = entry.skill.SkillID - 1;
             }
 
             // Copy text data to the pool
