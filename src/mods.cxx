@@ -293,6 +293,10 @@ bool install_skill_pack(pd_meta p, const char* path) {
     if (header.format_version <= 3 && header.magic != PACKV3_MAGIC) {
         // Older file, use backwards compatibility
         fseek(skill_pack, 0, SEEK_SET); // Reset pos
+        if (header.format_version == 0) {
+            // This is a single skill and not a pack, but it still has text.
+            return install_skill_v1_v2(p, skill_pack);
+        }
         return install_skill_pack_v1_v2(p, skill_pack);
     }
     else if (header.format_version > 3) {
