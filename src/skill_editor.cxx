@@ -239,14 +239,24 @@ int editor::draw() {
     if (IDSelection) {
         // Temporary storage to hold an ID before actually updating the selected ID
         static s32 temp_id = 0;
-
+        static bool just_opened = true;
         ImGui::Begin("Input a skill ID: ", &IDSelection);
         ImGui::Checkbox("Hexadecimal", &hexadecimal_ids);
-        ImGui::InputInt("ID", &temp_id, 1, 1, ImGuiInputTextFlags_CharsHexadecimal * hexadecimal_ids);
-        if (ImGui::Button("Open")) {
+        if (just_opened) {
+            ImGui::SetKeyboardFocusHere();
+            just_opened = false;
+        }
+        const int flags = ImGuiInputTextFlags_CharsHexadecimal * hexadecimal_ids;
+        ImGui::InputInt("ID", &temp_id, 1, 1, flags);
+        // InputScalar doesn't support EnterReturnsTrue for some reason
+        const bool enter_pressed = ImGui::IsItemDeactivatedAfterEdit();
+
+        const bool open_pressed = ImGui::Button("Open");
+        if (open_pressed || enter_pressed) {
             ID = temp_id;
             printf("Loaded skill with ID %d\n", ID);
             IDSelection = false;      // Close this window
+            just_opened = true;
             AttackSkillEditor = true; // Opens the Attack Skill Editor window
         }
         ImGui::End();
