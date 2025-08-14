@@ -89,7 +89,7 @@ int editor::draw() {
     if (game_running && game_available) {
         static u16 skill_id_cache = this->ID;
         const bool skill_id_changed = skill_id_cache != this->ID;
-        const bool gstorage_changed = flush_to_pd(p);
+        const bool gstorage_changed = flush_to_pd(p, use_vanilla_version);
 
         if (skill_id_changed) {
             // Reset saved ID
@@ -149,6 +149,7 @@ int editor::draw() {
             }
             if (ImGui::BeginMenu("Options")) {
                 toggle_freeze_game |= ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4");
+                ImGui::MenuItem("Use vanilla version number", nullptr, &use_vanilla_version);
                 ImGui::Checkbox("Remove Input Box Limits", &limitless);
                 ImGui::EndMenu();
             }
@@ -197,7 +198,7 @@ int editor::draw() {
             if (!SUCCEEDED(file_multiple_select_dialog())) {
                 printf("File selection canceled.\n");
             } else {
-                install_mod(p);
+                install_mod(p, multiselectpath, MultiSelectCount);
                 AttackSkillEditor = true; // Open the Attack Skill Editor window
             }
         }

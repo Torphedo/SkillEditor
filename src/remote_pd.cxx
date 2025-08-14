@@ -123,10 +123,19 @@ bool get_process(pd_meta* p) {
     return p;
 }
 
-bool flush_to_pd(pd_meta p) {
+bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
     if (p.gstorage == nullptr) {
         printf("No data to write...\n");
         return false;
+    }
+
+    // Trigger a flush whenever the version number needs to change
+    if (use_vanilla_version) {
+        if (p.gstorage->VersionNum != PD_VERSION_NUMBER) {
+            p.gstorage->VersionNum = PD_VERSION_NUMBER;
+        }
+    } else if (p.gstorage->VersionNum == PD_VERSION_NUMBER) {
+        p.gstorage->VersionNum = 0;
     }
 
     // The data we work with is ~274KiB, and getting pointers to 100 dirty pages
@@ -140,7 +149,7 @@ bool flush_to_pd(pd_meta p) {
 
     // If there's at least 1 page that changed, we need to copy some data
     const bool need_write = address_count > 0;
-    if (need_write) {
+    if (need_write && !use_vanilla_version) {
         // Make sure the current version number doesn't affect the hash
         p.gstorage->VersionNum = 0;
 

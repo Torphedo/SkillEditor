@@ -78,10 +78,6 @@ static_assert(offsetof(pack_header1, format_version) == offsetof(packv3_header, 
 // @return Whether there was any previously saved path.
 bool skill_select();
 
-/// Prompts the user for a skill file, then opens it and writes it to gsdata.
-/// @return the ID of the loaded skill if successful, otherwise returns the ID that was given.
-unsigned int install_skill(pd_meta p, unsigned int current_id);
-
 void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out);
 
 // Prompts the user for a filepath if they haven't entered one yet, then writes
@@ -90,4 +86,4 @@ void save_skill_to_file(pd_meta p, s16 id, bool write_text);
 void save_skill_pack();
 
 // Installs a skill pack into the game's memory.
-void install_mod(pd_meta p);
+void install_mod(pd_meta p, std::string* paths, u32 path_num);

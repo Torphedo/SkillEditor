@@ -8,6 +8,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+enum {
+    PD_VERSION_NUMBER = 140,
+};
+
 typedef struct {
     HANDLE h;
     uintptr_t gstorage_addr;
@@ -24,7 +28,7 @@ void update_process(pd_meta* p, bool force);
 // If anything changed in gstorage since the last time this was called, all
 // pages that changed are copied into the game process.
 // @return Whether data changed and a copy was needed
-bool flush_to_pd(pd_meta p);
+bool flush_to_pd(pd_meta p, bool use_vanilla_version);
 
 bool handle_still_valid(HANDLE h);
 
@@ -32,9 +36,6 @@ bool is_running();
 
 // Checks if 1 byte can be read from memory
 bool can_read_memory(pd_meta p);
-
-// Loads gsdata from memory into addressable structs.
-bool load_skill_data(pd_meta p);
 
 // Toggles whether the game is currently frozen by Skill Editor
 void toggle_game_pause(pd_meta p);

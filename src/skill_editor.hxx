@@ -19,6 +19,9 @@ struct editor {
     // Whether to remove all limits on input fields
     bool limitless = false;
 
+    // Whether to use the vanilla version number instead of the GSDATA hash
+    bool use_vanilla_version = true;
+
     // Whether to display IDs in ID selection window in hex format
     bool hexadecimal_ids = false;
 

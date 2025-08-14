@@ -352,13 +352,13 @@ bool install_skill_pack(pd_meta p, const char* path) {
     return true;
 }
 
-void install_mod(pd_meta p) {
+void install_mod(pd_meta p, std::string* paths, u32 path_num) {
     if (!handle_still_valid(p.h)) {
         return;
     }
 
-    for (int i = 0; i < MultiSelectCount; i++) {
-        install_skill_pack(p, multiselectpath[i].c_str());
-        printf("Installed skill pack %s.\n", multiselectpath[i].c_str());
+    for (int i = 0; i < path_num; i++) {
+        install_skill_pack(p, paths[i].c_str());
+        printf("Installed skill pack %s.\n", paths[i].c_str());
     }
 }
