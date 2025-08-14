@@ -73,17 +73,15 @@ static_assert(sizeof(pack_header1) == sizeof(packv3_header));
 // CLion complains about it and I'm not sure why...
 static_assert(offsetof(pack_header1, format_version) == offsetof(packv3_header, format_version));
 
-// Presents a file select dialog to the user, and saves the selected pack to a
-// hidden internal pointer used by other functions.
-// @return Whether there was any previously saved path.
-bool skill_select();
+// Presents a file select dialog to the user
+bool skill_select(char** path_out);
 
 void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out);
 
 // Prompts the user for a filepath if they haven't entered one yet, then writes
 // the specified skill (by ID) to disk and updates the version number and PD's gsdata.
-void save_skill_to_file(pd_meta p, s16 id, bool write_text);
-void save_skill_pack();
+void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text);
+void save_skill_pack(const char* path);
 
 // Installs a skill pack into the game's memory.
 void install_mod(pd_meta p, std::string* paths, u32 path_num);

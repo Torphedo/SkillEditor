@@ -8,3 +8,6 @@
 [submodule "vendor/bobtail"]
 	path = vendor/bobtail
 	url = https://github.com/Torphedo/bobtail
+[submodule "vendor/nfde"]
+	path = vendor/nfde
+	url = https://github.com/btzy/nativefiledialog-extended

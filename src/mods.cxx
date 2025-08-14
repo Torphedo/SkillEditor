@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <cstdio>
 
+#include <nfd.h>
+
 #include "winAPI.hxx"
 #include "remote_pd.hxx"
 #include "text.hxx"
@@ -11,12 +13,10 @@
 #include <common/file.h>
 #include <common/logging.h>
 
-// Used to track the most recently saved skill filepath
-char* most_recent_filename = nullptr;
-
-bool skill_select() {
-    most_recent_filename = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.sp3;" }, L".sp3");
-    return most_recent_filename != nullptr;
+bool skill_select(char** path_out) {
+    const nfdu8filteritem_t filters[] = { { "Skill File", "sp3" } };
+    nfdresult_t res = NFD_SaveDialogU8((nfdu8char_t**)path_out, filters, ARRAY_SIZE(filters), nullptr, nullptr);
+    return res == NFD_OKAY;
 }
 
 // Save functions don't need to deal with backwards compatibility and will
@@ -46,18 +46,16 @@ void save_skill_data(const char* path, skill_t skill, const char* name, const ch
 }
 
 // Writes the currently open skill to disk.
-void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
+void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     // Check that we actually have data to write and a place to write it to
     if (id == 0) {
-        printf("Skill ID was 0, skipping.\n");
+        LOG_MSG(warning, "Skill ID was 0, skipping.\n");
         return;
     }
 
-    if (most_recent_filename == nullptr) {
-        most_recent_filename = file_select_dialog(COMDLG_FILTERSPEC{ L"Skill File", L"*.sp3;" });
-        if (most_recent_filename == nullptr) { // Must be checked again in case user cancels selection
-            return;
-        }
+    if (path == nullptr) {
+        LOG_MSG(warning, "No path to save to.\n");
+        return;
     }
 
     // Save the skill
@@ -68,9 +66,9 @@ void save_skill_to_file(pd_meta p, s16 id, bool write_text) {
     if (write_text) {
         text = get_skill_text(p, skill.SkillTextID);
     }
-    save_skill_data(most_recent_filename, skill, text.name.data(), text.desc.data(), index);
+    save_skill_data(path, skill, text.name.data(), text.desc.data(), index);
 
-    printf("Saved skill to %s\n", most_recent_filename);
+    printf("Saved skill to %s\n", path);
 }
 
 /// @brief Determine if some data loaded from disk is a v3 skill pack
@@ -141,17 +139,11 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     return skill.SkillID;
 }
 
-void save_skill_pack() {
+void save_skill_pack(const char* path) {
     // I believe we leak memory here, but it crashes if I free it for some reason...
-    char* out_filepath = file_save_dialog(COMDLG_FILTERSPEC{ L"Skill Pack", L"*.sp3;" }, L".sp3");
-    if (out_filepath == nullptr) {
-        // No filepath?
-        printf("No filepath given, pack save cancelled.\n");
-        return;
-    }
-    FILE* skill_pack_out = fopen(out_filepath, "wb");
+    FILE* skill_pack_out = fopen(path, "wb");
     if (skill_pack_out == nullptr) {
-        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_filepath);
+        printf("Couldn't open skill pack file \"%s\" for writing.\n", path);
         return;
     }
 
@@ -236,7 +228,7 @@ void save_skill_pack() {
     pool_close(&pool);
 
     fclose(skill_pack_out);
-    printf("Saved skill pack to %s\n", out_filepath);
+    printf("Saved skill pack to %s\n", path);
 }
 
 bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {

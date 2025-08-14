@@ -2,11 +2,13 @@
 #include <imgui_internal.h> // For messing with the viewport for menu bar
 #include <imgui/misc/cpp/imgui_stdlib.h> // For std::string input fields
 #include <imgui_markdown.h>
+#include <nfd.h>
 
 #include "skill_editor.hxx"
 #include "winAPI.hxx"
 #include "mods.hxx"
 #include "text.hxx"
+#include "common/logging.h"
 
 #include <common/file.h>
 
@@ -184,9 +186,17 @@ int editor::draw() {
     // ImGui::ShowDemoWindow();
     if (new_skill_pack) {
         if (SUCCEEDED(file_multiple_select_dialog())) {
-            save_skill_pack();
+            char* out_path = nullptr;
+            if (!skill_select(&out_path)) {
+                LOG_MSG(info, "Skill pack creation cancelled.\n");
+            } else {
+                save_skill_pack(out_path);
+            }
+            if (out_path != nullptr) {
+                NFD_FreePathU8(out_path);
+            }
         } else {
-            printf("Skill selection canceled.\n");
+            LOG_MSG(info, "Skill selection cancelled.\n");
         }
     }
 
@@ -213,16 +223,23 @@ int editor::draw() {
         toggle_game_pause(p);
     }
 
+    static char* filepath = nullptr;
     // Saving
-    if (save_as) {
-        // Only open prompt if a file was chosen
-        text_prompt = skill_select();
-    }
-    else if (save_normal) {
-       text_prompt = true;
+    if (save_as || save_normal) {
+        if (save_normal && filepath != nullptr) {
+            // We already have a filepath, don't need to prompt the user
+            text_prompt = true;
+        } else {
+            if (filepath != nullptr) {
+                NFD_FreePathU8(filepath);
+                filepath = nullptr;
+            }
+            // Only open prompt if a file was chosen
+            text_prompt = skill_select(&filepath);
+        }
     }
 
-    if (text_prompt) {
+    if (text_prompt && filepath != nullptr) {
         ImGui::Begin("Save text to the skill file?");
         const bool no = ImGui::Button("No");
         ImGui::SameLine();
@@ -230,8 +247,10 @@ int editor::draw() {
 
         // Proceed if either is pressed, but only save text if they said yes
         if (yes || no) {
-            save_skill_to_file(p, ID, yes);
+            save_skill_to_file(filepath, p, ID, yes);
             text_prompt = false;
+            // We don't free the filepath here because we save to the same file
+            // again unless the user chooses a new one.
         }
         ImGui::End();
 
