@@ -4,6 +4,7 @@ project(skill_editor
 	LANGUAGES CXX C
 )
 
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(vendor/rapidyaml)
@@ -32,12 +33,12 @@ add_library(imgui STATIC
 add_executable(skill_editor
 	src/main.cxx
 	src/mods.cxx
-	src/winAPI.cxx
 	src/text.cxx
 	src/remote_pd.cxx
 	src/userlabels.cxx
 	src/gui_loop.cxx
 	src/skill_editor.cxx
+	src/nfde_wrapper.cxx
 	src/pool.c
 )
 

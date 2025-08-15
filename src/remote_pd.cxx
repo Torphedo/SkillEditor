@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
@@ -8,7 +9,6 @@
 
 #include "remote_pd.hxx"
 #include "structs.h"
-#include "winAPI.hxx"
 
 static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     PROCESSENTRY32 pt;
@@ -50,7 +50,7 @@ uintptr_t remote_module_base_addr(HANDLE h) {
     }
 
     if (base_exe_module == INVALID_HANDLE_VALUE) {
-        printf("Couldn't find PDUWP.exe base address.\n");
+        LOG_MSG(error, "Couldn't find PDUWP.exe base address.\n");
         return 0;
     }
 
@@ -92,7 +92,7 @@ bool get_process(pd_meta* p) {
     if (p->h == INVALID_HANDLE_VALUE) {
         return false;
     }
-    printf("PDUWP handle 0x%p\n", p->h);
+    LOG_MSG(debug, "PDUWP handle 0x%p\n", p->h);
 
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
     p->gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
@@ -125,7 +125,7 @@ bool get_process(pd_meta* p) {
 
 bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
     if (p.gstorage == nullptr) {
-        printf("No data to write...\n");
+        LOG_MSG(warning, "No data to write...\n");
         return false;
     }
 

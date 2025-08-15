@@ -3,6 +3,8 @@
 /// @brief Functions for installing/saving mods.
 /// This is the heart of the program, and the worst part of the codebase.
 #include <cstddef>
+#include <vector>
+#include <string>
 
 #include <common/file.h>
 #include "pool.h"
@@ -81,7 +83,7 @@ void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, cha
 // Prompts the user for a filepath if they haven't entered one yet, then writes
 // the specified skill (by ID) to disk and updates the version number and PD's gsdata.
 void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text);
-void save_skill_pack(const char* path);
+void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths);
 
 // Installs a skill pack into the game's memory.
-void install_mod(pd_meta p, std::string* paths, u32 path_num);
+void install_mod(pd_meta p, const std::string* paths, u32 path_num);

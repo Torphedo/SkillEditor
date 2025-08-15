@@ -2,7 +2,6 @@
 #include <filesystem>
 
 #include "gui_loop.hxx"
-#include "winAPI.hxx"
 #include "mods.hxx"
 #include "common/logging.h"
 
@@ -41,12 +40,10 @@ int main(int argc, char** argv) {
         }
     }
 
-    init_winapi();
     printf("Looking for Phantom Dust...\n");
 
     printf("Starting GUI.\n\n");
 
     gui_main(); // Main UI loop
-    CoUninitialize();
     return 0;
 }

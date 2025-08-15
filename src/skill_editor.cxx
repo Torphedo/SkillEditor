@@ -5,10 +5,10 @@
 #include <nfd.h>
 
 #include "skill_editor.hxx"
-#include "winAPI.hxx"
 #include "mods.hxx"
 #include "text.hxx"
 #include "common/logging.h"
+#include "nfde_wrapper.hxx"
 
 #include <common/file.h>
 
@@ -185,12 +185,15 @@ int editor::draw() {
 
     // ImGui::ShowDemoWindow();
     if (new_skill_pack) {
-        if (SUCCEEDED(file_multiple_select_dialog())) {
+        std::vector<std::string> paths;
+        const nfdu8filteritem_t filters[] = { { "Skill File", "*" } };
+        auto res = NFD_OpenDialogMultipleAutoFree(paths, filters, ARRAY_SIZE(filters), nullptr);
+        if (res == NFD_OKAY) {
             char* out_path = nullptr;
             if (!skill_select(&out_path)) {
                 LOG_MSG(info, "Skill pack creation cancelled.\n");
             } else {
-                save_skill_pack(out_path);
+                save_skill_pack(out_path, paths);
             }
             if (out_path != nullptr) {
                 NFD_FreePathU8(out_path);
@@ -205,10 +208,13 @@ int editor::draw() {
             printf("Can't access game's skill data in memory, cancelling skill pack install.\n");
         } else {
             // Open a multiple file open dialog
-            if (!SUCCEEDED(file_multiple_select_dialog())) {
-                printf("File selection canceled.\n");
+            std::vector<std::string> paths;
+            const nfdu8filteritem_t filters[] = { { "Skill File", "sp3" } };
+            auto res = NFD_OpenDialogMultipleAutoFree(paths, filters, ARRAY_SIZE(filters), nullptr);
+            if (res != NFD_OKAY) {
+                LOG_MSG(info, "Skill pack selection canceled.\n");
             } else {
-                install_mod(p, multiselectpath, MultiSelectCount);
+                install_mod(p, paths.data(), paths.size());
                 AttackSkillEditor = true; // Open the Attack Skill Editor window
             }
         }

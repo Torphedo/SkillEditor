@@ -3,7 +3,6 @@
 
 #include <nfd.h>
 
-#include "winAPI.hxx"
 #include "remote_pd.hxx"
 #include "text.hxx"
 #include "mods.hxx"
@@ -139,21 +138,21 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     return skill.SkillID;
 }
 
-void save_skill_pack(const char* path) {
+void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths) {
     // I believe we leak memory here, but it crashes if I free it for some reason...
-    FILE* skill_pack_out = fopen(path, "wb");
+    FILE* skill_pack_out = fopen(out_path, "wb");
     if (skill_pack_out == nullptr) {
-        printf("Couldn't open skill pack file \"%s\" for writing.\n", path);
+        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_path);
         return;
     }
 
-    const packv3_header header_out = packv3_header(MultiSelectCount);
+    const packv3_header header_out = packv3_header(skillpaths.size());
     fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
 
-    pool_t pool = pool_open(MultiSelectCount * 0x20); // Just an initial size
+    pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
     // Text pool comes after header and skill entries
-    for (u32 i = 0; i < MultiSelectCount; i++) {
-        FILE* skill_file = fopen(multiselectpath[i].data(), "rb");
+    for (const std::string& path : skillpaths) {
+        FILE* skill_file = fopen(path.c_str(), "rb");
         if (skill_file == nullptr) {
             LOG_MSG(error, "Failed to open input file \"%s\"\n");
             continue;
@@ -168,7 +167,7 @@ void save_skill_pack(const char* path) {
             packv3_entry* entries = (packv3_entry*)calloc(header.skill_count, sizeof(packv3_entry));
 
             if (entries == nullptr) {
-                printf("Failed to allocate for skill data from \"%s\"", multiselectpath[i].data());
+                printf("Failed to allocate for skill data from \"%s\"", path.c_str());
                 free(entries);
                 continue;
             }
@@ -177,7 +176,7 @@ void save_skill_pack(const char* path) {
             fread(entries, sizeof(*entries), header.skill_count, skill_file);
 
             // Text data takes up the remainder of the file:
-            const u32 text_size = file_size(multiselectpath[i].data()) - sizeof(header) - sizeof(*entries) * header.skill_count;
+            const u32 text_size = file_size(path.c_str()) - sizeof(header) - sizeof(*entries) * header.skill_count;
 
             // Allocate space, then just copy the skill text directly into our pool.
             const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
@@ -228,7 +227,7 @@ void save_skill_pack(const char* path) {
     pool_close(&pool);
 
     fclose(skill_pack_out);
-    printf("Saved skill pack to %s\n", path);
+    printf("Saved skill pack to %s\n", out_path);
 }
 
 bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
@@ -344,7 +343,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
     return true;
 }
 
-void install_mod(pd_meta p, std::string* paths, u32 path_num) {
+void install_mod(pd_meta p, const std::string* paths, u32 path_num) {
     if (!handle_still_valid(p.h)) {
         return;
     }
