@@ -1,35 +1,61 @@
 #include <optional>
+#include <common/logging.h>
 #include "userlabels.hxx"
 
+typedef struct {
+    const char* text;
+    u32 type;
+}type_table_entry;
+
+// Lookup tables to replace a bunch of if statements in other functions
+type_table_entry data_type_table[] = {
+    {"S8",  ImGuiDataType_S8},
+    {"U8",  ImGuiDataType_U8},
+    {"S16", ImGuiDataType_S16},
+    {"U16", ImGuiDataType_U16},
+    {"S32", ImGuiDataType_S32},
+    {"U32", ImGuiDataType_U32},
+    {"S64", ImGuiDataType_S64},
+    {"U64", ImGuiDataType_U64},
+};
+
+type_table_entry comp_type_table[] = {
+    {"==", EQUAL},
+    {"<",  LESS_THAN},
+    {"<=", LESS_THAN_OR_EQUAL},
+    {">",  GREATER_THAN},
+    {">=", GREATER_THAN_OR_EQUAL},
+};
+
 ImGuiDataType get_type(c4::basic_substring<const char> type_str) {
-    // C4's substring wrapper uses == operator for string compare
-    if (type_str == "S8") {
-        return ImGuiDataType_S8;
+    for (const type_table_entry& entry : data_type_table) {
+        if (strncmp(type_str.str, entry.text, type_str.len) == 0) {
+            return (ImGuiDataType)entry.type;
+        }
     }
-    else if (type_str == "U8") {
-        return ImGuiDataType_U8;
+
+    // We can't print here because the documentation window calls this every
+    // frame to show info about the data type, and it'd spam the log
+    /*
+    LOG_MSG(warning, "Data type '%.*s' is invalid, S8 will be assumed.\n", (int)type_str.len, type_str.str);
+    LOG_MSG(info, "The valid data types are: ");
+    for (const type_table_entry& entry : data_type_table) {
+        printf("'%s' ", entry.text);
     }
-    else if (type_str == "U16") {
-        return ImGuiDataType_U16;
+    printf("\n");
+    */
+
+    // Nothing worked, we'll assume S8
+    return ImGuiDataType_S8;
+}
+
+compare_t parse_comparison(c4::basic_substring<const char> str) {
+    for (const type_table_entry& entry : comp_type_table) {
+        if (strncmp(str.str, entry.text, str.len) == 0) {
+            return (compare_t)entry.type;
+        }
     }
-    else if (type_str == "S16") {
-        return ImGuiDataType_S16;
-    }
-    else if (type_str == "U32") {
-        return ImGuiDataType_U32;
-    }
-    else if (type_str == "S32") {
-        return ImGuiDataType_S32;
-    }
-    else if (type_str == "U64") {
-        return ImGuiDataType_U64;
-    }
-    else if (type_str == "S64") {
-        return ImGuiDataType_U64;
-    } else {
-        // Nothing worked, we'll assume S8
-        return ImGuiDataType_S8;
-    }
+    return COMPARISON_INVALID;
 }
 
 userlabel parse_label(ryml::ConstNodeRef label_node, u8& pos) {
@@ -122,26 +148,6 @@ void user_config::update_unconditional_labels() {
     }
 }
 
-compare_t parse_comparison(c4::basic_substring<const char> str) {
-    if (str == "==") {
-        return EQUAL;
-    }
-    else if (str == "<") {
-        return LESS_THAN;
-    }
-    else if (str == "<=") {
-        return LESS_THAN_OR_EQUAL;
-    }
-    else if (str == ">") {
-        return GREATER_THAN;
-    }
-    else if (str == ">=") {
-        return GREATER_THAN_OR_EQUAL;
-    } else {
-        return COMPARISON_INVALID;
-    }
-}
-
 bool do_comparison(const void* comp_target, ImGuiDataType target_type, s64 val, compare_t comparison) {
     s64 compare_to = 0;
 
@@ -165,7 +171,7 @@ bool do_comparison(const void* comp_target, ImGuiDataType target_type, s64 val, 
             compare_to = *((s32*)comp_target);
             break;
         case ImGuiDataType_U64:
-            // Numbers >UINT64_MAX might go negative here...
+            // Numbers >INT64_MAX might go negative here...
             compare_to = *((u64*)comp_target);
             break;
         case ImGuiDataType_S64:
