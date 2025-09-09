@@ -11,7 +11,7 @@ static const char ImGuiConfig[] = {
 
 int main(int argc, char** argv) {
     // Write imgui config if it doesn't already exist
-    if (!std::filesystem::exists("imgui.ini")) {
+    if (!file_exists("imgui.ini")) {
         FILE* config_out = fopen("imgui.ini", "wb");
         if (config_out != nullptr) {
             fwrite(ImGuiConfig, sizeof(ImGuiConfig), 1, config_out);

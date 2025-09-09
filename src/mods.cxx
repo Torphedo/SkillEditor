@@ -1,10 +1,9 @@
-#include <filesystem>
 #include <cstdio>
 
 #include <nfd.h>
 
-#include "remote_pd.hxx"
-#include "text.hxx"
+#include "remote_pd.h"
+#include "text.h"
 #include "mods.hxx"
 #include "pool.h"
 
@@ -22,7 +21,8 @@ bool skill_select(char** path_out) {
 // change between versions
 
 void save_skill_data(const char* path, skill_t skill, const char* name, const char* desc, u16 idx) {
-    const packv3_header header = packv3_header(1);
+    packv3_header header = {};
+    header.skill_count = 1;
 
     const packv3_entry entry = {
         skill,
@@ -65,7 +65,7 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     if (write_text) {
         text = get_skill_text(p, skill.SkillTextID);
     }
-    save_skill_data(path, skill, text.name.data(), text.desc.data(), index);
+    save_skill_data(path, skill, text.name, text.desc, index);
 
     printf("Saved skill to %s\n", path);
 }
@@ -146,13 +146,15 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         return;
     }
 
-    const packv3_header header_out = packv3_header(skillpaths.size());
+    packv3_header header_out = {};
+    header_out.skill_count = skillpaths.size(),
     fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
 
     pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
     // Text pool comes after header and skill entries
-    for (const std::string& path : skillpaths) {
-        FILE* skill_file = fopen(path.c_str(), "rb");
+    for (u32 i = 0; i < skillpaths.size(); i++) {
+        const char* path = skillpaths[i].c_str();
+        FILE* skill_file = fopen(path, "rb");
         if (skill_file == nullptr) {
             LOG_MSG(error, "Failed to open input file \"%s\"\n");
             continue;
@@ -167,7 +169,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
             packv3_entry* entries = (packv3_entry*)calloc(header.skill_count, sizeof(packv3_entry));
 
             if (entries == nullptr) {
-                printf("Failed to allocate for skill data from \"%s\"", path.c_str());
+                printf("Failed to allocate for skill data from \"%s\"", path);
                 free(entries);
                 continue;
             }
@@ -176,7 +178,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
             fread(entries, sizeof(*entries), header.skill_count, skill_file);
 
             // Text data takes up the remainder of the file:
-            const u32 text_size = file_size(path.c_str()) - sizeof(header) - sizeof(*entries) * header.skill_count;
+            const u32 text_size = file_size(path) - sizeof(header) - sizeof(*entries) * header.skill_count;
 
             // Allocate space, then just copy the skill text directly into our pool.
             const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);

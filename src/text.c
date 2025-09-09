@@ -1,22 +1,22 @@
-#include <cstring>
+#include <string.h>
 #include <windows.h>
 
 #include <common/int.h>
 
-#include "remote_pd.hxx"
+#include "remote_pd.h"
 #include "structs.h"
-#include "text.hxx"
+#include "text.h"
 
 skill_text get_skill_text(pd_meta p, unsigned int id) {
     if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {
-        return {"", ""};
+        return (skill_text) {"", ""};
     }
 
     // Read section header to check the number of strings
     const text_header* header = &p.gstorage->textHeader;
 
     if (id > header->offset_count - 1) {
-        return {"", ""};
+        return (skill_text) {"", ""};
     }
 
     const text_ptrs* string_offset = &p.gstorage->textPtrs[id];
@@ -68,10 +68,10 @@ bool save_skill_text(pd_meta p, skill_text text, unsigned int id) {
     const text_ptrs* string_offset = &p.gstorage->textPtrs[index];
 
     // Shorthands for the new text
-    const char* new_name = text.name.data();
-    const char* new_desc = text.desc.data();
-    const s32 name_size = text.name.length() + 1;
-    const s32 desc_size = text.desc.length() + 1;
+    const char* new_name = text.name;
+    const char* new_desc = text.desc;
+    const s32 name_size = strlen(text.name) + 1;
+    const s32 desc_size = strlen(text.desc) + 1;
 
     char* name = (char*)string_offset + string_offset->name;
     shift_textbuf(p, name, name_size, index, true);

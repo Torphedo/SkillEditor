@@ -52,7 +52,7 @@ typedef struct {
     u16 desc_offset;
 }packv3_entry;
 
-struct packv3_header {
+typedef struct packv3_header_s {
     // Makes the file easy to identify as v3 in a hex editor
     packv3_magic magic = PACKV3_MAGIC;
 
@@ -63,12 +63,8 @@ struct packv3_header {
     u16 format_version = 3;
     u16 skill_count = 0;
     u8 pad2[12] = {0};
+}packv3_header;
 
-    packv3_header() = default;
-    packv3_header(u16 skill_count) {
-        this->skill_count = skill_count;
-    }
-};
 // Header sizes should match
 static_assert(sizeof(pack_header1) == sizeof(packv3_header));
 // This might show up as an error in your editor, but it's valid and compiles.
@@ -80,8 +76,7 @@ bool skill_select(char** path_out);
 
 void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out);
 
-// Prompts the user for a filepath if they haven't entered one yet, then writes
-// the specified skill (by ID) to disk and updates the version number and PD's gsdata.
+// Writes the specified skill (by ID) to disk, then updates the version number and GSDATA.
 void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text);
 void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths);
 

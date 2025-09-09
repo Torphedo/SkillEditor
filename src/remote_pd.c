@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <stdio.h>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
@@ -7,7 +7,7 @@
 #include <common/crc32.h>
 #include <common/logging.h>
 
-#include "remote_pd.hxx"
+#include "remote_pd.h"
 #include "structs.h"
 
 static DWORD get_pid_by_name(LPCTSTR ProcessName) {
@@ -62,10 +62,10 @@ bool is_running() {
 }
 
 void win32_print_error_msg(DWORD err_code) {
-    const char* msg = nullptr;
-    DWORD format_result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 0, err_code, 0, (LPTSTR)&msg, 1, nullptr);
+    const char* msg = NULL;
+    DWORD format_result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 0, err_code, 0, (LPTSTR)&msg, 1, NULL);
 
-    printf("\"%s\"", (msg == nullptr) ? "[message missing]" : msg);
+    printf("\"%s\"", (msg == NULL) ? "[message missing]" : msg);
 
     if (format_result != 0) {
         LocalFree((void*)msg);
@@ -73,10 +73,10 @@ void win32_print_error_msg(DWORD err_code) {
 }
 
 bool get_process(pd_meta* p) {
-    if (p->gstorage == nullptr) {
+    if (p->gstorage == NULL) {
         // There's no existing gsdata buffer, we need to allocate it
         DWORD alloc_flags = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
-        p->gstorage = (gsdata*)VirtualAlloc(nullptr, sizeof(*p->gstorage), alloc_flags, PAGE_READWRITE);
+        p->gstorage = (gsdata*)VirtualAlloc(NULL, sizeof(*p->gstorage), alloc_flags, PAGE_READWRITE);
     }
 
     p->pid = get_pid_by_name("PDUWP.exe");
@@ -124,7 +124,7 @@ bool get_process(pd_meta* p) {
 }
 
 bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
-    if (p.gstorage == nullptr) {
+    if (p.gstorage == NULL) {
         LOG_MSG(warning, "No data to write...\n");
         return false;
     }
@@ -142,7 +142,7 @@ bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
     // allows for 400KiB of watched data to change without missing anything. We
     // can probbaly write a loop to sync an unlimited amount of data between
     // processes, but this is fine for our use case.
-    void* dirty_pages[100] = {};
+    void* dirty_pages[100] = {0};
     ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
     DWORD page_size = 0;
     GetWriteWatch(WRITE_WATCH_FLAG_RESET, p.gstorage, sizeof(*p.gstorage), dirty_pages, &address_count, &page_size);
@@ -157,7 +157,7 @@ bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
         p.gstorage->VersionNum = crc32buf((u8*)p.gstorage, sizeof(*p.gstorage));
 
         // We have to update the first page manually here
-        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, nullptr);
+        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, NULL);
 
         // Don't trigger the write watch again from editing version
         ResetWriteWatch(p.gstorage, sizeof(*p.gstorage));
@@ -213,7 +213,7 @@ bool can_read_memory(pd_meta p) {
 
     // Try to read memory
     unsigned int buf = 0;
-    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, nullptr);
+    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
     const DWORD error = GetLastError();
     SetLastError(0);
     return (error == 298) || (error == 0);

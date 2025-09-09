@@ -1,11 +1,17 @@
 #pragma once
-/// @file remote_pd.hxx
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// @file remote_pd.h
 /// Functions for syncing state with Phantom Dust.
 
+#include <stdbool.h>
 #include <common/int.h>
 #include "structs.h"
 
 #define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 
 enum {
@@ -17,7 +23,7 @@ typedef struct {
     uintptr_t gstorage_addr;
     gsdata* gstorage;
     u32 pid;
-}pd_meta;
+} pd_meta;
 
 // Gets the process ID, attaches to it with read/write permissions, then retrieves a copy of gsdata
 bool get_process(pd_meta* p);
@@ -39,3 +45,7 @@ bool can_read_memory(pd_meta p);
 
 // Toggles whether the game is currently frozen by Skill Editor
 void toggle_game_pause(pd_meta p);
+
+#ifdef __cplusplus
+}
+#endif

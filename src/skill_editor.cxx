@@ -6,7 +6,7 @@
 
 #include "skill_editor.hxx"
 #include "mods.hxx"
-#include "text.hxx"
+#include "text.h"
 #include "common/logging.h"
 #include "nfde_wrapper.hxx"
 
@@ -458,7 +458,7 @@ int editor::draw() {
 
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
-            skill_text text = {current_name, current_desc};
+            skill_text text = {current_name.c_str(), current_desc.c_str()};
             save_skill_text(p, text, text_id);
         }
         ImGui::End();

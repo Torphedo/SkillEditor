@@ -51,7 +51,7 @@ typedef enum {
 }capsule;
 
 // The gsdata structure is at this offset in PDUWP.exe
-const uintptr_t gstorage_offset = 0x4C5240;
+static const uintptr_t gstorage_offset = 0x4C5240;
 
 typedef struct {
     u32 filesize; // The size in bytes of the entire gsdata file

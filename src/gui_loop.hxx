@@ -1,4 +1,4 @@
 #pragma once
-#include "remote_pd.hxx"
+#include "remote_pd.h"
 
 int gui_main();

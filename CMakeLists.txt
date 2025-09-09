@@ -5,7 +5,8 @@ project(skill_editor
 )
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(vendor/rapidyaml)
 add_subdirectory(vendor/bobtail)
@@ -33,8 +34,8 @@ add_library(imgui STATIC
 add_executable(skill_editor
 	src/main.cxx
 	src/mods.cxx
-	src/text.cxx
-	src/remote_pd.cxx
+	src/text.c
+	src/remote_pd.c
 	src/userlabels.cxx
 	src/gui_loop.cxx
 	src/skill_editor.cxx
