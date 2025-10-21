@@ -32,6 +32,9 @@ struct editor {
     MemoryEditor hex_edit;
     ImGui::MarkdownConfig mdConfig;
 
+    std::optional<u16> clipboard_id;
+    skill_t skill_clipboard = {};
+
     // Name & description being edited in text edit box
     std::string current_name;
     std::string current_desc;

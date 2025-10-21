@@ -159,8 +159,7 @@ int editor::draw() {
             if (!handle_still_valid(p.h)) {
                 ImGui::SameLine(viewport->Size.x - 300);
                 ImGui::TextColored({ 255, 0, 0, 255 }, "No Phantom Dust instance detected!");
-            }
-            else {
+            } else {
                 ImGui::SameLine(viewport->Size.x - 15 - 575);
                 if (p.h == INVALID_HANDLE_VALUE || p.h == NULL) {
                     ImGui::TextColored({ 255, 0, 0, 255 }, "No handle to process!");
@@ -296,6 +295,25 @@ int editor::draw() {
     if (AttackSkillEditor) {
         // Render the editor w/ user-controlled labels
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
+            ImGui::Text("Current ID: %d (0x%X)", ID, ID);
+            if (ImGui::Button("Copy Skill")) {
+                clipboard_id = MAX(0, ID - 1);
+            }
+            if (clipboard_id.has_value()) {
+                ImGui::SameLine();
+                if (ImGui::Button("Paste Skill")) {
+                    const skill_t* source = &p.gstorage->skill_array[clipboard_id.value()];
+                    memcpy(cur_skill(), source, sizeof(*source));
+                }
+
+                ImGui::SameLine();
+                ImGui::Text("Clipboard ID: %d (0x%X)", clipboard_id.value(), clipboard_id.value());
+
+                if (ImGui::Button("Clear clipboard")) {
+                    clipboard_id.reset();
+                }
+            }
+
             std::optional<u32> selected_item = this->custom_labels.render_editor(this->cur_skill(), limitless);
             if (selected_item.has_value()) {
                 Documentation = true;
