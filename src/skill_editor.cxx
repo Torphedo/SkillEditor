@@ -402,7 +402,7 @@ int editor::draw() {
                 const userlabel parsed_label = parse_label(selected_node, pos);
                 char data_info[0x40] = {0};
                 const ImGuiDataTypeInfo* type_info = ImGui::DataTypeGetInfo(parsed_label.type);
-                snprintf(data_info, sizeof(data_info) - 1, "\nType: %s (%llu bytes) @ offset 0x%X\n", type_info->Name, type_info->Size, pos);
+                snprintf(data_info, sizeof(data_info) - 1, "\nType: %s (%llu byte(s)) @ offset 0x%X\n", type_info->Name, type_info->Size, pos);
 
                 ImGui::Markdown(data_info, strlen(data_info), mdConfig);
 

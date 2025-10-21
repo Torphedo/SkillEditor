@@ -32,19 +32,29 @@ uintptr_t remote_module_base_addr(HANDLE h) {
 
     // Get path to base module
     char base_exe_name[MAX_PATH] = {0};
-    HMODULE base_exe_module = 0;
-    GetModuleFileNameEx(h, NULL, base_exe_name, sizeof(base_exe_name) / sizeof(TCHAR));
+    HMODULE base_exe_module = INVALID_HANDLE_VALUE;
+    DWORD base_exe_len = ARRAY_SIZE(base_exe_name);
+    bool result = QueryFullProcessImageNameA(h, 0, base_exe_name, &base_exe_len);
+    if (!result) {
+        const DWORD err_code = GetLastError();
+        LOG_MSG(error, "Failed to get executable name of the other process (error code %d)\n", err_code);
+    }
 
     if (EnumProcessModules(h, modules, sizeof(modules), &bytes_needed)) {
         for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
             char module_name[MAX_PATH] = {0};
 
-            if (GetModuleFileNameExA(h, modules[i], module_name, sizeof(module_name) / sizeof(TCHAR))) {
-                // Check name against the base EXE name
-                if (strncmp(module_name, base_exe_name, MAX_PATH) == EXIT_SUCCESS) {
-                    base_exe_module = modules[i];
-                    break;
-                }
+            result = GetModuleFileNameExA(h, modules[i], module_name, ARRAY_SIZE(module_name));
+            if (!result) {
+                LOG_MSG(error, "Failed to get filename for a module in the other process (error code %d)\n", GetLastError());
+                continue;
+            }
+
+            if (strncmp(module_name, base_exe_name, MAX_PATH) == 0) {
+                // The remote module handle is just the pointer to the
+                // module in the other process' address space
+                base_exe_module = modules[i];
+                break;
             }
         }
     }
@@ -103,7 +113,7 @@ bool get_process(pd_meta* p) {
     ResetWriteWatch((void*)p->gstorage, requested_size);
     if (!result) {
         const DWORD err_code = GetLastError();
-        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld)\n", err_code);
+        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld, remote pointer %p)\n", err_code, (void*)p->gstorage_addr);
         LOG_MSG(info, "Windows says ");
         win32_print_error_msg(err_code);
         printf("\n");
