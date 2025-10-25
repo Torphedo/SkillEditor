@@ -11,6 +11,7 @@ struct editor {
     u16 ID = 1;
     bool NewSkillPack = false;
     bool AttackSkillEditor = true;
+    bool AnimProfileEditor = false;
     bool Documentation = true;
     bool IDSelection = false;
     bool text_edit = true;
@@ -30,6 +31,8 @@ struct editor {
     ryml::ConstNodeRef selected_node = nullptr;
 
     MemoryEditor hex_edit;
+    MemoryEditor animHexEditGround;
+    MemoryEditor animHexEditAir;
     ImGui::MarkdownConfig mdConfig;
 
     std::optional<u16> clipboard_id;

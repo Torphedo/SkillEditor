@@ -143,6 +143,7 @@ int editor::draw() {
             if (ImGui::BeginMenu("Window")) {
                 ImGui::MenuItem("Attack Skill Editor", nullptr, &AttackSkillEditor);
                 ImGui::MenuItem("Skill Hex Editor", nullptr, &hex_edit.Open);
+                ImGui::MenuItem("Animation Profile Editor", nullptr, &AnimProfileEditor);
                 ImGui::MenuItem("Documentation", nullptr, &Documentation);
                 if (ImGui::MenuItem("Text Edit", nullptr, &text_edit)) {
                     update_process(&p, false); // Refresh skill data address & game handle
@@ -293,7 +294,18 @@ int editor::draw() {
 
     if (hex_edit.Open) {
         hex_edit.OptShowAscii = false;
-        hex_edit.DrawWindow("Hex Editor", &gstorage->skill_array[ID - 1], 144);
+        hex_edit.DrawWindow("Hex Editor", &gstorage->skill_array[ID - 1], sizeof(skill_t));
+    }
+
+    if (AnimProfileEditor) {
+        anim_profile* profiles = (anim_profile*)p.anim_profiles.local_data;
+        const char* label = "Animation Profile Editor (Ground)";
+        u32 idx = cur_skill()->AnimProfileGround;
+        animHexEditGround.DrawWindow(label, &profiles[idx], sizeof(*profiles));
+
+        label = "Animation Profile Editor (Air)";
+        idx = cur_skill()->AnimProfileAir;
+        animHexEditAir.DrawWindow(label, &profiles[idx], sizeof(*profiles));
     }
 
     if (AttackSkillEditor) {

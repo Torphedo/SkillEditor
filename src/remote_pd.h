@@ -22,6 +22,7 @@ enum {
 
 // Local copy of a memory region in a remote process.
 typedef struct {
+    const char* name; // User-friendly name
     void* local_data;
     uintptr_t remote_addr;
     u32 size;
@@ -38,7 +39,7 @@ static const DWORD remote_region_access = PROCESS_VM_OPERATION | PROCESS_VM_READ
 /// @param size Size of the synced region
 /// @param remote_addr Pointer in the remote process' address space to sync with
 /// @param h Process handle with at least [remote_region_access] access flags.
-remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h);
+remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, const char* name, HANDLE h);
 
 /// @brief Overwrite remote region with your local data
 ///
@@ -55,8 +56,8 @@ void free_remote_region(remote_region* reg);
 
 typedef struct {
     HANDLE h;
-    uintptr_t gstorage_addr;
     remote_region gstorage;
+    remote_region anim_profiles;
     u32 pid;
 } pd_meta;
 

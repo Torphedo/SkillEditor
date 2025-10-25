@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 #include <common/int.h>
 
 // =============================================================================
@@ -23,22 +24,27 @@ enum {
     GSDATA_PADDING_SIZE = 0x198F4,
     GSDATA_TEXTPTR_COUNT = 393,
     GSDATA_TEXTBUF_SIZE = 56504,
-    GSDATA_SKILL_COUNT = 751
+    GSDATA_SKILL_COUNT = 751,
+    ANIMATION_PROFILE_COUNT = GSDATA_SKILL_COUNT,
 };
 
 typedef struct {
-    // This could be made a big array of 0x90 bytes, but the ID & text ID are
-    // needed all over the place.
-
     u8 data1[0x8];
-    // SkillTextID offset = 0x8
     u16 SkillTextID;
     u8 data2[0x4];
-    // SkillID offset = 0xE
     u16 SkillID;
+    u8 data3[0xC];
+    u16 AnimProfileGround;
+    u16 AnimProfileAir;
 
-    u8 data3[0x80];
+    u8 data4[0x70];
 }skill_t;
+static_assert(sizeof(skill_t) == 0x90, "Skill size is wrong!");
+// CLion complains about this because it interprets it as C++, you can ignore the linter warnings.
+static_assert(offsetof(skill_t, SkillTextID) == 0x8, "Skill text ID offset is wrong!");
+static_assert(offsetof(skill_t, SkillID) == 0xE, "Skill ID offset is wrong!");
+static_assert(offsetof(skill_t, AnimProfileGround) == 0x1C, "Ground animation profile offset is wrong!");
+static_assert(offsetof(skill_t, AnimProfileAir) == 0x1E, "Air animation profile offset is wrong!");
 
 typedef enum {
     AURA,
@@ -52,6 +58,7 @@ typedef enum {
 
 // The gsdata structure is at this offset in PDUWP.exe
 static const uintptr_t gstorage_offset = 0x4C5240;
+static const uintptr_t anim_profiles_offset = 0x4BCC98;
 
 typedef struct {
     u32 filesize; // The size in bytes of the entire gsdata file
@@ -67,3 +74,8 @@ typedef struct {
     text_ptrs textPtrs[GSDATA_TEXTPTR_COUNT];
     char textbuf[GSDATA_TEXTBUF_SIZE];
 }gsdata;
+
+typedef struct {
+    u8 data[0x72];
+}anim_profile;
+static_assert(sizeof(anim_profile) == 0x72);

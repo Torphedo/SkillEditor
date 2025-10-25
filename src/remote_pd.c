@@ -82,8 +82,9 @@ void win32_print_error_msg(DWORD err_code) {
     }
 }
 
-remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h) {
+remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, const char* name, HANDLE h) {
     remote_region out = {
+        .name = name,
         .size = size,
         .remote_addr = remote_addr,
     };
@@ -95,7 +96,7 @@ remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h) {
     const DWORD alloc_flags = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
     out.local_data = VirtualAlloc(NULL, size, alloc_flags, PAGE_READWRITE);
     if (!out.local_data) {
-        LOG_MSG(error, "Failed to allocate local copy of %x byte memory region!\n", size);
+        LOG_MSG(error, "Failed to allocate local copy of %x byte memory region '%s'!\n", size, name);
         return out;
     }
 
@@ -105,7 +106,7 @@ remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h) {
 
     if (!result) {
         const DWORD err_code = GetLastError();
-        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld, remote pointer %p)\n", err_code, (void*)remote_addr);
+        LOG_MSG(error, "Failed to read '%s' from Phantom Dust (error code %ld, remote pointer %p)\n", name, err_code, (void*)remote_addr);
         LOG_MSG(info, "Windows says ");
         win32_print_error_msg(err_code);
         printf("\n");
@@ -127,7 +128,7 @@ remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h) {
 
 bool flush_remote_region(const remote_region* reg, HANDLE h) {
     if (!reg->local_data) {
-        LOG_MSG(warning, "No data to flush for region %p\n", reg->local_data);
+        LOG_MSG(warning, "No data to flush for remote region '%s'\n", reg->name);
         return false;
     }
 
@@ -167,10 +168,16 @@ bool get_process(pd_meta* p) {
     LOG_MSG(debug, "PDUWP handle 0x%p\n", p->h);
 
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
-    p->gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
+    const uintptr_t gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
+    const uintptr_t anim_addr = ((uintptr_t)base_exe_module + anim_profiles_offset);
 
     if (!p->gstorage.local_data) {
-        p->gstorage = alloc_remote_region(sizeof(gsdata), p->gstorage_addr, p->h);
+        p->gstorage = alloc_remote_region(sizeof(gsdata), gstorage_addr, "Skill Data", p->h);
+    }
+
+    if (!p->anim_profiles.local_data) {
+        const u32 size = sizeof(anim_profile) * ANIMATION_PROFILE_COUNT;
+        p->anim_profiles = alloc_remote_region(size, anim_addr, "Animation profiles", p->h);
     }
 
     return p;
@@ -187,10 +194,11 @@ bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
     } else if (gstorage->VersionNum == PD_VERSION_NUMBER) {
         gstorage->VersionNum = 0;
     }
-    const bool need_write = flush_remote_region(&p.gstorage, p.h);
+    const bool need_gsdata_write = flush_remote_region(&p.gstorage, p.h);
+    const bool need_anim_write = flush_remote_region(&p.anim_profiles, p.h);
 
     // If there's at least 1 page that changed, we need to copy some data
-    if (need_write && !use_vanilla_version) {
+    if (need_gsdata_write && !use_vanilla_version) {
         // Make sure the current version number doesn't affect the hash
         gstorage->VersionNum = 0;
 
@@ -201,7 +209,7 @@ bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
         flush_remote_region(&p.gstorage, p.h);
     }
 
-    return need_write;
+    return need_gsdata_write || need_anim_write;
 }
 
 bool handle_still_valid(HANDLE h) {
@@ -235,6 +243,7 @@ void update_process(pd_meta* p, bool force) {
         CloseHandle(p->h);
     }
     free_remote_region(&p->gstorage);
+    free_remote_region(&p->anim_profiles);
 
     // Update everything
     get_process(p);
@@ -247,7 +256,7 @@ bool can_read_memory(pd_meta p) {
 
     // Try to read memory
     unsigned int buf = 0;
-    ReadProcessMemory(p.h, (LPVOID)p.gstorage_addr, &buf, 1, NULL);
+    ReadProcessMemory(p.h, (LPVOID)p.gstorage.remote_addr, &buf, 1, NULL);
     const DWORD error = GetLastError();
     SetLastError(0);
     return (error == 298) || (error == 0);
