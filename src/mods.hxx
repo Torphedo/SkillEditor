@@ -18,7 +18,7 @@ typedef struct {
     u16 skill_count;
     u8 pad[12];
 }pack_header1;
-const u32 s = sizeof(pack_header1);
+static_assert(sizeof(pack_header1) == 0x30);
 
 // Skill pack v2 format, has skill and text data
 typedef struct {
@@ -27,11 +27,11 @@ typedef struct {
 }pack2_text;
 
 // =============================================================================
-// Skill Pack v3 structures
+// Skill Pack v4 structures
 typedef enum : u32 {
-    // Stands for "Skill Pack v3"
-    PACKV3_MAGIC = MAGIC('S', 'P', '3', 0x00)
-}packv3_magic;
+    PACKV3_MAGIC = MAGIC('S', 'P', '3', 0x00),
+    PACKV4_MAGIC = MAGIC('S', 'P', '4', 0x00),
+}pack_magic;
 
 // All the data associated with each skill in a pack
 typedef struct {
@@ -50,26 +50,36 @@ typedef struct {
     u16 name_offset;
     // The offset in the skill pack's string pool where the skill's description is.
     u16 desc_offset;
-}packv3_entry;
+}packv4_entry;
+static_assert(sizeof(packv4_entry) == 0x96);
 
-typedef struct packv3_header_s {
-    // Makes the file easy to identify as v3 in a hex editor
-    packv3_magic magic = PACKV3_MAGIC;
+struct packv4_anim_entry {
+    anim_profile anim;
+    u16 idx;
+    u8 pad[0xC]; // For forward compatibility and a nice even number
+};
+static_assert(sizeof(packv4_anim_entry) == 0x80);
+
+struct packv4_header {
+    // Makes the file easy to identify as v4 in a hex editor
+    pack_magic magic = PACKV4_MAGIC;
 
     // Format version & skill count are @ 0x20 in other versions, so we add
     // padding to match that.
-    u8 pad[0x20 - sizeof(packv3_magic)] = {0};
+    u8 pad[0x20 - sizeof(pack_magic)] = {0};
 
     u16 format_version = 3;
     u16 skill_count = 0;
-    u8 pad2[12] = {0};
-}packv3_header;
+    u16 anim_profile_count = 0;
+    u8 pad2[10] = {0};
+};
+static_assert(sizeof(packv4_header) == 0x30);
 
 // Header sizes should match
-static_assert(sizeof(pack_header1) == sizeof(packv3_header));
+static_assert(sizeof(pack_header1) == sizeof(packv4_header));
 // This might show up as an error in your editor, but it's valid and compiles.
 // CLion complains about it and I'm not sure why...
-static_assert(offsetof(pack_header1, format_version) == offsetof(packv3_header, format_version));
+static_assert(offsetof(pack_header1, format_version) == offsetof(packv4_header, format_version));
 
 // Presents a file select dialog to the user
 bool skill_select(char** path_out);

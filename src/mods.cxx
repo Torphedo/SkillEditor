@@ -21,10 +21,10 @@ bool skill_select(char** path_out) {
 // change between versions
 
 void save_skill_data(const char* path, skill_t skill, const char* name, const char* desc, u16 idx) {
-    packv3_header header = {};
+    packv4_header header = {};
     header.skill_count = 1;
 
-    const packv3_entry entry = {
+    const packv4_entry entry = {
         skill,
         idx,
         0,
@@ -71,10 +71,11 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     printf("Saved skill to %s\n", path);
 }
 
-/// @brief Determine if some data loaded from disk is a v3 skill pack
+/// @brief Determine if some data loaded from disk is a v4-compatible skill pack
 /// @param Pointer to the first byte of data [should have at least 4 readable bytes]
-bool is_v3_pack(void* data) {
-    return *((u32*)data) == PACKV3_MAGIC;
+bool is_v4_pack(void* data) {
+    const u32 magic = *((u32*)data);
+    return magic == PACKV3_MAGIC || magic == PACKV4_MAGIC;
 }
 // Skill loading functions, which have to maintain backwards compatibility
 
@@ -148,7 +149,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         return;
     }
 
-    packv3_header header_out = {};
+    packv4_header header_out = {};
     header_out.skill_count = skillpaths.size(),
     fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
 
@@ -162,13 +163,13 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
             continue;
         }
 
-        // Read just enough data to find out if this is a v3 skill pack
-        packv3_header header;
+        // Read just enough data to find out if this is a v4 skill pack
+        packv4_header header;
         fread(&header, sizeof(header), 1, skill_file);
 
-        // V3 packs should have all their skills included
-        if (is_v3_pack(&header.magic)) {
-            packv3_entry* entries = (packv3_entry*)calloc(header.skill_count, sizeof(packv3_entry));
+        // V4 packs should have all their skills included
+        if (is_v4_pack(&header.magic)) {
+            packv4_entry* entries = (packv4_entry*)calloc(header.skill_count, sizeof(packv4_entry));
 
             if (entries == nullptr) {
                 printf("Failed to allocate for skill data from \"%s\"", path);
@@ -200,10 +201,10 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         } else {
             // V1 or V2 file
             // Save the skill & text in the new format
-            packv3_entry entry = {0};
+            packv4_entry entry = {0};
             char* name = nullptr;
             char* desc = nullptr;
-            if (!is_v3_pack((void*)&magic)) {
+            if (!is_v4_pack((void*)&magic)) {
                 // It's an old file, use backwards compatible loading
                 fseek(skill_file, 0, SEEK_SET);
                 load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
@@ -282,11 +283,25 @@ bool install_skill_pack(pd_meta p, const char* path) {
         return false;
     }
 
-    packv3_header header;
+    packv4_header header;
     fread(&header, sizeof(header), 1, skill_pack);
 
+    const bool too_new = header.format_version > 4;
+    const bool bad_magic = is_v4_pack(&header);
+
+    if (too_new) {
+        printf("Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
+        return false;
+    }
+
+    if (bad_magic) {
+        // Some invalid file
+        printf("I don't recognize \"%s\" as a valid skill pack, cancelling.\n", path);
+        return false;
+    }
+
     // Compatibility checks
-    if (header.format_version <= 3 && header.magic != PACKV3_MAGIC) {
+    if (header.format_version < 3) {
         // Older file, use backwards compatibility
         fseek(skill_pack, 0, SEEK_SET); // Reset pos
         if (header.format_version == 0) {
@@ -295,18 +310,10 @@ bool install_skill_pack(pd_meta p, const char* path) {
         }
         return install_skill_pack_v1_v2(p, skill_pack);
     }
-    else if (header.format_version > 3) {
-        // Newer file version, we can't handle it.
-        printf("Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
-        return false;
-    } else if (header.magic != PACKV3_MAGIC) {
-        // Some invalid file
-        printf("I don't recognize \"%s\" as a valid skill pack, cancelling.\n", path);
-        return false;
-    }
 
     // Load the pack's string pool. This makes things easy on our end and lets us load everything in one pass.
-    const s32 pool_offset = sizeof(packv3_header) + (header.skill_count * sizeof(packv3_entry));
+    const s32 anim_offset = sizeof(packv4_header) + (header.skill_count * sizeof(packv4_entry));
+    const s32 pool_offset = anim_offset + (header.anim_profile_count * sizeof(anim_profile));
     // If the size ends up negative, MAX() will keep it positive
     const s64 pool_size = MAX(1, (s64)file_size(path) - pool_offset);
     pool_t pool = pool_open(pool_size);
@@ -327,7 +334,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
     gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
-        packv3_entry entry = {0};
+        packv4_entry entry = {0};
         fread((void*)&entry, sizeof(entry), 1, skill_pack);
 
         // Copy the skill into gstorage
@@ -343,6 +350,14 @@ bool install_skill_pack(pd_meta p, const char* path) {
             const char* desc = (char*)pool_getdata(pool, entry.desc_offset);
             save_skill_text(p, {name, desc}, entry.skill.SkillTextID);
         }
+    }
+
+    // Load profiles if needed
+    anim_profile* profiles = (anim_profile*)p.anim_profiles.local_data;
+    for (u32 i = 0; i < header.anim_profile_count; i++) {
+        packv4_anim_entry entry = {0};
+        fread((void*)&entry, sizeof(entry), 1, skill_pack);
+        profiles[entry.idx] = entry.anim;
     }
 
     fclose(skill_pack);
