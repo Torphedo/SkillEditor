@@ -1,16 +1,18 @@
+#include "skill_editor.hxx"
 #include <imgui.h>
 #include <imgui_internal.h> // For messing with the viewport for menu bar
 #include <imgui/misc/cpp/imgui_stdlib.h> // For std::string input fields
 #include <imgui_markdown.h>
 #include <nfd.h>
 
-#include "skill_editor.hxx"
+#include <common/file.h>
+#include <common/logging.h>
+
 #include "mods.hxx"
 #include "text.h"
-#include "common/logging.h"
+#include "remote_pd.h"
 #include "nfde_wrapper.hxx"
 
-#include <common/file.h>
 
 // I'd normally keep this near the top, but c4 and windows.h are mortal enemies.
 // c4 always has to be included first, and it comes in via skill_editor.hxx.
@@ -65,12 +67,13 @@ editor::editor() {
 }
 
 editor::~editor() {
-    VirtualFree(p.gstorage, sizeof(*p.gstorage), MEM_RELEASE);
+    free_remote_region(&p.gstorage);
     free(this->cfg_yaml);
 }
 
 skill_t* editor::cur_skill() {
-    return &p.gstorage->skill_array[ID - 1];
+    auto* gstorage = (gsdata*)p.gstorage.local_data;
+    return &gstorage->skill_array[ID - 1];
 }
 
 int editor::draw() {
@@ -83,6 +86,7 @@ int editor::draw() {
     ImGui::DockSpaceOverViewport(); // Enable docking
     const bool game_available = handle_still_valid(p.h);
     const bool game_running = is_running();
+    auto* gstorage = (gsdata*)p.gstorage.local_data;
 
     if (!game_available) {
         update_process(&p, false);
@@ -289,7 +293,7 @@ int editor::draw() {
 
     if (hex_edit.Open) {
         hex_edit.OptShowAscii = false;
-        hex_edit.DrawWindow("Hex Editor", &p.gstorage->skill_array[ID - 1], 144);
+        hex_edit.DrawWindow("Hex Editor", &gstorage->skill_array[ID - 1], 144);
     }
 
     if (AttackSkillEditor) {
@@ -302,7 +306,7 @@ int editor::draw() {
             if (clipboard_id.has_value()) {
                 ImGui::SameLine();
                 if (ImGui::Button("Paste Skill")) {
-                    const skill_t* source = &p.gstorage->skill_array[clipboard_id.value()];
+                    const skill_t* source = &gstorage->skill_array[clipboard_id.value()];
                     memcpy(cur_skill(), source, sizeof(*source));
                 }
 
@@ -466,7 +470,7 @@ int editor::draw() {
 
         static u16 text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
-        text_id = p.gstorage->skill_array[ID - 1].SkillTextID;
+        text_id = gstorage->skill_array[ID - 1].SkillTextID;
 
         if (ImGui::Button("Reload") || cache != text_id) {
             skill_text text = get_skill_text(p, text_id);

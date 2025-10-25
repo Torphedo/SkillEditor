@@ -59,7 +59,8 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
 
     // Save the skill
     const u16 index = id - 1;
-    const skill_t skill = p.gstorage->skill_array[index];
+    const gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    const skill_t skill = gstorage->skill_array[index];
     // Use empty strings if told not to save text
     skill_text text = {"", ""};
     if (write_text) {
@@ -115,7 +116,8 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     load_skill_v1_v2(skill_file, &skill, &name, &desc);
 
     // Load skill data
-    p.gstorage->skill_array[skill.SkillID - 1] = skill;
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    gstorage->skill_array[skill.SkillID - 1] = skill;
 
     if (name != nullptr || desc != nullptr) {
         const s32 text_id = skill.SkillTextID;
@@ -236,10 +238,11 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     pack_header1 header = {0};
     fread(&header, sizeof(header), 1, skill_pack);
 
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     skill_t* skills = (skill_t*)calloc(header.skill_count, sizeof(*skills));
     fread(skills, sizeof(*skills), header.skill_count, skill_pack);
     for (int i = 0; i < header.skill_count; i++) {
-        p.gstorage->skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
+        gstorage->skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
     }
     pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(pack2_text));
     if (text_meta == nullptr) {
@@ -321,13 +324,14 @@ bool install_skill_pack(pd_meta p, const char* path) {
     fseek(skill_pack, sizeof(header), SEEK_SET);
 
     // Looks like this is a good pack file we can understand, time to install it
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
         packv3_entry entry = {0};
         fread((void*)&entry, sizeof(entry), 1, skill_pack);
 
         // Copy the skill into gstorage
-        p.gstorage->skill_array[entry.idx] = entry.skill;
+        gstorage->skill_array[entry.idx] = entry.skill;
 
         if (entry.desc_offset - entry.name_offset <= 1) {
             // This indicates the name is empty, so we'll assume the skill is

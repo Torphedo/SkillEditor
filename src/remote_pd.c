@@ -82,13 +82,75 @@ void win32_print_error_msg(DWORD err_code) {
     }
 }
 
-bool get_process(pd_meta* p) {
-    if (p->gstorage == NULL) {
-        // There's no existing gsdata buffer, we need to allocate it
-        DWORD alloc_flags = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
-        p->gstorage = (gsdata*)VirtualAlloc(NULL, sizeof(*p->gstorage), alloc_flags, PAGE_READWRITE);
+remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, HANDLE h) {
+    remote_region out = {
+        .size = size,
+        .remote_addr = remote_addr,
+    };
+    if (size > REMOTE_REGION_MAX_SIZE) {
+        LOG_MSG(error, "Remote region is 0x%X bytes, we can only handle up to 0x%X!\n", size, REMOTE_REGION_MAX_SIZE);
+        return out;
     }
 
+    const DWORD alloc_flags = MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH;
+    out.local_data = VirtualAlloc(NULL, size, alloc_flags, PAGE_READWRITE);
+    if (!out.local_data) {
+        LOG_MSG(error, "Failed to allocate local copy of %x byte memory region!\n", size);
+        return out;
+    }
+
+    SIZE_T actual_read = 0;
+    bool result = ReadProcessMemory(h, (LPVOID)remote_addr, out.local_data, size, &actual_read);
+    ResetWriteWatch(out.local_data, size);
+
+    if (!result) {
+        const DWORD err_code = GetLastError();
+        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld, remote pointer %p)\n", err_code, (void*)remote_addr);
+        LOG_MSG(info, "Windows says ");
+        win32_print_error_msg(err_code);
+        printf("\n");
+
+        bool valid = handle_still_valid(h);
+        const char* valid_msg = valid ? "still valid" : "no longer valid";
+        const float ratio = ((float)actual_read / size) * 100;
+        LOG_MSG(debug, "Debug info: Request is for handle 0x%x (which is %s). We wanted 0x%x bytes, and got 0x%x bytes (%.0f%%).\n", h, valid_msg, size, actual_read, ratio);
+
+        if (err_code != 0) {
+            SetLastError(0);
+        }
+
+        return out;
+    }
+
+    return out;
+}
+
+bool flush_remote_region(const remote_region* reg, HANDLE h) {
+    if (!reg->local_data) {
+        LOG_MSG(warning, "No data to flush for region %p\n", reg->local_data);
+        return false;
+    }
+
+    void* dirty_pages[REMOTE_REGION_MAX_PAGES] = {0};
+    ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
+    DWORD page_size = 0;
+    GetWriteWatch(WRITE_WATCH_FLAG_RESET, reg->local_data, reg->size, dirty_pages, &address_count, &page_size);
+
+    for (int i = 0; i < address_count; i++) {
+        const ptrdiff_t offset = (u8*)dirty_pages[i] - (u8*)reg->local_data;
+        WriteProcessMemory(h, (void*)(reg->remote_addr + offset), dirty_pages[i], page_size, NULL);
+    }
+
+    const bool need_write = address_count > 0;
+    return need_write;
+}
+
+void free_remote_region(remote_region* reg) {
+    VirtualFree(reg->local_data, reg->size, MEM_RELEASE);
+    memset(reg, 0, sizeof(*reg));
+}
+
+bool get_process(pd_meta* p) {
     p->pid = get_pid_by_name("PDUWP.exe");
     if (p->pid == 0) {
         // The game isn't running, any handles we had are now invalid.
@@ -107,75 +169,36 @@ bool get_process(pd_meta* p) {
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
     p->gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
 
-    const u32 requested_size = sizeof(*p->gstorage);
-    SIZE_T actual_read = 0;
-    bool result = ReadProcessMemory(p->h, (LPVOID)p->gstorage_addr, p->gstorage, requested_size, &actual_read);
-    ResetWriteWatch((void*)p->gstorage, requested_size);
-    if (!result) {
-        const DWORD err_code = GetLastError();
-        LOG_MSG(error, "Failed to read data from Phantom Dust (error code %ld, remote pointer %p)\n", err_code, (void*)p->gstorage_addr);
-        LOG_MSG(info, "Windows says ");
-        win32_print_error_msg(err_code);
-        printf("\n");
-
-        bool valid = handle_still_valid(p->h);
-        const char* valid_msg = valid ? "still valid" : "no longer valid";
-        const float ratio = ((float)actual_read / requested_size) * 100;
-        LOG_MSG(debug, "Debug info: Request is for handle 0x%x (which is %s). We wanted 0x%x bytes, and got 0x%x bytes (%.0f%%).\n", p->h, valid_msg, requested_size, actual_read, ratio);
-
-        if (err_code != 0) {
-            SetLastError(0);
-        }
-
-        return false;
+    if (!p->gstorage.local_data) {
+        p->gstorage = alloc_remote_region(sizeof(gsdata), p->gstorage_addr, p->h);
     }
 
     return p;
 }
 
 bool flush_to_pd(pd_meta p, bool use_vanilla_version) {
-    if (p.gstorage == NULL) {
-        LOG_MSG(warning, "No data to write...\n");
-        return false;
-    }
+    gsdata* gstorage = p.gstorage.local_data;
 
     // Trigger a flush whenever the version number needs to change
     if (use_vanilla_version) {
-        if (p.gstorage->VersionNum != PD_VERSION_NUMBER) {
-            p.gstorage->VersionNum = PD_VERSION_NUMBER;
+        if (gstorage->VersionNum != PD_VERSION_NUMBER) {
+            gstorage->VersionNum = PD_VERSION_NUMBER;
         }
-    } else if (p.gstorage->VersionNum == PD_VERSION_NUMBER) {
-        p.gstorage->VersionNum = 0;
+    } else if (gstorage->VersionNum == PD_VERSION_NUMBER) {
+        gstorage->VersionNum = 0;
     }
-
-    // The data we work with is ~274KiB, and getting pointers to 100 dirty pages
-    // allows for 400KiB of watched data to change without missing anything. We
-    // can probbaly write a loop to sync an unlimited amount of data between
-    // processes, but this is fine for our use case.
-    void* dirty_pages[100] = {0};
-    ULONG_PTR address_count = ARRAYSIZE(dirty_pages);
-    DWORD page_size = 0;
-    GetWriteWatch(WRITE_WATCH_FLAG_RESET, p.gstorage, sizeof(*p.gstorage), dirty_pages, &address_count, &page_size);
+    const bool need_write = flush_remote_region(&p.gstorage, p.h);
 
     // If there's at least 1 page that changed, we need to copy some data
-    const bool need_write = address_count > 0;
     if (need_write && !use_vanilla_version) {
         // Make sure the current version number doesn't affect the hash
-        p.gstorage->VersionNum = 0;
+        gstorage->VersionNum = 0;
 
         // Update version number
-        p.gstorage->VersionNum = crc32buf((u8*)p.gstorage, sizeof(*p.gstorage));
+        gstorage->VersionNum = crc32buf((u8*)gstorage, sizeof(*gstorage));
 
-        // We have to update the first page manually here
-        WriteProcessMemory(p.h, (void*)(p.gstorage_addr), p.gstorage, page_size, NULL);
-
-        // Don't trigger the write watch again from editing version
-        ResetWriteWatch(p.gstorage, sizeof(*p.gstorage));
-    }
-
-    for (int i = 0; i < address_count; i++) {
-        const ptrdiff_t offset = (char*)dirty_pages[i] - (char*)p.gstorage;
-        WriteProcessMemory(p.h, (void*)(p.gstorage_addr + offset), dirty_pages[i], page_size, NULL);
+        // Copy the change over
+        flush_remote_region(&p.gstorage, p.h);
     }
 
     return need_write;
@@ -211,6 +234,7 @@ void update_process(pd_meta* p, bool force) {
         // Clean up our old handle before we open a new one
         CloseHandle(p->h);
     }
+    free_remote_region(&p->gstorage);
 
     // Update everything
     get_process(p);
