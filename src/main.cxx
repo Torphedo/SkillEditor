@@ -10,6 +10,7 @@ static const char ImGuiConfig[] = {
 };
 
 int main(int argc, char** argv) {
+    enable_win_ansi();
     // Write imgui config if it doesn't already exist
     if (!file_exists("imgui.ini")) {
         FILE* config_out = fopen("imgui.ini", "wb");
