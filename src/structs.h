@@ -58,7 +58,8 @@ typedef enum {
 
 // The gsdata structure is at this offset in PDUWP.exe
 static const uintptr_t gstorage_offset = 0x4C5240;
-static const uintptr_t anim_profiles_offset = 0x4BCC98;
+// The offset 0x4BCC98 has also been associated with the animation profiles
+static const uintptr_t anim_profiles_offset = 0x4E024C;
 
 typedef struct {
     u32 filesize; // The size in bytes of the entire gsdata file
