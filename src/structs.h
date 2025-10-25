@@ -21,7 +21,7 @@ typedef struct {
 
 // Some of these could change if/when new skills are added
 enum {
-    GSDATA_PADDING_SIZE = 0x198F4,
+    GSDATA_PADDING_SIZE = 0x198FC,
     GSDATA_TEXTPTR_COUNT = 393,
     GSDATA_TEXTBUF_SIZE = 56504,
     GSDATA_SKILL_COUNT = 751,
@@ -68,7 +68,7 @@ typedef struct {
     u32 unk2; // TBD
     u32 VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
     u32 skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
-    u8 dummy[136]; // This is actual data, but it's un-researched so we ignore it.
+    u8 dummy[128]; // This is actual data, but it's un-researched so we ignore it.
     skill_t skill_array[GSDATA_SKILL_COUNT];
     u8 pad[GSDATA_PADDING_SIZE];
     text_header textHeader;

@@ -190,7 +190,7 @@ int editor::draw() {
     // ImGui::ShowDemoWindow();
     if (new_skill_pack) {
         std::vector<std::string> paths;
-        const nfdu8filteritem_t filters[] = { { "Skill File", "*" } };
+        const nfdu8filteritem_t filters[] = { { "Skill File", "sp4,sp3,bin" } };
         auto res = NFD_OpenDialogMultipleAutoFree(paths, filters, ARRAY_SIZE(filters), nullptr);
         if (res == NFD_OKAY) {
             char* out_path = nullptr;
@@ -213,7 +213,7 @@ int editor::draw() {
         } else {
             // Open a multiple file open dialog
             std::vector<std::string> paths;
-            const nfdu8filteritem_t filters[] = { { "Skill File", "sp3" } };
+            const nfdu8filteritem_t filters[] = { { "Skill File", "sp4,sp3,bin" }};
             auto res = NFD_OpenDialogMultipleAutoFree(paths, filters, ARRAY_SIZE(filters), nullptr);
             if (res != NFD_OKAY) {
                 LOG_MSG(info, "Skill pack selection canceled.\n");

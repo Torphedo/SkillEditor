@@ -12,35 +12,69 @@
 #include <common/logging.h>
 
 bool skill_select(char** path_out) {
-    const nfdu8filteritem_t filters[] = { { "Skill File", "sp3" } };
+    const nfdu8filteritem_t filters[] = { { "Skill File", "sp4" } };
     nfdresult_t res = NFD_SaveDialogU8((nfdu8char_t**)path_out, filters, ARRAY_SIZE(filters), nullptr, nullptr);
     return res == NFD_OKAY;
+}
+
+/// @brief Get the skill array pointer
+///
+/// In old versions, the skill array was offset by 8 bytes by accident.
+/// @param use_compatibility_offset Whether to use the skill pointer expected by
+///                                 old skill files
+skill_t* skill_from_pd_meta(pd_meta p, bool use_compatibility_offset) {
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    skill_t* skills = gstorage->skill_array;
+    if (use_compatibility_offset) {
+        skills = (skill_t*)(uintptr_t(skills) + 8);
+    }
+    return skills;
 }
 
 // Save functions don't need to deal with backwards compatibility and will
 // change between versions
 
-void save_skill_data(const char* path, skill_t skill, const char* name, const char* desc, u16 idx) {
+void save_skill_data(const char* path, skill_t skill, pd_meta p, u16 idx, bool write_text) {
     packv4_header header = {};
     header.skill_count = 1;
+
+    // Use empty strings if told not to save text
+    skill_text text = {"", ""};
+    if (write_text) {
+        text = get_skill_text(p, skill.SkillTextID);
+    }
 
     const packv4_entry entry = {
         skill,
         idx,
         0,
-        (u16)(strlen(name) + 1),
+        (u16)(strlen(text.name) + 1),
+    };
+
+    const anim_profile* profiles = (anim_profile*)p.anim_profiles.local_data;
+    const packv4_anim_entry anim_entries[] = {
+        {
+            profiles[skill.AnimProfileGround],
+            skill.AnimProfileGround,
+        },
+        {
+            profiles[skill.AnimProfileAir],
+            skill.AnimProfileAir,
+        },
     };
 
     // Save skill file
     FILE* f = fopen(path, "wb");
-    if (f == nullptr) {
-        printf("Failed to open file \"%s\"\n", path);
+    if (!f) {
+        LOG_MSG(error, "Failed to open file \"%s\"\n", path);
         return;
     }
+
     fwrite(&header, sizeof(header), 1, f);
     fwrite(&entry, sizeof(entry), 1, f);
-    fwrite(name, strlen(name) + 1, 1, f);
-    fwrite(desc, strlen(desc) + 1, 1, f);
+    fwrite(anim_entries, sizeof(*anim_entries), ARRAY_SIZE(anim_entries), f);
+    fwrite(text.name, strlen(text.name) + 1, 1, f);
+    fwrite(text.desc, strlen(text.desc) + 1, 1, f);
     fclose(f);
 }
 
@@ -61,12 +95,7 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     const u16 index = id - 1;
     const gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     const skill_t skill = gstorage->skill_array[index];
-    // Use empty strings if told not to save text
-    skill_text text = {"", ""};
-    if (write_text) {
-        text = get_skill_text(p, skill.SkillTextID);
-    }
-    save_skill_data(path, skill, text.name, text.desc, index);
+    save_skill_data(path, skill, p, index, write_text);
 
     printf("Saved skill to %s\n", path);
 }
@@ -117,8 +146,8 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     load_skill_v1_v2(skill_file, &skill, &name, &desc);
 
     // Load skill data
-    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
-    gstorage->skill_array[skill.SkillID - 1] = skill;
+    skill_t* skills = skill_from_pd_meta(p, true);
+    skills[skill.SkillID - 1] = skill;
 
     if (name != nullptr || desc != nullptr) {
         const s32 text_id = skill.SkillTextID;
@@ -142,9 +171,8 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
 }
 
 void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths) {
-    // I believe we leak memory here, but it crashes if I free it for some reason...
     FILE* skill_pack_out = fopen(out_path, "wb");
-    if (skill_pack_out == nullptr) {
+    if (!skill_pack_out) {
         printf("Couldn't open skill pack file \"%s\" for writing.\n", out_path);
         return;
     }
@@ -169,16 +197,19 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
 
         // V4 packs should have all their skills included
         if (is_v4_pack(&header.magic)) {
-            packv4_entry* entries = (packv4_entry*)calloc(header.skill_count, sizeof(packv4_entry));
+            packv4_entry* entries = (packv4_entry*)calloc(MAX(1, header.skill_count), sizeof(*entries));
+            packv4_anim_entry* anim_entries = (packv4_anim_entry*)calloc(MAX(1, header.anim_profile_count), sizeof(*anim_entries));
 
-            if (entries == nullptr) {
+            if (!entries || !anim_entries) {
                 printf("Failed to allocate for skill data from \"%s\"", path);
                 free(entries);
+                free(anim_entries);
                 continue;
             }
 
-            // Load all skill entries at once
+            // Load all entries at once
             fread(entries, sizeof(*entries), header.skill_count, skill_file);
+            fread(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_file);
 
             // Text data takes up the remainder of the file:
             const u32 text_size = file_size(path) - sizeof(header) - sizeof(*entries) * header.skill_count;
@@ -195,9 +226,11 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
 
             // Native format, just copy the entries over
             fwrite(entries, sizeof(*entries), header.skill_count, skill_pack_out);
+            fwrite(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_pack_out);
 
             // Cleanup
             free(entries);
+            free(anim_entries);
         } else {
             // V1 or V2 file
             // Save the skill & text in the new format
@@ -239,11 +272,11 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     pack_header1 header = {0};
     fread(&header, sizeof(header), 1, skill_pack);
 
-    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     skill_t* skills = (skill_t*)calloc(header.skill_count, sizeof(*skills));
     fread(skills, sizeof(*skills), header.skill_count, skill_pack);
     for (int i = 0; i < header.skill_count; i++) {
-        gstorage->skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
+        skill_t* skill_array = skill_from_pd_meta(p, true);
+        skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
     }
     pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(pack2_text));
     if (text_meta == nullptr) {
@@ -331,14 +364,16 @@ bool install_skill_pack(pd_meta p, const char* path) {
     fseek(skill_pack, sizeof(header), SEEK_SET);
 
     // Looks like this is a good pack file we can understand, time to install it
-    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+
+    // Skill pointer is adjusted for pre-v4 files
+    skill_t* skills = skill_from_pd_meta(p, (header.format_version < 4));
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
         packv4_entry entry = {0};
         fread((void*)&entry, sizeof(entry), 1, skill_pack);
 
         // Copy the skill into gstorage
-        gstorage->skill_array[entry.idx] = entry.skill;
+        skills[entry.idx] = entry.skill;
 
         if (entry.desc_offset - entry.name_offset <= 1) {
             // This indicates the name is empty, so we'll assume the skill is

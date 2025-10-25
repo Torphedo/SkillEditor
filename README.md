@@ -14,10 +14,10 @@ meaning of each byte in the skill data can drastically change depending on the n
 Because of this, all labels are configurable (in `labels.yaml`) and can change depending on other data in the skill.
 
 # Modpacks & Distribution
-You can save individual skills as `.sp3` files, using the `File > Save to File` or `File > Save As` options. `Save As` always asks you where to save
+You can save individual skills as `.sp4` files, using the `File > Save to File` or `File > Save As` options. `Save As` always asks you where to save
 the skill, whereas `Save to File` is like a standard `Save` button and overwrites the last file you saved.
-Once you have multiple skills saved, you can merge them into a single skill pack file (also named `.sp3`, because individual
-skills are considered 1-skill modpacks). To make one, click `File > New Skill Pack`, select some SP3 files, and pick a filename.
+Once you have multiple skills saved, you can merge them into a single skill pack file (also named `.sp4`, because individual
+skills are considered 1-skill modpacks). To make one, click `File > New Skill Pack`, select some SP3/SP4 files, and pick a filename.
 
 Single skill files are under 200 bytes, and the largest modpacks so far are well under 100KiB.
 These SP3 files are also supported by Nuion's tool [PD Helper](https://github.com/eradication0/PDHelper), which is also
