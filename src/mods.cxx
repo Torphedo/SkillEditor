@@ -31,6 +31,16 @@ skill_t* skill_from_pd_meta(pd_meta p, bool use_compatibility_offset) {
     return skills;
 }
 
+// Shift skill data back by 8 bytes to correct for broken offset in past versions
+void skill_backshift(skill_t* skill) {
+    u8* target = (u8*)skill;
+    u8* source = target + 8;
+    memmove(target, source, sizeof(*skill) - 8);
+
+    u8* erase_target = &target[1] - 8;
+    memset(erase_target, 0, 8);
+}
+
 // Save functions don't need to deal with backwards compatibility and will
 // change between versions
 
@@ -92,7 +102,7 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     }
 
     // Save the skill
-    const u16 index = id - 1;
+    const u16 index = id;
     const gsdata* gstorage = (gsdata*)p.gstorage.local_data;
     const skill_t skill = gstorage->skill_array[index];
     save_skill_data(path, skill, p, index, write_text);
@@ -147,7 +157,7 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
 
     // Load skill data
     skill_t* skills = skill_from_pd_meta(p, true);
-    skills[skill.SkillID - 1] = skill;
+    skills[skill.SkillID] = skill;
 
     if (name != nullptr || desc != nullptr) {
         const s32 text_id = skill.SkillTextID;
@@ -222,6 +232,10 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
             for (u32 i = 0; i < header.skill_count; i++) {
                 entries[i].name_offset += offset;
                 entries[i].desc_offset += offset;
+                if (header.format_version < 4) {
+                    // Account for old broken skill offset
+                    skill_backshift(&entries[i].skill);
+                }
             }
 
             // Native format, just copy the entries over
@@ -241,7 +255,9 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
                 // It's an old file, use backwards compatible loading
                 fseek(skill_file, 0, SEEK_SET);
                 load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
-                entry.idx = entry.skill.SkillID - 1;
+                entry.idx = entry.skill.SkillID;
+                // Account for old broken skill offset
+                skill_backshift(&entry.skill);
             }
 
             // Copy text data to the pool
@@ -276,7 +292,7 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     fread(skills, sizeof(*skills), header.skill_count, skill_pack);
     for (int i = 0; i < header.skill_count; i++) {
         skill_t* skill_array = skill_from_pd_meta(p, true);
-        skill_array[(skills[i].SkillID - 1)] = skills[i]; // Write skills from pack into gsdata
+        skill_array[skills[i].SkillID] = skills[i]; // Write skills from pack into gsdata
     }
     pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(pack2_text));
     if (text_meta == nullptr) {

@@ -8,7 +8,7 @@
 
 struct editor {
     pd_meta p = {};
-    u16 ID = 1;
+    s16 ID = 1;
     bool NewSkillPack = false;
     bool AttackSkillEditor = true;
     bool AnimProfileEditor = false;

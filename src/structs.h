@@ -21,15 +21,14 @@ typedef struct {
 
 // Some of these could change if/when new skills are added
 enum {
-    GSDATA_PADDING_SIZE = 0x198FC,
+    GSDATA_PADDING_SIZE = 0x198EC,
     GSDATA_TEXTPTR_COUNT = 393,
     GSDATA_TEXTBUF_SIZE = 56504,
-    GSDATA_SKILL_COUNT = 751,
+    GSDATA_SKILL_COUNT = 752,
     ANIMATION_PROFILE_COUNT = GSDATA_SKILL_COUNT,
 };
 
 typedef struct {
-    u8 data1[0x8];
     u16 SkillTextID;
     u8 data2[0x4];
     u16 SkillID;
@@ -37,14 +36,14 @@ typedef struct {
     u16 AnimProfileGround;
     u16 AnimProfileAir;
 
-    u8 data4[0x70];
+    u8 data4[0x78];
 }skill_t;
 static_assert(sizeof(skill_t) == 0x90, "Skill size is wrong!");
 // CLion complains about this because it interprets it as C++, you can ignore the linter warnings.
-static_assert(offsetof(skill_t, SkillTextID) == 0x8, "Skill text ID offset is wrong!");
-static_assert(offsetof(skill_t, SkillID) == 0xE, "Skill ID offset is wrong!");
-static_assert(offsetof(skill_t, AnimProfileGround) == 0x1C, "Ground animation profile offset is wrong!");
-static_assert(offsetof(skill_t, AnimProfileAir) == 0x1E, "Air animation profile offset is wrong!");
+static_assert(offsetof(skill_t, SkillTextID) == 0x0, "Skill text ID offset is wrong!");
+static_assert(offsetof(skill_t, SkillID) == 0x6, "Skill ID offset is wrong!");
+static_assert(offsetof(skill_t, AnimProfileGround) == 0x14, "Ground animation profile offset is wrong!");
+static_assert(offsetof(skill_t, AnimProfileAir) == 0x16, "Air animation profile offset is wrong!");
 
 typedef enum {
     AURA,
@@ -68,13 +67,16 @@ typedef struct {
     u32 unk2; // TBD
     u32 VersionNum; // Decimal on title screen is placed 2 digits from the right: (3947602715 -> 39476027.15)
     u32 skill_limiter; // The number of skills allowed (default 0x176, 0d374) TODO: Improve this description
-    u8 dummy[128]; // This is actual data, but it's un-researched so we ignore it.
     skill_t skill_array[GSDATA_SKILL_COUNT];
     u8 pad[GSDATA_PADDING_SIZE];
     text_header textHeader;
     text_ptrs textPtrs[GSDATA_TEXTPTR_COUNT];
     char textbuf[GSDATA_TEXTBUF_SIZE];
 }gsdata;
+static_assert(offsetof(gsdata, skill_array) == 0x18, "Skill array offset is wrong");
+static_assert(offsetof(gsdata, textHeader) == 0x34004, "Text header offset is wrong");
+static_assert(offsetof(gsdata, textPtrs) == 0x34018, "Text pointers offset is wrong");
+static_assert(offsetof(gsdata, textbuf) == 0x35284, "Text buffer offset is wrong");
 
 typedef struct {
     u8 data[0x72];

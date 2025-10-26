@@ -73,13 +73,11 @@ editor::~editor() {
 
 skill_t* editor::cur_skill() {
     auto* gstorage = (gsdata*)p.gstorage.local_data;
-    return &gstorage->skill_array[ID - 1];
+    return &gstorage->skill_array[ID];
 }
 
 int editor::draw() {
-    if (ID == 0) {
-        ID++;
-    }
+    ID = MAX(-1, ID);
     ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetMainViewport();
     float height = ImGui::GetFrameHeight();
 
@@ -294,7 +292,7 @@ int editor::draw() {
 
     if (hex_edit.Open) {
         hex_edit.OptShowAscii = false;
-        hex_edit.DrawWindow("Hex Editor", &gstorage->skill_array[ID - 1], sizeof(skill_t));
+        hex_edit.DrawWindow("Hex Editor", &gstorage->skill_array[ID], sizeof(skill_t));
     }
 
     if (AnimProfileEditor) {
@@ -313,7 +311,7 @@ int editor::draw() {
         if (ImGui::Begin("Skill Editor", &this->AttackSkillEditor)) {
             ImGui::Text("Current ID: %d (0x%X)", ID, ID);
             if (ImGui::Button("Copy Skill")) {
-                clipboard_id = MAX(0, ID - 1);
+                clipboard_id = MAX(0, ID);
             }
             if (clipboard_id.has_value()) {
                 ImGui::SameLine();
@@ -482,7 +480,7 @@ int editor::draw() {
 
         static u16 text_id = 0;
         uint16_t cache = text_id; // Previously selected skill ID
-        text_id = gstorage->skill_array[ID - 1].SkillTextID;
+        text_id = gstorage->skill_array[ID].SkillTextID;
 
         if (ImGui::Button("Reload") || cache != text_id) {
             skill_text text = get_skill_text(p, text_id);
