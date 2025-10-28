@@ -22,9 +22,8 @@ typedef struct {
 // Some of these could change if/when new skills are added
 enum {
     GSDATA_PADDING_SIZE = 0x198EC,
-    GSDATA_TEXTPTR_COUNT = 393,
-    GSDATA_TEXTBUF_SIZE = 56504,
     GSDATA_SKILL_COUNT = 752,
+    GSDATA_SIZE = 0x44004,
     ANIMATION_PROFILE_COUNT = GSDATA_SKILL_COUNT,
 };
 
@@ -70,13 +69,11 @@ typedef struct {
     skill_t skill_array[GSDATA_SKILL_COUNT];
     u8 pad[GSDATA_PADDING_SIZE];
     text_header textHeader;
-    text_ptrs textPtrs[GSDATA_TEXTPTR_COUNT];
-    char textbuf[GSDATA_TEXTBUF_SIZE];
+    text_ptrs textPtrs[];
 }gsdata;
 static_assert(offsetof(gsdata, skill_array) == 0x18, "Skill array offset is wrong");
 static_assert(offsetof(gsdata, textHeader) == 0x34004, "Text header offset is wrong");
 static_assert(offsetof(gsdata, textPtrs) == 0x34018, "Text pointers offset is wrong");
-static_assert(offsetof(gsdata, textbuf) == 0x35284, "Text buffer offset is wrong");
 
 typedef struct {
     u8 data[0x72];

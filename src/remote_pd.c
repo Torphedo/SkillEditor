@@ -172,7 +172,7 @@ bool get_process(pd_meta* p) {
     const uintptr_t anim_addr = ((uintptr_t)base_exe_module + anim_profiles_offset);
 
     if (!p->gstorage.local_data) {
-        p->gstorage = alloc_remote_region(sizeof(gsdata), gstorage_addr, "Skill Data", p->h);
+        p->gstorage = alloc_remote_region(GSDATA_SIZE, gstorage_addr, "Skill Data", p->h);
     }
 
     if (!p->anim_profiles.local_data) {
