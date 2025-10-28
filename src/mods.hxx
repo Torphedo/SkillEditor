@@ -68,10 +68,11 @@ struct packv4_header {
     // padding to match that.
     u8 pad[0x20 - sizeof(pack_magic)] = {0};
 
-    u16 format_version = 3;
+    u16 format_version = 4;
     u16 skill_count = 0;
     u16 anim_profile_count = 0;
     u8 pad2[10] = {0};
+    skill_t skills[];
 };
 static_assert(sizeof(packv4_header) == 0x30);
 

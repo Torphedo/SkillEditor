@@ -45,8 +45,9 @@ void skill_backshift(skill_t* skill) {
 // change between versions
 
 void save_skill_data(const char* path, skill_t skill, pd_meta p, u16 idx, bool write_text) {
-    packv4_header header = {};
+    packv4_header header = packv4_header();
     header.skill_count = 1;
+    header.anim_profile_count = 2;
 
     // Use empty strings if told not to save text
     skill_text text = {"", ""};
@@ -187,8 +188,9 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         return;
     }
 
-    packv4_header header_out = {};
+    packv4_header header_out = packv4_header();
     header_out.skill_count = skillpaths.size(),
+    header_out.anim_profile_count = header_out.skill_count * 2; // 2 animations per skill
     fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
 
     pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
@@ -202,7 +204,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         }
 
         // Read just enough data to find out if this is a v4 skill pack
-        packv4_header header;
+        packv4_header header = packv4_header();
         fread(&header, sizeof(header), 1, skill_file);
 
         // V4 packs should have all their skills included
@@ -294,7 +296,7 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
         skill_t* skill_array = skill_from_pd_meta(p, true);
         skill_array[skills[i].SkillID] = skills[i]; // Write skills from pack into gsdata
     }
-    pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(pack2_text));
+    pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(*text_meta));
     if (text_meta == nullptr) {
         // TODO: Just read in a loop so this can't happen
         printf("Failed to allocate for text metadata!\n");
@@ -332,11 +334,11 @@ bool install_skill_pack(pd_meta p, const char* path) {
         return false;
     }
 
-    packv4_header header;
+    packv4_header header = packv4_header();
     fread(&header, sizeof(header), 1, skill_pack);
 
     const bool too_new = header.format_version > 4;
-    const bool bad_magic = is_v4_pack(&header);
+    const bool bad_magic = !is_v4_pack(&header);
 
     if (too_new) {
         printf("Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
@@ -362,7 +364,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
 
     // Load the pack's string pool. This makes things easy on our end and lets us load everything in one pass.
     const s32 anim_offset = sizeof(packv4_header) + (header.skill_count * sizeof(packv4_entry));
-    const s32 pool_offset = anim_offset + (header.anim_profile_count * sizeof(anim_profile));
+    const s32 pool_offset = anim_offset + (header.anim_profile_count * sizeof(packv4_anim_entry));
     // If the size ends up negative, MAX() will keep it positive
     const s64 pool_size = MAX(1, (s64)file_size(path) - pool_offset);
     pool_t pool = pool_open(pool_size);
