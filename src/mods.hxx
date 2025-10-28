@@ -10,6 +10,10 @@
 #include "pool.h"
 
 // Custom Skill Editor formats for skill packs
+typedef enum : u32 {
+    PACKV3_MAGIC = MAGIC('S', 'P', '3', 0x00),
+    PACKV4_MAGIC = MAGIC('S', 'P', '4', 0x00),
+}pack_magic;
 
 // Original format, skill data only
 typedef struct {
@@ -18,7 +22,6 @@ typedef struct {
     u16 skill_count;
     u8 pad[12];
 }pack_header1;
-static_assert(sizeof(pack_header1) == 0x30);
 
 // Skill pack v2 format, has skill and text data
 typedef struct {
@@ -27,11 +30,45 @@ typedef struct {
 }pack2_text;
 
 // =============================================================================
+// Skill Pack v3 structures
+
+// All the data associated with each skill in a pack
+typedef struct {
+    skill_t skill; // The actual skill data
+
+    // The index in gstorage this skill should overwrite
+    u16 idx;
+
+    // Skill packs have a string pool after all of the skill entries, which
+    // stores all of the text related to the skills.
+    // This is a similar idea, but different than the gstorage string pool in
+    // vanilla files. Skill Editor copies the text into Phantom Dust's gstorage
+    // string pool when loading the skill pack.
+
+    // The offset in the skill pack's string pool where the skill's name is.
+    u16 name_offset;
+    // The offset in the skill pack's string pool where the skill's description is.
+    u16 desc_offset;
+}packv3_entry;
+static_assert(sizeof(packv3_entry) == 0x96);
+
+//
+struct packv3_header {
+    // Makes the file easy to identify as v4 in a hex editor
+    pack_magic magic = PACKV3_MAGIC;
+
+    // Format version & skill count are @ 0x20 in other versions, so we add
+    // padding to match that.
+    u8 pad[0x20 - sizeof(pack_magic)] = {0};
+
+    u16 format_version = 3;
+    u16 skill_count = 0;
+    u8 pad2[12] = {0};
+    packv3_entry skills[];
+};
+
+// =============================================================================
 // Skill Pack v4 structures
-typedef enum : u32 {
-    PACKV3_MAGIC = MAGIC('S', 'P', '3', 0x00),
-    PACKV4_MAGIC = MAGIC('S', 'P', '4', 0x00),
-}pack_magic;
 
 // All the data associated with each skill in a pack
 typedef struct {
@@ -72,12 +109,13 @@ struct packv4_header {
     u16 skill_count = 0;
     u16 anim_profile_count = 0;
     u8 pad2[10] = {0};
-    skill_t skills[];
+    packv4_entry skills[];
 };
-static_assert(sizeof(packv4_header) == 0x30);
 
 // Header sizes should match
-static_assert(sizeof(pack_header1) == sizeof(packv4_header));
+static_assert(sizeof(packv3_header) == 0x30);
+static_assert(sizeof(packv4_header) == 0x30);
+static_assert(sizeof(pack_header1) == 0x30);
 // This might show up as an error in your editor, but it's valid and compiles.
 // CLion complains about it and I'm not sure why...
 static_assert(offsetof(pack_header1, format_version) == offsetof(packv4_header, format_version));

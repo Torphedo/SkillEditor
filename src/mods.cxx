@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cassert>
 
 #include <nfd.h>
 
@@ -15,6 +16,13 @@ bool skill_select(char** path_out) {
     const nfdu8filteritem_t filters[] = { { "Skill File", "sp4" } };
     nfdresult_t res = NFD_SaveDialogU8((nfdu8char_t**)path_out, filters, ARRAY_SIZE(filters), nullptr, nullptr);
     return res == NFD_OKAY;
+}
+
+/// @brief Determine if some data loaded from disk is a v4-compatible skill pack
+/// @param Pointer to the first byte of data [should have at least 4 readable bytes]
+bool is_v4_pack(void* data) {
+    const u32 magic = *((u32*)data);
+    return magic == PACKV4_MAGIC;
 }
 
 /// @brief Get the skill array pointer
@@ -111,12 +119,111 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     printf("Saved skill to %s\n", path);
 }
 
-/// @brief Determine if some data loaded from disk is a v4-compatible skill pack
-/// @param Pointer to the first byte of data [should have at least 4 readable bytes]
-bool is_v4_pack(void* data) {
-    const u32 magic = *((u32*)data);
-    return magic == PACKV3_MAGIC || magic == PACKV4_MAGIC;
+void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths) {
+    FILE* skill_pack_out = fopen(out_path, "wb");
+    if (!skill_pack_out) {
+        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_path);
+        return;
+    }
+
+    packv4_header header_out = packv4_header();
+    header_out.skill_count = skillpaths.size(),
+    header_out.anim_profile_count = header_out.skill_count * 2; // 2 animations per skill
+    fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
+
+    pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
+    // Text pool comes after header and skill entries
+    for (u32 i = 0; i < skillpaths.size(); i++) {
+        const char* path = skillpaths[i].c_str();
+        FILE* skill_file = fopen(path, "rb");
+        if (skill_file == nullptr) {
+            LOG_MSG(error, "Failed to open input file \"%s\"\n");
+            continue;
+        }
+
+        // Read just enough data to find out if this is a v4 skill pack
+        packv4_header header = packv4_header();
+        fread(&header, sizeof(header), 1, skill_file);
+
+        // V4 packs should have all their skills included
+        if (is_v4_pack(&header.magic)) {
+            packv4_entry* entries = (packv4_entry*)calloc(MAX(1, header.skill_count), sizeof(*entries));
+            packv4_anim_entry* anim_entries = (packv4_anim_entry*)calloc(MAX(1, header.anim_profile_count), sizeof(*anim_entries));
+
+            if (!entries || !anim_entries) {
+                printf("Failed to allocate for skill data from \"%s\"", path);
+                free(entries);
+                free(anim_entries);
+                continue;
+            }
+
+            // Load all entries at once
+            fread(entries, sizeof(*entries), header.skill_count, skill_file);
+            fread(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_file);
+
+            // Text data takes up the remainder of the file:
+            const u32 text_size = file_size(path) - sizeof(header) - sizeof(*entries) * header.skill_count;
+
+            // Allocate space, then just copy the skill text directly into our pool.
+            const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
+            fread(pool_getdata(pool, offset), text_size, 1, skill_file);
+
+            // Adjust text offsets in each entries to match their final location
+            for (u32 j = 0; j < header.skill_count; j++) {
+                entries[j].name_offset += offset;
+                entries[j].desc_offset += offset;
+                if (header.format_version < 4) {
+                    // Account for old broken skill offset
+                    skill_backshift(&entries[j].skill);
+                }
+            }
+
+            // Native format, just copy the entries over
+            fwrite(entries, sizeof(*entries), header.skill_count, skill_pack_out);
+            fwrite(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_pack_out);
+
+            // Cleanup
+            free(entries);
+            free(anim_entries);
+        } else {
+            // V1 or V2 file
+            // Save the skill & text in the new format
+            packv4_entry entry = {0};
+            char* name = nullptr;
+            char* desc = nullptr;
+            if (!is_v4_pack((void*)&header.magic)) {
+                // It's an old file, use backwards compatible loading
+                fseek(skill_file, 0, SEEK_SET);
+                load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
+                entry.idx = entry.skill.SkillID;
+                // Account for old broken skill offset
+                skill_backshift(&entry.skill);
+            }
+
+            // Copy text data to the pool
+            if (name != nullptr) {
+                entry.name_offset = pool_push(&pool, name, strlen(name) + 1, 0);
+            }
+            if (desc != nullptr) {
+                entry.desc_offset = pool_push(&pool, desc, strlen(desc) + 1, 0);
+            }
+
+            // Save entry
+            fwrite(&entry, sizeof(entry), 1, skill_pack_out);
+
+            free(name);
+            free(desc);
+        }
+    }
+
+    // Save all the text data at once
+    fwrite((void*)pool.data, pool.pos, 1, skill_pack_out);
+    pool_close(&pool);
+
+    fclose(skill_pack_out);
+    printf("Saved skill pack to %s\n", out_path);
 }
+
 // Skill loading functions, which have to maintain backwards compatibility
 
 void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out) {
@@ -181,111 +288,6 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     return skill.SkillID;
 }
 
-void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths) {
-    FILE* skill_pack_out = fopen(out_path, "wb");
-    if (!skill_pack_out) {
-        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_path);
-        return;
-    }
-
-    packv4_header header_out = packv4_header();
-    header_out.skill_count = skillpaths.size(),
-    header_out.anim_profile_count = header_out.skill_count * 2; // 2 animations per skill
-    fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
-
-    pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
-    // Text pool comes after header and skill entries
-    for (u32 i = 0; i < skillpaths.size(); i++) {
-        const char* path = skillpaths[i].c_str();
-        FILE* skill_file = fopen(path, "rb");
-        if (skill_file == nullptr) {
-            LOG_MSG(error, "Failed to open input file \"%s\"\n");
-            continue;
-        }
-
-        // Read just enough data to find out if this is a v4 skill pack
-        packv4_header header = packv4_header();
-        fread(&header, sizeof(header), 1, skill_file);
-
-        // V4 packs should have all their skills included
-        if (is_v4_pack(&header.magic)) {
-            packv4_entry* entries = (packv4_entry*)calloc(MAX(1, header.skill_count), sizeof(*entries));
-            packv4_anim_entry* anim_entries = (packv4_anim_entry*)calloc(MAX(1, header.anim_profile_count), sizeof(*anim_entries));
-
-            if (!entries || !anim_entries) {
-                printf("Failed to allocate for skill data from \"%s\"", path);
-                free(entries);
-                free(anim_entries);
-                continue;
-            }
-
-            // Load all entries at once
-            fread(entries, sizeof(*entries), header.skill_count, skill_file);
-            fread(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_file);
-
-            // Text data takes up the remainder of the file:
-            const u32 text_size = file_size(path) - sizeof(header) - sizeof(*entries) * header.skill_count;
-
-            // Allocate space, then just copy the skill text directly into our pool.
-            const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
-            fread(pool_getdata(pool, offset), text_size, 1, skill_file);
-
-            // Adjust text offsets in each entries to match their final location
-            for (u32 i = 0; i < header.skill_count; i++) {
-                entries[i].name_offset += offset;
-                entries[i].desc_offset += offset;
-                if (header.format_version < 4) {
-                    // Account for old broken skill offset
-                    skill_backshift(&entries[i].skill);
-                }
-            }
-
-            // Native format, just copy the entries over
-            fwrite(entries, sizeof(*entries), header.skill_count, skill_pack_out);
-            fwrite(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_pack_out);
-
-            // Cleanup
-            free(entries);
-            free(anim_entries);
-        } else {
-            // V1 or V2 file
-            // Save the skill & text in the new format
-            packv4_entry entry = {0};
-            char* name = nullptr;
-            char* desc = nullptr;
-            if (!is_v4_pack((void*)&magic)) {
-                // It's an old file, use backwards compatible loading
-                fseek(skill_file, 0, SEEK_SET);
-                load_skill_v1_v2(skill_file, &entry.skill, &name, &desc);
-                entry.idx = entry.skill.SkillID;
-                // Account for old broken skill offset
-                skill_backshift(&entry.skill);
-            }
-
-            // Copy text data to the pool
-            if (name != nullptr) {
-                entry.name_offset = pool_push(&pool, name, strlen(name) + 1, 0);
-            }
-            if (desc != nullptr) {
-                entry.desc_offset = pool_push(&pool, desc, strlen(desc) + 1, 0);
-            }
-
-            // Save entry
-            fwrite(&entry, sizeof(entry), 1, skill_pack_out);
-
-            free(name);
-            free(desc);
-        }
-    }
-
-    // Save all the text data at once
-    fwrite((void*)pool.data, pool.pos, 1, skill_pack_out);
-    pool_close(&pool);
-
-    fclose(skill_pack_out);
-    printf("Saved skill pack to %s\n", out_path);
-}
-
 bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     pack_header1 header = {0};
     fread(&header, sizeof(header), 1, skill_pack);
@@ -327,6 +329,64 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     return true;
 }
 
+bool install_skill_pack_v3(pd_meta p, FILE* skill_pack) {
+    fseek(skill_pack, 0, SEEK_END);
+    const s64 fileSize = ftell(skill_pack);
+    fseek(skill_pack, 0, SEEK_SET);
+
+    packv3_header header = packv3_header();
+    fread(&header, sizeof(header), 1, skill_pack);
+
+    // This should've already been verified
+    assert(header.format_version == 3);
+    assert(header.magic == PACKV3_MAGIC);
+
+    // Load the pack's string pool. This makes things easy on our end and lets us load everything in one pass.
+    const s32 pool_offset = sizeof(header) + (header.skill_count * sizeof(packv3_entry));
+    // If the size ends up negative, MAX() will keep it positive
+    const s64 pool_size = MAX(1, fileSize - pool_offset);
+    pool_t pool = pool_open(pool_size);
+    if (pool.data == 0) {
+        // Alloc failure
+        printf("Failed to allocate %llu bytes for string pool!\n", pool_size);
+        return false;
+    }
+
+    // Jump to the text data and read it
+    fseek(skill_pack, pool_offset, SEEK_SET);
+    fread((void*)pool.data, pool_size, 1, skill_pack);
+    pool.pos = pool_size;
+    // Jump back to where we were
+    fseek(skill_pack, sizeof(header), SEEK_SET);
+
+    // Looks like this is a good pack file we can understand, time to install it
+
+    // Skill pointer is adjusted for pre-v4 files
+    skill_t* skills = skill_from_pd_meta(p, true);
+    for (u32 i = 0; i < header.skill_count; i++) {
+        // Load the entry
+        packv3_entry entry = {0};
+        fread((void*)&entry, sizeof(entry), 1, skill_pack);
+
+        // Copy the skill into gstorage
+        skills[entry.idx] = entry.skill;
+
+        if (entry.desc_offset - entry.name_offset <= 1) {
+            // This indicates the name is empty, so we'll assume the skill is
+            // meant to use the original text and leave it alone.
+            // If someone really wants an empty name, a space will bypass this.
+            continue;
+        } else {
+            const char* name = (char*)pool_getdata(pool, entry.name_offset);
+            const char* desc = (char*)pool_getdata(pool, entry.desc_offset);
+            save_skill_text(p, {name, desc}, entry.skill.SkillTextID);
+        }
+    }
+
+    fclose(skill_pack);
+    return true;
+}
+
 bool install_skill_pack(pd_meta p, const char* path) {
     FILE* skill_pack = fopen(path, "rb");
     if (skill_pack == nullptr) {
@@ -338,32 +398,41 @@ bool install_skill_pack(pd_meta p, const char* path) {
     fread(&header, sizeof(header), 1, skill_pack);
 
     const bool too_new = header.format_version > 4;
-    const bool bad_magic = !is_v4_pack(&header);
 
     if (too_new) {
         printf("Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
         return false;
     }
 
+    // Compatibility checks
+    if (header.format_version < 4) {
+        fseek(skill_pack, 0, SEEK_SET); // Reset pos
+        switch (header.format_version) {
+            case 0:
+                // This is 1 skill (not a pack), which may or may not have text
+                return install_skill_v1_v2(p, skill_pack);
+                break;
+            case 1:
+                // fallthrough
+            case 2:
+                // Old skill pack format
+                install_skill_pack_v1_v2(p, skill_pack);
+                break;
+            case 3:
+                install_skill_pack_v3(p, skill_pack);
+                break;
+        }
+    }
+
+    const bool bad_magic = !is_v4_pack(&header);
     if (bad_magic) {
         // Some invalid file
         printf("I don't recognize \"%s\" as a valid skill pack, cancelling.\n", path);
         return false;
     }
 
-    // Compatibility checks
-    if (header.format_version < 3) {
-        // Older file, use backwards compatibility
-        fseek(skill_pack, 0, SEEK_SET); // Reset pos
-        if (header.format_version == 0) {
-            // This is a single skill and not a pack, but it still has text.
-            return install_skill_v1_v2(p, skill_pack);
-        }
-        return install_skill_pack_v1_v2(p, skill_pack);
-    }
-
     // Load the pack's string pool. This makes things easy on our end and lets us load everything in one pass.
-    const s32 anim_offset = sizeof(packv4_header) + (header.skill_count * sizeof(packv4_entry));
+    const s32 anim_offset = sizeof(header) + (header.skill_count * sizeof(*header.skills));
     const s32 pool_offset = anim_offset + (header.anim_profile_count * sizeof(packv4_anim_entry));
     // If the size ends up negative, MAX() will keep it positive
     const s64 pool_size = MAX(1, (s64)file_size(path) - pool_offset);
@@ -381,10 +450,8 @@ bool install_skill_pack(pd_meta p, const char* path) {
     // Jump back to where we were
     fseek(skill_pack, sizeof(header), SEEK_SET);
 
-    // Looks like this is a good pack file we can understand, time to install it
-
     // Skill pointer is adjusted for pre-v4 files
-    skill_t* skills = skill_from_pd_meta(p, (header.format_version < 4));
+    skill_t* skills = skill_from_pd_meta(p, false);
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
         packv4_entry entry = {0};
