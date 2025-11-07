@@ -44,3 +44,5 @@ add_executable(skill_editor
 )
 
 target_link_libraries(skill_editor d3d9 imgui ryml bobtail nfd)
+
+add_subdirectory(skill_plugin)
