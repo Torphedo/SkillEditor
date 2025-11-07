@@ -8,6 +8,8 @@
 
 #include <common/file.h>
 #include "pool.h"
+#include "structs.h"
+#include "remote_pd.h"
 
 // Custom Skill Editor formats for skill packs
 typedef enum : u32 {

@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <stdio.h>
 #include <cassert>
 
 #include <nfd.h>
@@ -116,13 +116,13 @@ void save_skill_to_file(const char* path, pd_meta p, s16 id, bool write_text) {
     const skill_t skill = gstorage->skill_array[index];
     save_skill_data(path, skill, p, index, write_text);
 
-    printf("Saved skill to %s\n", path);
+    LOG_MSG(info, "Saved skill to %s\n", path);
 }
 
 void save_skill_pack(const char* out_path, const std::vector<std::string>& skillpaths) {
     FILE* skill_pack_out = fopen(out_path, "wb");
     if (!skill_pack_out) {
-        printf("Couldn't open skill pack file \"%s\" for writing.\n", out_path);
+        LOG_MSG(error, "Couldn't open skill pack file \"%s\" for writing.\n", out_path);
         return;
     }
 
@@ -151,7 +151,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
             packv4_anim_entry* anim_entries = (packv4_anim_entry*)calloc(MAX(1, header.anim_profile_count), sizeof(*anim_entries));
 
             if (!entries || !anim_entries) {
-                printf("Failed to allocate for skill data from \"%s\"", path);
+                LOG_MSG(error, "Failed to allocate for skill data from \"%s\"", path);
                 free(entries);
                 free(anim_entries);
                 continue;
@@ -221,7 +221,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
     pool_close(&pool);
 
     fclose(skill_pack_out);
-    printf("Saved skill pack to %s\n", out_path);
+    LOG_MSG(info, "Saved skill pack to %s\n", out_path);
 }
 
 // Skill loading functions, which have to maintain backwards compatibility
@@ -301,7 +301,7 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(*text_meta));
     if (text_meta == nullptr) {
         // TODO: Just read in a loop so this can't happen
-        printf("Failed to allocate for text metadata!\n");
+        LOG_MSG(error, "Failed to allocate for text metadata!\n");
         return false;
     }
 
@@ -348,7 +348,7 @@ bool install_skill_pack_v3(pd_meta p, FILE* skill_pack) {
     pool_t pool = pool_open(pool_size);
     if (pool.data == 0) {
         // Alloc failure
-        printf("Failed to allocate %llu bytes for string pool!\n", pool_size);
+        LOG_MSG(error, "Failed to allocate %llu bytes for string pool!\n", pool_size);
         return false;
     }
 
@@ -390,7 +390,7 @@ bool install_skill_pack_v3(pd_meta p, FILE* skill_pack) {
 bool install_skill_pack(pd_meta p, const char* path) {
     FILE* skill_pack = fopen(path, "rb");
     if (skill_pack == nullptr) {
-        printf("Failed to open %s\n", path);
+        LOG_MSG(error, "Failed to open %s\n", path);
         return false;
     }
 
@@ -400,7 +400,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
     const bool too_new = header.format_version > 4;
 
     if (too_new) {
-        printf("Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
+        LOG_MSG(error, "Your skill pack \"%s\" was made for a newer version of Skill Editor, I don't know what to do with it. Cancelling.\n", path);
         return false;
     }
 
@@ -411,23 +411,20 @@ bool install_skill_pack(pd_meta p, const char* path) {
             case 0:
                 // This is 1 skill (not a pack), which may or may not have text
                 return install_skill_v1_v2(p, skill_pack);
-                break;
             case 1:
                 // fallthrough
             case 2:
                 // Old skill pack format
-                install_skill_pack_v1_v2(p, skill_pack);
-                break;
+                return install_skill_pack_v1_v2(p, skill_pack);
             case 3:
-                install_skill_pack_v3(p, skill_pack);
-                break;
+                return install_skill_pack_v3(p, skill_pack);
         }
     }
 
     const bool bad_magic = !is_v4_pack(&header);
     if (bad_magic) {
         // Some invalid file
-        printf("I don't recognize \"%s\" as a valid skill pack, cancelling.\n", path);
+        LOG_MSG(error, "I don't recognize \"%s\" as a valid skill pack, cancelling.\n", path);
         return false;
     }
 
@@ -439,7 +436,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
     pool_t pool = pool_open(pool_size);
     if (pool.data == 0) {
         // Alloc failure
-        printf("Failed to allocate %llu bytes for \"%s\"'s string pool!\n", pool_size, path);
+        LOG_MSG(error, "Failed to allocate %llu bytes for \"%s\"'s string pool!\n", pool_size, path);
         return false;
     }
 
@@ -450,7 +447,6 @@ bool install_skill_pack(pd_meta p, const char* path) {
     // Jump back to where we were
     fseek(skill_pack, sizeof(header), SEEK_SET);
 
-    // Skill pointer is adjusted for pre-v4 files
     skill_t* skills = skill_from_pd_meta(p, false);
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
@@ -468,6 +464,7 @@ bool install_skill_pack(pd_meta p, const char* path) {
         } else {
             const char* name = (char*)pool_getdata(pool, entry.name_offset);
             const char* desc = (char*)pool_getdata(pool, entry.desc_offset);
+            LOG_MSG(debug, "Loading '%s'\n", name);
             save_skill_text(p, {name, desc}, entry.skill.SkillTextID);
         }
     }
@@ -485,12 +482,8 @@ bool install_skill_pack(pd_meta p, const char* path) {
 }
 
 void install_mod(pd_meta p, const std::string* paths, u32 path_num) {
-    if (!handle_still_valid(p.h)) {
-        return;
-    }
-
     for (int i = 0; i < path_num; i++) {
         install_skill_pack(p, paths[i].c_str());
-        printf("Installed skill pack %s.\n", paths[i].c_str());
+        LOG_MSG(info, "Installed skill pack %s.\n", paths[i].c_str());
     }
 }
