@@ -25,27 +25,13 @@ bool is_v4_pack(void* data) {
     return magic == PACKV4_MAGIC;
 }
 
-/// @brief Get the skill array pointer
-///
-/// In old versions, the skill array was offset by 8 bytes by accident.
-/// @param use_compatibility_offset Whether to use the skill pointer expected by
-///                                 old skill files
-skill_t* skill_from_pd_meta(pd_meta p, bool use_compatibility_offset) {
-    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
-    skill_t* skills = gstorage->skill_array;
-    if (use_compatibility_offset) {
-        skills = (skill_t*)(uintptr_t(skills) + 8);
-    }
-    return skills;
-}
-
 // Shift skill data back by 8 bytes to correct for broken offset in past versions
 void skill_backshift(skill_t* skill) {
     u8* target = (u8*)skill;
     u8* source = target + 8;
     memmove(target, source, sizeof(*skill) - 8);
 
-    u8* erase_target = &target[1] - 8;
+    u8* erase_target = target + (sizeof(*skill) - 8);
     memset(erase_target, 0, 8);
 }
 
@@ -228,6 +214,7 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
 
 void load_skill_v1_v2(FILE* skill_file, skill_t* skill_out, char** name_out, char** desc_out) {
     fread(skill_out, sizeof(*skill_out), 1, skill_file);
+    skill_backshift(skill_out);
 
     // Find filesize using stdio then reset pos to where it was
     const size_t pos = ftell(skill_file);
@@ -264,7 +251,8 @@ unsigned int install_skill_v1_v2(pd_meta p, FILE* skill_file) {
     load_skill_v1_v2(skill_file, &skill, &name, &desc);
 
     // Load skill data
-    skill_t* skills = skill_from_pd_meta(p, true);
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    skill_t* skills = gstorage->skill_array;
     skills[skill.SkillID] = skill;
 
     if (name != nullptr || desc != nullptr) {
@@ -295,7 +283,10 @@ bool install_skill_pack_v1_v2(pd_meta p, FILE* skill_pack) {
     skill_t* skills = (skill_t*)calloc(header.skill_count, sizeof(*skills));
     fread(skills, sizeof(*skills), header.skill_count, skill_pack);
     for (int i = 0; i < header.skill_count; i++) {
-        skill_t* skill_array = skill_from_pd_meta(p, true);
+        gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+        skill_t* skill_array = gstorage->skill_array;
+
+        skill_backshift(&skills[i]);
         skill_array[skills[i].SkillID] = skills[i]; // Write skills from pack into gsdata
     }
     pack2_text* text_meta = (pack2_text*) calloc(header.skill_count, sizeof(*text_meta));
@@ -362,13 +353,15 @@ bool install_skill_pack_v3(pd_meta p, FILE* skill_pack) {
     // Looks like this is a good pack file we can understand, time to install it
 
     // Skill pointer is adjusted for pre-v4 files
-    skill_t* skills = skill_from_pd_meta(p, true);
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    skill_t* skills = gstorage->skill_array;
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
         packv3_entry entry = {0};
         fread((void*)&entry, sizeof(entry), 1, skill_pack);
 
         // Copy the skill into gstorage
+        skill_backshift(&entry.skill);
         skills[entry.idx] = entry.skill;
 
         if (entry.desc_offset - entry.name_offset <= 1) {
@@ -447,7 +440,8 @@ bool install_skill_pack(pd_meta p, const char* path) {
     // Jump back to where we were
     fseek(skill_pack, sizeof(header), SEEK_SET);
 
-    skill_t* skills = skill_from_pd_meta(p, false);
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    skill_t* skills = gstorage->skill_array;
     for (u32 i = 0; i < header.skill_count; i++) {
         // Load the entry
         packv4_entry entry = {0};
