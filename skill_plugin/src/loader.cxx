@@ -2,6 +2,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <plugins.h>
+#include <physfs.h>
 
 #include <common/int.h>
 #include <common/logging.h>

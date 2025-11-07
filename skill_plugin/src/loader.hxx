@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pd_loader_core.h>
 #include <commands.h>
 
 void load_skills();
