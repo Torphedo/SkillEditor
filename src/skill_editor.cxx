@@ -155,6 +155,9 @@ int editor::draw() {
             if (ImGui::BeginMenu("Options")) {
                 toggle_freeze_game |= ImGui::MenuItem("Freeze/Unfreeze Phantom Dust", "F4");
                 ImGui::MenuItem("Use vanilla version number", nullptr, &use_vanilla_version);
+                if (ImGui::InputScalar("Skill Limiter", ImGuiDataType_U32, &gstorage->skill_limiter)) {
+                    unlimit_skills(gstorage, gstorage->skill_limiter);
+                }
                 ImGui::Checkbox("Remove Input Box Limits", &limitless);
                 ImGui::EndMenu();
             }

@@ -133,3 +133,5 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
 
 // Installs a skill pack into the game's memory.
 void install_mod(pd_meta p, const std::string* paths, u32 path_num);
+
+void unlimit_skills(gsdata* gstorage, u32 new_limit);

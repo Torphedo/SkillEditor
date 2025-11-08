@@ -31,11 +31,14 @@ typedef struct {
     u16 SkillTextID;
     u8 data2[0x4];
     u16 SkillID;
-    u8 data3[0xC];
+    u16 RegisterID;
+    u8 data3[0x4];
+    u16 CapsuleType;
+    u8 data4[0x4];
     u16 AnimProfileGround;
     u16 AnimProfileAir;
 
-    u8 data4[0x78];
+    u8 data5[0x78];
 }skill_t;
 static_assert(sizeof(skill_t) == 0x90, "Skill size is wrong!");
 // CLion complains about this because it interprets it as C++, you can ignore the linter warnings.

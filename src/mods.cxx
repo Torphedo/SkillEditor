@@ -481,3 +481,19 @@ void install_mod(pd_meta p, const std::string* paths, u32 path_num) {
         LOG_MSG(info, "Installed skill pack %s.\n", paths[i].c_str());
     }
 }
+
+void unlimit_skills(gsdata* gstorage, u32 new_limit) {
+    const u32 old_limit = gstorage->skill_limiter;
+    gstorage->skill_limiter = new_limit;
+
+    for (u32 i = old_limit; i < new_limit; i++) {
+        skill_t& skill = gstorage->skill_array[i];
+        if (skill.SkillID != 0 || skill.CapsuleType != 0 || skill.RegisterID != 0 || skill.SkillTextID != 0) {
+            // Try not to overwrite boss skills
+            continue;
+        }
+        skill.SkillID = i;
+        skill.RegisterID = 0xA;
+        skill.CapsuleType = 7;
+    }
+}
