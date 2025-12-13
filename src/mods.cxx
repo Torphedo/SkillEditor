@@ -112,12 +112,9 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
         return;
     }
 
-    packv4_header header_out = packv4_header();
-    header_out.skill_count = skillpaths.size(),
-    header_out.anim_profile_count = header_out.skill_count * 2; // 2 animations per skill
-    fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
-
     pool_t pool = pool_open(skillpaths.size() * 0x20); // Just an initial size
+    std::vector<packv4_entry> entries;
+    std::vector<packv4_anim_entry> anim_entries;
     // Text pool comes after header and skill entries
     for (u32 i = 0; i < skillpaths.size(); i++) {
         const char* path = skillpaths[i].c_str();
@@ -133,29 +130,29 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
 
         // V4 packs should have all their skills included
         if (is_v4_pack(&header.magic)) {
-            packv4_entry* entries = (packv4_entry*)calloc(MAX(1, header.skill_count), sizeof(*entries));
-            packv4_anim_entry* anim_entries = (packv4_anim_entry*)calloc(MAX(1, header.anim_profile_count), sizeof(*anim_entries));
+            const u32 first_entry_idx = entries.size();
 
-            if (!entries || !anim_entries) {
-                LOG_MSG(error, "Failed to allocate for skill data from \"%s\"", path);
-                free(entries);
-                free(anim_entries);
-                continue;
+            // Load all entries from the pack
+            for (u32 j = 0; j < header.skill_count; j++) {
+                packv4_entry entry = {};
+                fread(&entry, sizeof(entry), 1, skill_file);
+                entries.push_back(entry);
+            }
+            for (u32 j = 0; j < header.anim_profile_count; j++) {
+                packv4_anim_entry entry = {};
+                fread(&entry, sizeof(entry), 1, skill_file);
+                anim_entries.push_back(entry);
             }
 
-            // Load all entries at once
-            fread(entries, sizeof(*entries), header.skill_count, skill_file);
-            fread(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_file);
-
-            // Text data takes up the remainder of the file:
-            const u32 text_size = file_size(path) - sizeof(header) - sizeof(*entries) * header.skill_count;
+            // Text data takes up the remainder of the file
+            const u32 text_size = file_size(path) - ftell(skill_file);
 
             // Allocate space, then just copy the skill text directly into our pool.
             const pool_handle offset = pool_push(&pool, nullptr, 0, text_size);
             fread(pool_getdata(pool, offset), text_size, 1, skill_file);
 
             // Adjust text offsets in each entries to match their final location
-            for (u32 j = 0; j < header.skill_count; j++) {
+            for (u32 j = first_entry_idx; j < first_entry_idx + header.skill_count; j++) {
                 entries[j].name_offset += offset;
                 entries[j].desc_offset += offset;
                 if (header.format_version < 4) {
@@ -163,14 +160,6 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
                     skill_backshift(&entries[j].skill);
                 }
             }
-
-            // Native format, just copy the entries over
-            fwrite(entries, sizeof(*entries), header.skill_count, skill_pack_out);
-            fwrite(anim_entries, sizeof(*anim_entries), header.anim_profile_count, skill_pack_out);
-
-            // Cleanup
-            free(entries);
-            free(anim_entries);
         } else {
             // V1 or V2 file
             // Save the skill & text in the new format
@@ -194,13 +183,21 @@ void save_skill_pack(const char* out_path, const std::vector<std::string>& skill
                 entry.desc_offset = pool_push(&pool, desc, strlen(desc) + 1, 0);
             }
 
-            // Save entry
-            fwrite(&entry, sizeof(entry), 1, skill_pack_out);
-
+            entries.push_back(entry);
             free(name);
             free(desc);
         }
     }
+
+    packv4_header header_out = packv4_header();
+    header_out.skill_count = entries.size();
+    header_out.anim_profile_count = anim_entries.size();
+    fwrite(&header_out, sizeof(header_out), 1, skill_pack_out);
+
+
+    // Save entries
+    fwrite(entries.data(), sizeof(entries[0]), entries.size(), skill_pack_out);
+    fwrite(anim_entries.data(), sizeof(anim_entries[0]), anim_entries.size(), skill_pack_out);
 
     // Save all the text data at once
     fwrite((void*)pool.data, pool.pos, 1, skill_pack_out);
