@@ -42,6 +42,18 @@ add_executable(skill_editor
 	src/pool.c
 )
 
+add_executable(skill_editor_tests
+	src/tests/main.cxx
+	src/tests/skill_pack.cxx
+
+	src/mods.cxx
+	src/nfde_wrapper.cxx
+	src/text.c
+
+	src/pool.c
+)
+
 target_link_libraries(skill_editor d3d9 imgui ryml bobtail nfd)
+target_link_libraries(skill_editor_tests bobtail nfd)
 
 add_subdirectory(skill_plugin)
