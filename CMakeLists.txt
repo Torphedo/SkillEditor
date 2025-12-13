@@ -4,8 +4,7 @@ project(skill_editor
 	LANGUAGES CXX C
 )
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(vendor/rapidyaml)

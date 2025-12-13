@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <assert.h>
 #include <common/int.h>
 
 // =============================================================================

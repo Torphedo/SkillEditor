@@ -6,7 +6,6 @@
 #include <common/logging.h>
 
 #include "remote_pd.h"
-#include "structs.h"
 #include "text.h"
 
 void expand_text_table(pd_meta p, s16 new_size) {
