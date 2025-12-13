@@ -156,15 +156,16 @@ bool get_process(pd_meta* p) {
     if (p->pid == 0) {
         // The game isn't running, any handles we had are now invalid.
         p->h = INVALID_HANDLE_VALUE;
-        return false;
     }
 
     // Open game process
     DWORD access = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | SYNCHRONIZE;
     p->h = OpenProcess(access, FALSE, p->pid);
-    if (p->h == INVALID_HANDLE_VALUE) {
-        return false;
-    }
+    // We still want the UI to run when the game is closed/crashed, so we'll
+    // still allocate the buffers on our side. So we won't bother checking for
+    // failure here, and let the parts that require access to the game process
+    // safely fail.
+
     LOG_MSG(debug, "PDUWP handle 0x%p\n", p->h);
 
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
