@@ -86,7 +86,7 @@ int editor::draw() {
     const bool game_running = is_running();
     auto* gstorage = (gsdata*)p.gstorage.local_data;
 
-    if (!game_available) {
+    if (!game_available && game_running) {
         update_process(&p, false);
     }
 
@@ -286,7 +286,6 @@ int editor::draw() {
         if (open_pressed || enter_pressed) {
             ID = temp_id;
             printf("Loaded skill with ID %d\n", ID);
-            IDSelection = false;      // Close this window
             just_opened = true;
             AttackSkillEditor = true; // Opens the Attack Skill Editor window
         }
