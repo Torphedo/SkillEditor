@@ -34,11 +34,22 @@ void load_skills() {
     char** files = PHYSFS_enumerateFiles("skills");
 
     pd_meta p = get_local_pd_meta();
+    gsdata* gstorage = (gsdata*)p.gstorage.local_data;
+    gstorage->skill_limiter = 500;
+
     std::string real_root = PHYSFS_getRealDir("/");
     for (char** i = files; *i != nullptr; i++) {
         std::string path = real_root + "/skills/" + *i;
         install_mod(p, &path, 1);
     }
+}
+
+const uintptr_t owned_skills_offset = 0x003ED6B8;
+void unlock_all_skills() {
+    const uintptr_t pduwp = (uintptr_t)GetModuleHandle(nullptr);
+    const u32 max_skill_count = 500;
+    u8* owned_skill_counts = (u8*)(pduwp + owned_skills_offset);
+    memset(owned_skill_counts, 0x64, max_skill_count);
 }
 
 int PLUGIN_API command_load_skill(int argc, char** argv) {

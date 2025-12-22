@@ -22,10 +22,12 @@ const uintptr_t offset_load_skills = 0x17E0A0;
 void hook_load_skills(void* unknown_ptr, int* unknown_int_ptr, int unknown_int) {
     (original_load_skills)(unknown_ptr, unknown_int_ptr, unknown_int);
     load_skills();
+    LOG_MSG(debug, "Unlocking all skills...\n");
+    unlock_all_skills();
 }
 
 void __stdcall plugin_thread(void* plugin_handle) {
-    const uintptr_t pduwp = (uintptr_t)GetModuleHandle("PDUWP.exe");
+    const uintptr_t pduwp = (uintptr_t)GetModuleHandle(nullptr);
     address_load_skills = (LOAD_SKILLS) (pduwp + offset_load_skills);
 
     const int res = MH_Initialize();
