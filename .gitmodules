@@ -11,3 +11,6 @@
 [submodule "vendor/nfde"]
 	path = vendor/nfde
 	url = https://github.com/btzy/nativefiledialog-extended
+[submodule "vendor/minhook"]
+	path = vendor/minhook
+	url = https://github.com/TsudaKageyu/minhook

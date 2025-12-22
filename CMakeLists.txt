@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(vendor/rapidyaml)
 add_subdirectory(vendor/bobtail)
 add_subdirectory(vendor/nfde)
+add_subdirectory(vendor/minhook)
 
 include_directories(
 	"vendor"

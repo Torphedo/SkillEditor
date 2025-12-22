@@ -13,5 +13,8 @@ add_library(skill_loader SHARED
 	../src/pool.c
 )
 
-target_link_libraries(skill_loader PRIVATE pd_loader_core bobtail nfd)
-target_include_directories(skill_loader PRIVATE "${CMAKE_SOURCE_DIR}/vendor/pd_loader_core/include")
+target_link_libraries(skill_loader PRIVATE pd_loader_core bobtail nfd minhook)
+target_include_directories(skill_loader PRIVATE
+	"${CMAKE_SOURCE_DIR}/vendor/pd_loader_core/include"
+	"${CMAKE_SOURCE_DIR}/vendor/minhook/include"
+)

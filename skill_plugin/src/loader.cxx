@@ -26,6 +26,7 @@ pd_meta get_local_pd_meta(u8* pduwp = nullptr) {
 }
 
 void load_skills() {
+    LOG_MSG(debug, "Looking for custom skills to load in 'skills' folder...\n");
     if (!PHYSFS_exists("skills")) {
         PHYSFS_mkdir("skills");
     }
