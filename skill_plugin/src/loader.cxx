@@ -44,7 +44,7 @@ void load_skills() {
     }
 }
 
-const uintptr_t owned_skills_offset = 0x003ED6B8;
+const uintptr_t owned_skills_offset = 0x003ED6B8 + 644;
 void unlock_all_skills() {
     const uintptr_t pduwp = (uintptr_t)GetModuleHandle(nullptr);
     const u32 max_skill_count = 500;
