@@ -82,8 +82,6 @@ uintptr_t remote_module_base_addr(HANDLE h) {
 
     bool found_module = false;
     if (EnumProcessModules(h, modules, sizeof(modules), &bytes_needed)) {
-        LOG_MSG(debug, "EnumProcessModules returned %d modules\n", bytes_needed / sizeof(HMODULE));
-
         for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
             char module_name[MAX_PATH] = {0};
 
@@ -98,10 +96,7 @@ uintptr_t remote_module_base_addr(HANDLE h) {
                 // module in the other process' address space
                 base_exe_module = modules[i];
                 found_module = true;
-                LOG_MSG(debug, "Module matched: '%s'. Address == %p\n", module_name, modules[i]);
                 break;
-            } else {
-                LOG_MSG(debug, "Module didn't match: '%s'\n", module_name);
             }
         }
     }
@@ -187,13 +182,7 @@ void free_remote_region(remote_region* reg) {
 }
 
 bool get_process(pd_meta* p) {
-    bool debug_result = set_debug_privilege(true);
-    if (debug_result) {
-        LOG_MSG(debug, "Enabled SE_DEBUG_NAME privilege.\n");
-    } else {
-        LOG_MSG(error, "Failed to enable SE_DEBUG_NAME privilege.\n");
-    }
-
+    set_debug_privilege(true);
     p->pid = get_pid_by_name("PDUWP.exe");
     if (p->pid == 0) {
         // The game isn't running, any handles we had are now invalid.
