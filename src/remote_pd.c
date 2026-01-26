@@ -26,6 +26,30 @@ static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     return 0;
 }
 
+bool set_debug_privilege(bool state) {
+    HANDLE hToken = NULL;
+    LUID luid;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken)) {
+        return false;
+    }
+    if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid)) {
+        return false;
+    }
+
+    TOKEN_PRIVILEGES tokenPriv = {
+        .PrivilegeCount = 1,
+        .Privileges[0] = {
+            .Luid = luid,
+            .Attributes = state ? SE_PRIVILEGE_ENABLED : SE_PRIVILEGE_REMOVED
+        }
+    };
+    if (!AdjustTokenPrivileges(hToken, false, &tokenPriv, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
+        return false;
+    }
+    return true;
+}
+
 uintptr_t remote_module_base_addr(HANDLE h) {
     HMODULE modules[1024] = {0};
     DWORD bytes_needed = 0;
@@ -152,6 +176,13 @@ void free_remote_region(remote_region* reg) {
 }
 
 bool get_process(pd_meta* p) {
+    bool debug_result = set_debug_privilege(true);
+    if (debug_result) {
+        LOG_MSG(debug, "Enabled SE_DEBUG_NAME privilege.\n");
+    } else {
+        LOG_MSG(error, "Failed to enable SE_DEBUG_NAME privilege.\n");
+    }
+
     p->pid = get_pid_by_name("PDUWP.exe");
     if (p->pid == 0) {
         // The game isn't running, any handles we had are now invalid.
