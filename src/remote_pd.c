@@ -6,9 +6,21 @@
 
 #include <common/crc32.h>
 #include <common/logging.h>
+#include <common/path.h>
 
 #include "remote_pd.h"
 #include "structs.h"
+
+void win32_print_error_msg(DWORD err_code) {
+    const char* msg = NULL;
+    DWORD format_result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 0, err_code, 0, (LPTSTR)&msg, 1, NULL);
+
+    printf("\"%s\"", (msg == NULL) ? "[message missing]" : msg);
+
+    if (format_result != 0) {
+        LocalFree((void*)msg);
+    }
+}
 
 static DWORD get_pid_by_name(LPCTSTR ProcessName) {
     PROCESSENTRY32 pt;
@@ -56,36 +68,46 @@ uintptr_t remote_module_base_addr(HANDLE h) {
 
     // Get path to base module
     char base_exe_name[MAX_PATH] = {0};
-    HMODULE base_exe_module = INVALID_HANDLE_VALUE;
+    HMODULE base_exe_module = 0;
     DWORD base_exe_len = ARRAY_SIZE(base_exe_name);
     bool result = QueryFullProcessImageNameA(h, 0, base_exe_name, &base_exe_len);
+    path_get_filename(base_exe_name, base_exe_name);
+
     if (!result) {
         const DWORD err_code = GetLastError();
-        LOG_MSG(error, "Failed to get executable name of the other process (error code %d)\n", err_code);
+        LOG_MSG(error, "Failed to get executable name of the other process (error code %d, Windows says: ", err_code);
+        win32_print_error_msg(err_code);
+        printf(")\n");
     }
 
+    bool found_module = false;
     if (EnumProcessModules(h, modules, sizeof(modules), &bytes_needed)) {
+        LOG_MSG(debug, "EnumProcessModules returned %d modules\n", bytes_needed / sizeof(HMODULE));
+
         for (uint32_t i = 0; i < (bytes_needed / sizeof(HMODULE)); i++) {
             char module_name[MAX_PATH] = {0};
 
-            result = GetModuleFileNameExA(h, modules[i], module_name, ARRAY_SIZE(module_name));
+            result = GetModuleBaseName(h, modules[i], module_name, ARRAY_SIZE(module_name));
             if (!result) {
                 LOG_MSG(error, "Failed to get filename for a module in the other process (error code %d)\n", GetLastError());
                 continue;
             }
 
-            if (strncmp(module_name, base_exe_name, MAX_PATH) == 0) {
+            if (strnicmp(module_name, base_exe_name, MAX_PATH) == 0) {
                 // The remote module handle is just the pointer to the
                 // module in the other process' address space
                 base_exe_module = modules[i];
+                found_module = true;
+                LOG_MSG(debug, "Module matched: '%s'. Address == %p\n", module_name, modules[i]);
                 break;
+            } else {
+                LOG_MSG(debug, "Module didn't match: '%s'\n", module_name);
             }
         }
     }
 
-    if (base_exe_module == INVALID_HANDLE_VALUE) {
-        LOG_MSG(error, "Couldn't find PDUWP.exe base address.\n");
-        return 0;
+    if (!found_module) {
+        LOG_MSG(error, "Couldn't find base address of main module '%s' [process handle %p]\n", base_exe_name, h);
     }
 
     return (uintptr_t)base_exe_module;
@@ -93,17 +115,6 @@ uintptr_t remote_module_base_addr(HANDLE h) {
 
 bool is_running() {
     return get_pid_by_name("PDUWP.exe") != 0;
-}
-
-void win32_print_error_msg(DWORD err_code) {
-    const char* msg = NULL;
-    DWORD format_result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 0, err_code, 0, (LPTSTR)&msg, 1, NULL);
-
-    printf("\"%s\"", (msg == NULL) ? "[message missing]" : msg);
-
-    if (format_result != 0) {
-        LocalFree((void*)msg);
-    }
 }
 
 remote_region alloc_remote_region(u32 size, uintptr_t remote_addr, const char* name, HANDLE h) {
@@ -197,7 +208,7 @@ bool get_process(pd_meta* p) {
     // failure here, and let the parts that require access to the game process
     // safely fail.
 
-    LOG_MSG(debug, "PDUWP handle 0x%p\n", p->h);
+    LOG_MSG(debug, "PDUWP handle 0x%p [PID %d]\n", p->h, p->pid);
 
     const uintptr_t base_exe_module = remote_module_base_addr(p->h);
     const uintptr_t gstorage_addr = ((uintptr_t)base_exe_module + gstorage_offset);
