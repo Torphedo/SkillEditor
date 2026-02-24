@@ -37,11 +37,6 @@ If the text boxes in the text editor window are empty even after the game is run
 For more info on how to write custom labels, look at `labels.yaml` or read the documentation in the documentation window of the editor.
 All the information here is also written there.
 
-## Known Issues
-- Occasional "Failed to read data from Phantom Dust (error code 299) errors
-I don't know what causes this to happen, on my machine they only happen while the game is starting and are fixed by hitting `Refresh process`.
-For some other people, they happen consistently and completely break the editor.
-
 # How?
 The editor uses [`ReadProcessMemory`](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory)
 to make a copy of the game's skill and text data, then uses [`GetWriteWatch`](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-getwritewatch)
